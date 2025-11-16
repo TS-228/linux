@@ -26,6 +26,10 @@
 #include "mmc_ops.h"
 #include "sd_ops.h"
 
+#ifdef CONFIG_MMC_RTK_EMMC
+#include "../host/reg_mmc.h"
+#endif
+
 #define DEFAULT_CMD6_TIMEOUT_MS	500
 #define MIN_CACHE_EN_TIMEOUT_MS 1600
 
@@ -258,6 +262,14 @@ static void mmc_select_card_type(struct mmc_card *card)
 	card->ext_csd.hs200_max_dtr = hs200_max_dtr;
 	card->mmc_avail_type = avail_type;
 }
+
+#ifdef CONFIG_MMC_RTK_EMMC
+void rtkemmc_select_card_type(struct mmc_card *card)
+{
+        mmc_select_card_type(card);
+}
+EXPORT_SYMBOL(rtkemmc_select_card_type);
+#endif
 
 static void mmc_manage_enhanced_area(struct mmc_card *card, u8 *ext_csd)
 {
@@ -573,8 +585,12 @@ static int mmc_decode_ext_csd(struct mmc_card *card, u8 *ext_csd)
 	if (card->ext_csd.rev >= 6) {
 		card->ext_csd.feature_support |= MMC_DISCARD_FEATURE;
 
+#ifdef CONFIG_MMC_RTK_EMMC
+		card->ext_csd.generic_cmd6_time = 3000;
+#else
 		card->ext_csd.generic_cmd6_time = 10 *
 			ext_csd[EXT_CSD_GENERIC_CMD6_TIME];
+#endif
 		card->ext_csd.power_off_longtime = 10 *
 			ext_csd[EXT_CSD_POWER_OFF_LONG_TIME];
 
@@ -624,7 +640,33 @@ static int mmc_decode_ext_csd(struct mmc_card *card, u8 *ext_csd)
 		card->ext_csd.ffu_capable =
 			(ext_csd[EXT_CSD_SUPPORTED_MODE] & 0x1) &&
 			!(ext_csd[EXT_CSD_FW_CONFIG] & 0x1);
+#ifdef CONFIG_MMC_RTK_EMMC
+		card->ext_csd.pre_eol_info = ext_csd[EXT_CSD_PRE_EOL_INFO];
+		card->ext_csd.device_life_time_est_typ_a =
+			ext_csd[EXT_CSD_DEVICE_LIFE_TIME_EST_TYP_A];
+		card->ext_csd.device_life_time_est_typ_b =
+			ext_csd[EXT_CSD_DEVICE_LIFE_TIME_EST_TYP_B];
+#endif
 	}
+
+	/*we port kernel 4.14-4.16 command queue function to kernel 4.9 for realtek eMMC 5.1 IP*/
+#if defined(CONFIG_ARCH_RTD13xx) && defined(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_MMC_RTK_EMMC_CMDQ)
+
+	if (card->ext_csd.rev >= 8) {
+		card->ext_csd.cmdq_support = ext_csd[EXT_CSD_CMDQ_SUPPORT];
+		if (card->ext_csd.cmdq_support) {
+			/*
+			 * Queue Depth = N + 1,
+			 * see JEDEC JESD84-B51 section 7.4.19
+			 */
+			card->ext_csd.cmdq_depth =
+				ext_csd[EXT_CSD_CMDQ_DEPTH] + 1;
+			printk(KERN_ERR "%s: CMDQ supported: depth: %d\n",
+				mmc_hostname(card->host),
+				card->ext_csd.cmdq_depth);
+		}
+	}
+#endif
 out:
 	return err;
 }
@@ -753,6 +795,11 @@ MMC_DEV_ATTR(manfid, "0x%06x\n", card->cid.manfid);
 MMC_DEV_ATTR(name, "%s\n", card->cid.prod_name);
 MMC_DEV_ATTR(oemid, "0x%04x\n", card->cid.oemid);
 MMC_DEV_ATTR(prv, "0x%x\n", card->cid.prv);
+MMC_DEV_ATTR(rev, "0x%x\n", card->ext_csd.rev);
+MMC_DEV_ATTR(pre_eol_info, "%02x\n", card->ext_csd.pre_eol_info);
+MMC_DEV_ATTR(life_time, "0x%02x 0x%02x\n",
+	card->ext_csd.device_life_time_est_typ_a,
+	card->ext_csd.device_life_time_est_typ_b);
 MMC_DEV_ATTR(serial, "0x%08x\n", card->cid.serial);
 MMC_DEV_ATTR(enhanced_area_offset, "%llu\n",
 		card->ext_csd.enhanced_area_offset);
@@ -806,6 +853,9 @@ static struct attribute *mmc_std_attrs[] = {
 	&dev_attr_name.attr,
 	&dev_attr_oemid.attr,
 	&dev_attr_prv.attr,
+	&dev_attr_rev.attr,
+	&dev_attr_pre_eol_info.attr,
+	&dev_attr_life_time.attr,
 	&dev_attr_serial.attr,
 	&dev_attr_enhanced_area_offset.attr,
 	&dev_attr_enhanced_area_size.attr,
@@ -1029,11 +1079,17 @@ static int mmc_switch_status(struct mmc_card *card)
 static int mmc_select_hs(struct mmc_card *card)
 {
 	int err;
-
+#ifdef CONFIG_MMC_RTK_EMMC
+	err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+				EXT_CSD_HS_TIMING, EXT_CSD_TIMING_HS,
+				card->ext_csd.generic_cmd6_time,
+				true, true, true);
+#else
 	err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 			   EXT_CSD_HS_TIMING, EXT_CSD_TIMING_HS,
 			   card->ext_csd.generic_cmd6_time,
 			   true, false, true);
+#endif
 	if (!err) {
 		mmc_set_timing(card->host, MMC_TIMING_MMC_HS);
 		err = mmc_switch_status(card);
@@ -1117,6 +1173,33 @@ static int mmc_select_hs_ddr(struct mmc_card *card)
 	return err;
 }
 
+#ifdef CONFIG_MMC_RTK_EMMC
+static int mmc_select_ddr50(struct mmc_card *card)
+{
+	int err = 0;
+	u8 val;
+
+	err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+				EXT_CSD_HS_TIMING, EXT_CSD_TIMING_HS,
+				card->ext_csd.generic_cmd6_time,
+				true, true, true);
+	if (!err) {
+		mmc_set_timing(card->host, MMC_TIMING_MMC_HS);
+		err = mmc_switch_status(card);
+	}
+
+	if (err)
+		pr_warn("%s: switch to high-speed failed, err:%d\n",
+			mmc_hostname(card->host), err);
+
+	err = mmc_select_bus_width(card);
+	if (err > 0 && mmc_card_hs(card)) {
+		err = mmc_select_hs_ddr(card);
+	}
+	return err;
+}
+#endif
+
 static int mmc_select_hs400(struct mmc_card *card)
 {
 	struct mmc_host *host = card->host;
@@ -1124,13 +1207,33 @@ static int mmc_select_hs400(struct mmc_card *card)
 	int err = 0;
 	u8 val;
 
+#ifdef CONFIG_MMC_RTK_EMMC
+	if(host->doing_retune==1) return 0;
+#endif
 	/*
 	 * HS400 mode requires 8-bit bus width
 	 */
 	if (!(card->mmc_avail_type & EXT_CSD_CARD_TYPE_HS400 &&
 	      host->ios.bus_width == MMC_BUS_WIDTH_8))
 		return 0;
+#ifdef CONFIG_MMC_RTK_EMMC
+	mmc_set_timing(card->host, MMC_TIMING_MMC_HS);
 
+        /* Reduce frequency to HS frequency */
+        max_dtr = card->ext_csd.hs_max_dtr;
+        mmc_set_clock(host, max_dtr);
+
+	val = EXT_CSD_TIMING_HS;
+        err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+                           EXT_CSD_HS_TIMING, val,
+                           card->ext_csd.generic_cmd6_time,
+                           true, true, true);
+        if (err) {
+                pr_err("%s: switch to high-speed from hs200 failed, err:%d\n",
+                        mmc_hostname(host), err);
+                return err;
+        }
+#else
 	/* Switch card to HS mode */
 	val = EXT_CSD_TIMING_HS;
 	err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
@@ -1153,7 +1256,7 @@ static int mmc_select_hs400(struct mmc_card *card)
 	err = mmc_switch_status(card);
 	if (err)
 		goto out_err;
-
+#endif
 	/* Switch card to DDR */
 	err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 			 EXT_CSD_BUS_WIDTH,
@@ -1165,6 +1268,26 @@ static int mmc_select_hs400(struct mmc_card *card)
 		return err;
 	}
 
+#ifdef CONFIG_MMC_RTK_EMMC
+	if(card->ext_csd.raw_driver_strength & 0x2)
+		card->drive_strength = 0x1;	//in realtek chip, some emmc need to strengthen the device ability
+	printk(KERN_ERR "mmc_select_hs400: card->ext_csd.raw_driver_strength=%x\n",card->ext_csd.raw_driver_strength);
+	val = EXT_CSD_TIMING_HS400 |
+              card->drive_strength << EXT_CSD_DRV_STR_SHIFT;
+        err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+                           EXT_CSD_HS_TIMING, val,
+                           card->ext_csd.generic_cmd6_time,
+                           true, true, true);
+        if (err) {
+                pr_err("%s: switch to hs400 failed, err:%d\n",
+                         mmc_hostname(host), err);
+                return err;
+        }
+
+        /* Set host controller to HS400 timing and frequency */
+        mmc_set_timing(host, MMC_TIMING_MMC_HS400);
+        mmc_set_bus_speed(card);
+#else
 	/* Switch card to HS400 */
 	val = EXT_CSD_TIMING_HS400 |
 	      card->drive_strength << EXT_CSD_DRV_STR_SHIFT;
@@ -1177,7 +1300,6 @@ static int mmc_select_hs400(struct mmc_card *card)
 			 mmc_hostname(host), err);
 		return err;
 	}
-
 	/* Set host controller to HS400 timing and frequency */
 	mmc_set_timing(host, MMC_TIMING_MMC_HS400);
 	mmc_set_bus_speed(card);
@@ -1185,7 +1307,12 @@ static int mmc_select_hs400(struct mmc_card *card)
 	err = mmc_switch_status(card);
 	if (err)
 		goto out_err;
+#endif
 
+#ifdef CONFIG_MMC_RTK_EMMC
+	if(host->ops->dqs_tuning)
+		host->ops->dqs_tuning(host);
+#endif
 	return 0;
 
 out_err:
@@ -1206,10 +1333,40 @@ int mmc_hs400_to_hs200(struct mmc_card *card)
 	int err;
 	u8 val;
 
+#ifdef CONFIG_MMC_RTK_EMMC
+	if(host->doing_retune==1) return 0;
+#endif
 	/* Reduce frequency to HS */
 	max_dtr = card->ext_csd.hs_max_dtr;
 	mmc_set_clock(host, max_dtr);
 
+#ifdef CONFIG_MMC_RTK_EMMC
+	mmc_set_timing(host, MMC_TIMING_MMC_DDR52);
+	val = EXT_CSD_TIMING_HS;
+        err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_HS_TIMING,
+                           val, card->ext_csd.generic_cmd6_time,
+                           true, true, true);
+        if (err)
+                goto out_err;
+
+	mmc_set_timing(host, MMC_TIMING_MMC_HS);
+
+	/* Switch HS400 to HS */
+        err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_BUS_WIDTH,
+                           EXT_CSD_BUS_WIDTH_8, card->ext_csd.generic_cmd6_time,
+                           true, true, true);
+        if (err)
+                goto out_err;
+
+	mmc_set_timing(host, MMC_TIMING_MMC_HS200);
+	val = EXT_CSD_TIMING_HS200 |
+              card->drive_strength << EXT_CSD_DRV_STR_SHIFT;
+        err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_HS_TIMING,
+                           val, card->ext_csd.generic_cmd6_time,
+                           true, true, true);
+        if (err)
+                goto out_err;
+#else
 	/* Switch HS400 to HS DDR */
 	val = EXT_CSD_TIMING_HS;
 	err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_HS_TIMING,
@@ -1251,7 +1408,7 @@ int mmc_hs400_to_hs200(struct mmc_card *card)
 	err = mmc_switch_status(card);
 	if (err)
 		goto out_err;
-
+#endif
 	mmc_set_bus_speed(card);
 
 	return 0;
@@ -1261,6 +1418,7 @@ out_err:
 	       __func__, err);
 	return err;
 }
+EXPORT_SYMBOL(mmc_hs400_to_hs200);
 
 static void mmc_select_driver_type(struct mmc_card *card)
 {
@@ -1397,15 +1555,25 @@ static int mmc_select_hs200(struct mmc_card *card)
 	if (err > 0) {
 		val = EXT_CSD_TIMING_HS200 |
 		      card->drive_strength << EXT_CSD_DRV_STR_SHIFT;
+#ifdef CONFIG_MMC_RTK_EMMC
 		err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 				   EXT_CSD_HS_TIMING, val,
 				   card->ext_csd.generic_cmd6_time,
-				   true, false, true);
+				   true, true, true);
+#else
+		err = __mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+                                   EXT_CSD_HS_TIMING, val,
+                                   card->ext_csd.generic_cmd6_time,
+                                   true, false, true);
+#endif
 		if (err)
 			goto err;
 		old_timing = host->ios.timing;
 		mmc_set_timing(host, MMC_TIMING_MMC_HS200);
 
+#ifdef CONFIG_MMC_RTK_EMMC
+		return err;
+#else
 		err = mmc_switch_status(card);
 		/*
 		 * mmc_select_timing() assumes timing has not changed if
@@ -1413,6 +1581,7 @@ static int mmc_select_hs200(struct mmc_card *card)
 		 */
 		if (err == -EBADMSG)
 			mmc_set_timing(host, old_timing);
+#endif
 	}
 err:
 	if (err) {
@@ -1436,10 +1605,16 @@ static int mmc_select_timing(struct mmc_card *card)
 	if (!mmc_can_ext_csd(card))
 		goto bus_speed;
 
+	printk(KERN_ERR "card->mmc_avail_type = 0x%08x \n", card->mmc_avail_type);
+
 	if (card->mmc_avail_type & EXT_CSD_CARD_TYPE_HS400ES)
 		err = mmc_select_hs400es(card);
 	else if (card->mmc_avail_type & EXT_CSD_CARD_TYPE_HS200)
 		err = mmc_select_hs200(card);
+#ifdef CONFIG_MMC_RTK_EMMC
+	else if (card->mmc_avail_type & EXT_CSD_CARD_TYPE_DDR_52)
+		err = mmc_select_ddr50(card);
+#endif
 	else if (card->mmc_avail_type & EXT_CSD_CARD_TYPE_HS)
 		err = mmc_select_hs(card);
 
@@ -1455,10 +1630,25 @@ bus_speed:
 	return 0;
 }
 
+#ifdef CONFIG_MMC_RTK_EMMC
+int rtkemmc_select_timing(struct mmc_card *card)
+{
+        mmc_select_timing(card);
+}
+EXPORT_SYMBOL(rtkemmc_select_timing);
+#endif
+
 /*
  * Execute tuning sequence to seek the proper bus operating
  * conditions for HS200 and HS400, which sends CMD21 to the device.
  */
+#ifdef CONFIG_MMC_RTK_EMMC
+static int mmc_ddr50_tuning(struct mmc_card *card)
+{
+	card->host->mode = MODE_DDR;
+	return mmc_execute_tuning(card);
+}
+#endif
 static int mmc_hs200_tuning(struct mmc_card *card)
 {
 	struct mmc_host *host = card->host;
@@ -1468,12 +1658,73 @@ static int mmc_hs200_tuning(struct mmc_card *card)
 	 * operation frequency for tuning process
 	 */
 	if (card->mmc_avail_type & EXT_CSD_CARD_TYPE_HS400 &&
-	    host->ios.bus_width == MMC_BUS_WIDTH_8)
-		if (host->ops->prepare_hs400_tuning)
+	    host->ios.bus_width == MMC_BUS_WIDTH_8) {
+		if (host->ops->prepare_hs400_tuning) {
+#ifdef CONFIG_MMC_RTK_EMMC
+			card->host->mode = MODE_HS400; //execute tuning hs400
+#endif
 			host->ops->prepare_hs400_tuning(host, &host->ios);
-
+		}
+	}
+#ifdef CONFIG_MMC_RTK_EMMC
+	else
+	{
+		card->host->mode = MODE_HS200; //execute tuning hs200
+	}
+#endif
 	return mmc_execute_tuning(card);
 }
+#ifdef CONFIG_MMC_RTK_EMMC
+int rtkemmc_hs200_tuning(struct mmc_card *card)
+{
+         mmc_hs200_tuning(card);
+}
+EXPORT_SYMBOL(rtkemmc_hs200_tuning);
+#endif
+
+#if defined(CONFIG_ARCH_RTD13xx) && defined(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_MMC_RTK_EMMC_CMDQ)
+static int mmc_select_cmdq(struct mmc_card *card)
+{
+	struct mmc_host *host = card->host;
+	int ret = 0;
+	if (!host->cmdq_ops) {
+		pr_err("%s: host controller doesn't support CMDQ\n",
+		       mmc_hostname(host));
+		return 0;
+	}
+
+	ret = mmc_set_blocklen(card, MMC_CARD_CMDQ_BLK_SIZE);
+	if (ret)
+		goto out;
+
+	ret = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_CMDQ, 1,
+			 card->ext_csd.generic_cmd6_time);
+	if (ret)
+		goto out;
+
+	mmc_card_set_cmdq(card);
+	if(!host->cmdq_ops->enable) {
+		printk(KERN_ERR "no cmdq enable callback function\n");
+		goto out;
+	}
+	ret = host->cmdq_ops->enable(card->host);
+	if (ret) {
+		pr_err("%s: failed (%d) enabling CMDQ on host\n",
+			mmc_hostname(host), ret);
+		mmc_card_clr_cmdq(card);
+		ret = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_CMDQ, 0,
+				 card->ext_csd.generic_cmd6_time);
+		if (ret)
+			goto out;
+	}
+
+	pr_debug("%s: CMDQ enabled on card\n", mmc_hostname(host));
+out:
+
+	return ret;
+}
+#endif
+
 
 /*
  * Handle the detection and initialisation of a card.
@@ -1503,6 +1754,9 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 	 * respond.
 	 * mmc_go_idle is needed for eMMC that are asleep
 	 */
+#if defined(CONFIG_ARCH_RTD13xx) && defined(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_MMC_RTK_EMMC_CMDQ)
+reinit:
+#endif
 	mmc_go_idle(host);
 
 	/* The extra bit indicates that we support high capacity */
@@ -1601,6 +1855,26 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 			goto free_card;
 	}
 
+#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_MMC_RTK_EMMC
+	err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_HS_TIMING, 1, 0);
+	if(err){
+#ifdef MMC_DBG
+                printk(KERN_ERR "%s:%d ......>\n",__func__,__LINE__);
+#endif
+                goto free_card;
+          }
+        if(card->host->ops->execute_tuning) {
+#ifdef MMC_DBG
+                printk(KERN_ERR "%s:%d ......>\n",__func__,__LINE__);
+#endif
+		card->host->mode = 0;	//MODE_SD20
+		card->host->card = card;// fix null pointer bug of SDR50
+                err = card->host->ops->execute_tuning(card->host, MMC_SEND_TUNING_BLOCK_HS200);
+        }
+#endif
+#endif
+
 	if (!oldcard) {
 		/* Read extended CSD. */
 		err = mmc_read_ext_csd(card);
@@ -1619,7 +1893,33 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 		/* Erase size depends on CSD and Extended CSD */
 		mmc_set_erase_size(card);
 	}
+#ifndef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_MMC_RTK_EMMC
+	if (!(card->mmc_avail_type & EXT_CSD_CARD_TYPE_HS200)) {
+		err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
+		EXT_CSD_HS_TIMING, EXT_CSD_TIMING_HS, 0);
+		if (err)
+		{
+#ifdef CONFIG_MMC_DEBUG
+			printk("%s:%d ......>\n",__func__,__LINE__);
+#endif
+			goto free_card;
+		}
+		if (card->host->ops->execute_tuning) {
+#ifdef CONFIG_MMC_DEBUG
+			printk("%s:%d ......>\n",__func__,__LINE__);
+#endif
+			card->host->mode = MODE_SDR; //default use high speed SDR firstly
+			card->host->card = card;// fix null pointer bug of SDR50
+			err = card->host->ops->execute_tuning(card->host, MMC_SEND_TUNING_BLOCK_HS200);
+		}
+        }
+#ifdef CONFIG_MMC_DEBUG
+        printk("%s:%d ......>\n",__func__,__LINE__);
+#endif
 
+#endif
+#endif
 	/*
 	 * If enhanced_area_en is TRUE, host needs to enable ERASE_GRP_DEF
 	 * bit.  This bit will be lost every time after a reset or power off.
@@ -1690,8 +1990,16 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 	err = mmc_select_timing(card);
 	if (err)
 		goto free_card;
-
+#ifdef CONFIG_MMC_RTK_EMMC
+	if (mmc_card_ddr52(card)) {
+		err = mmc_ddr50_tuning(card);
+                if (err)
+                        goto free_card;
+	}
+	else if (mmc_card_hs200(card)) {
+#else
 	if (mmc_card_hs200(card)) {
+#endif
 		err = mmc_hs200_tuning(card);
 		if (err)
 			goto free_card;
@@ -1787,7 +2095,19 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 
 	if (!oldcard)
 		host->card = card;
-
+#if defined(CONFIG_ARCH_RTD13xx) && defined(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_MMC_RTK_EMMC_CMDQ)
+	if (card->ext_csd.cmdq_support && (card->host->caps2 &
+					   MMC_CAP2_CMD_QUEUE)) {
+		err = mmc_select_cmdq(card);
+		if (err) {
+			pr_err("%s: selecting CMDQ mode: failed: %d\n",
+					   mmc_hostname(card->host), err);
+			card->ext_csd.cmdq_support = 0;
+			oldcard = card;
+			goto reinit;
+		}
+	}
+#endif
 	return 0;
 
 free_card:

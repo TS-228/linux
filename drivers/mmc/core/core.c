@@ -49,6 +49,10 @@
 #include "sd_ops.h"
 #include "sdio_ops.h"
 
+#ifdef CONFIG_MMC_SDHCI_RTK
+#include "../host/sdhci.h"
+#endif /* CONFIG_RTK_PLATFORM */
+
 /* If the device is not responding */
 #define MMC_CORE_TIMEOUT_MS	(10 * 60 * 1000) /* 10 minute timeout */
 
@@ -72,7 +76,23 @@ static const unsigned freqs[] = { 400000, 300000, 200000, 100000 };
  */
 bool use_spi_crc = 1;
 module_param(use_spi_crc, bool, 0);
+#ifndef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_MMC_SDHCI_RTK
+bool SDIO_flag = false;
+bool SDIO_fini = false;
+extern bool SDIO_card;
+#endif /* CONFIG_RTK_PLATFORM */
+#endif
+#if (!defined(CONFIG_ARCH_RTD119X)) && (!defined(CONFIG_ARCH_RTD129x))
+#ifdef CONFIG_MMC_RTK_SDMMC
+void rtk_sdmmc_close_clk(struct mmc_host *host);
+int rtk_sdmmc_clk_cls_chk(struct mmc_host *host);
+#endif
+#endif
 
+/*
+ * Internal function. Schedule delayed work in the MMC work queue.
+ */
 static int mmc_schedule_delayed_work(struct delayed_work *work,
 				     unsigned long delay)
 {
@@ -334,6 +354,39 @@ static int mmc_start_request(struct mmc_host *host, struct mmc_request *mrq)
 
 	return 0;
 }
+
+#if defined(CONFIG_ARCH_RTD13xx) && defined(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_MMC_RTK_EMMC_CMDQ)
+
+static void mmc_start_cmdq_request(struct mmc_host *host,
+				   struct mmc_request *mrq)
+{
+	if (mrq->data) {
+		pr_debug("%s:     blksz %d blocks %d flags %08x tsac %lu ms nsac %d\n",
+			mmc_hostname(host), mrq->data->blksz,
+			mrq->data->blocks, mrq->data->flags,
+			mrq->data->timeout_ns / NSEC_PER_MSEC,
+			mrq->data->timeout_clks);
+
+		BUG_ON(mrq->data->blksz > host->max_blk_size);
+		BUG_ON(mrq->data->blocks > host->max_blk_count);
+		BUG_ON(mrq->data->blocks * mrq->data->blksz >
+			host->max_req_size);
+		mrq->data->error = 0;
+		mrq->data->mrq = mrq;
+	}
+
+	if (mrq->cmd) {
+		mrq->cmd->error = 0;
+		mrq->cmd->mrq = mrq;
+	}
+
+	if (likely(host->cmdq_ops->request))
+		host->cmdq_ops->request(host, mrq);
+	else
+		pr_err("%s: %s: issue request failed\n", mmc_hostname(host),
+				__func__);
+}
+#endif
 
 /**
  *	mmc_start_bkops - start BKOPS for supported cards
@@ -642,6 +695,78 @@ static void mmc_post_req(struct mmc_host *host, struct mmc_request *mrq,
 	if (host->ops->post_req)
 		host->ops->post_req(host, mrq, err);
 }
+
+#if defined(CONFIG_ARCH_RTD13xx) && defined(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_MMC_RTK_EMMC_CMDQ)
+
+/**
+ *	mmc_cmdq_post_req - post process of a completed request
+ *	@host: host instance
+ *	@mrq: the request to be processed
+ *	@err: non-zero is error, success otherwise
+ */
+void mmc_cmdq_post_req(struct mmc_host *host, struct mmc_request *mrq, int err)
+{
+	if (likely(host->cmdq_ops->post_req))
+		host->cmdq_ops->post_req(host, mrq, err);
+}
+EXPORT_SYMBOL(mmc_cmdq_post_req);
+
+/**
+ *	mmc_cmdq_halt - halt/un-halt the command queue engine
+ *	@host: host instance
+ *	@halt: true - halt, un-halt otherwise
+ *
+ *	Host halts the command queue engine. It should complete
+ *	the ongoing transfer and release the bus.
+ *	All legacy commands can be sent upon successful
+ *	completion of this function.
+ *	Returns 0 on success, negative otherwise
+ */
+int mmc_cmdq_halt(struct mmc_host *host, bool halt)
+{
+	int err = 0;
+
+	if ((halt && mmc_host_halt(host)) ||
+	    (!halt && !mmc_host_halt(host)))
+		return -EINVAL;
+
+	if (host->cmdq_ops->halt) {
+		err = host->cmdq_ops->halt(host, halt);
+		if (!err && halt)
+			mmc_host_set_halt(host);
+		else if (!err && !halt)
+			mmc_host_clr_halt(host);
+	} else {
+		err = -ENOSYS;
+	}
+
+	return err;
+}
+EXPORT_SYMBOL(mmc_cmdq_halt);
+
+int mmc_cmdq_start_req(struct mmc_host *host, struct mmc_cmdq_req *cmdq_req)
+{
+	struct mmc_request *mrq = &cmdq_req->mrq;
+
+	mrq->host = host;
+	if (mmc_card_removed(host->card)) {
+		mrq->cmd->error = -ENOMEDIUM;
+		return -ENOMEDIUM;
+	}
+	mmc_start_cmdq_request(host, mrq);
+	return 0;
+}
+EXPORT_SYMBOL(mmc_cmdq_start_req);
+
+int mmc_cmdq_prepare_flush(struct mmc_command *cmd)
+{
+	return   __mmc_switch_cmdq_mode(cmd, EXT_CSD_CMD_SET_NORMAL,
+				     EXT_CSD_FLUSH_CACHE, 1,
+				     0, true, true);
+}
+EXPORT_SYMBOL(mmc_cmdq_prepare_flush);
+#endif
+
 
 /**
  *	mmc_start_req - start a non-blocking request
@@ -1170,6 +1295,10 @@ int mmc_execute_tuning(struct mmc_card *card)
 		opcode = MMC_SEND_TUNING_BLOCK_HS200;
 	else
 		opcode = MMC_SEND_TUNING_BLOCK;
+
+#ifdef CONFIG_MMC_RTK_EMMC
+	host->card = card;
+#endif
 
 	err = host->ops->execute_tuning(host, opcode);
 
@@ -2645,6 +2774,11 @@ EXPORT_SYMBOL(mmc_hw_reset);
 
 static int mmc_rescan_try_freq(struct mmc_host *host, unsigned freq)
 {
+#ifndef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_MMC_SDHCI_RTK
+	int ret=0;
+#endif /* CONFIG_RTK_PLATFORM */
+#endif
 	host->f_init = freq;
 
 #ifdef CONFIG_MMC_DEBUG
@@ -2674,9 +2808,26 @@ static int mmc_rescan_try_freq(struct mmc_host *host, unsigned freq)
 		mmc_send_if_cond(host, host->ocr_avail);
 
 	/* Order's important: probe SDIO, then SD, then MMC */
+#ifdef CONFIG_MMC_SDHCI_RTK
+#ifndef CONFIG_ARCH_RTD119X
+	if (!(host->caps2 & MMC_CAP2_NO_SDIO)) {
+		if (!(ret = mmc_attach_sdio(host))) {
+			SDIO_flag = true;
+			return 0;
+		}
+		if(ret == -110)
+			SDIO_fini = true;
+	}
+#else
 	if (!(host->caps2 & MMC_CAP2_NO_SDIO))
 		if (!mmc_attach_sdio(host))
 			return 0;
+#endif
+#else
+	if (!(host->caps2 & MMC_CAP2_NO_SDIO))
+		if (!mmc_attach_sdio(host))
+			return 0;
+#endif /* CONFIG_RTK_PLATFORM */
 
 	if (!(host->caps2 & MMC_CAP2_NO_SD))
 		if (!mmc_attach_sd(host))
@@ -2762,6 +2913,10 @@ void mmc_rescan(struct work_struct *work)
 	struct mmc_host *host =
 		container_of(work, struct mmc_host, detect.work);
 	int i;
+	if (host->trigger_card_event && host->ops->card_event) {
+		host->ops->card_event(host);
+		host->trigger_card_event = false;
+	}
 
 	if (host->rescan_disable)
 		return;
@@ -2784,8 +2939,15 @@ void mmc_rescan(struct work_struct *work)
 	 * if there is a _removable_ card registered, check whether it is
 	 * still present
 	 */
-	if (host->bus_ops && !host->bus_dead && mmc_card_is_removable(host))
+	if (host->bus_ops && !host->bus_dead && mmc_card_is_removable(host)) {
 		host->bus_ops->detect(host);
+#if (!defined(CONFIG_ARCH_RTD119X)) && (!defined(CONFIG_ARCH_RTD129x))
+#ifdef CONFIG_MMC_RTK_SDMMC
+		//We close the SD clock for power saving if no SD card
+		if(!(host->caps2 & MMC_CAP2_NO_SD)) rtk_sdmmc_close_clk(host);
+#endif
+#endif
+	}
 
 	host->detect_change = 0;
 
@@ -2827,6 +2989,21 @@ void mmc_rescan(struct work_struct *work)
  out:
 	if (host->caps & MMC_CAP_NEEDS_POLL)
 		mmc_schedule_delayed_work(&host->detect, HZ);
+#ifndef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_MMC_SDHCI_RTK
+	if(SDIO_fini==true && SDIO_flag == false && SDIO_card==false) {
+		SDIO_fini= false;
+		host->caps2 |=  MMC_CAP2_NO_SDIO;
+		rtk_sdhci_close_clk();
+	}
+#endif
+#endif
+#if (!defined(CONFIG_ARCH_RTD119X)) && (!defined(CONFIG_ARCH_RTD129x))
+#ifdef CONFIG_MMC_RTK_SDMMC
+	//We close the SD clock for power saving if no SD card
+	if(!(host->caps2 & MMC_CAP2_NO_SD) && rtk_sdmmc_clk_cls_chk(host)) rtk_sdmmc_close_clk(host);
+#endif
+#endif
 }
 
 void mmc_start_host(struct mmc_host *host)

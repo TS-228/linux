@@ -27,6 +27,10 @@
 #include <linux/list.h>
 #include <linux/dma-mapping.h>
 
+#ifdef CONFIG_USB_DWC3_RTK
+#include <linux/of_device.h>
+#endif
+
 #include <linux/usb/ch9.h>
 #include <linux/usb/gadget.h>
 
@@ -1637,6 +1641,10 @@ static void dwc3_gadget_setup_nump(struct dwc3 *dwc)
 	u32 nump;
 	u32 reg;
 
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	dev_dbg(dwc->dev, "%s Enter \n", __func__);
+#endif
+
 	ram2_depth = DWC3_GHWPARAMS7_RAM2_DEPTH(dwc->hwparams.hwparams7);
 	mdwidth = DWC3_GHWPARAMS0_MDWIDTH(dwc->hwparams.hwparams0);
 
@@ -1738,6 +1746,10 @@ static int __dwc3_gadget_start(struct dwc3 *dwc)
 
 	dwc3_gadget_enable_irq(dwc);
 
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	dev_dbg(dwc->dev, "%s Exit\n", __func__);
+#endif
+
 	return 0;
 
 err1:
@@ -1775,6 +1787,10 @@ static int dwc3_gadget_start(struct usb_gadget *g,
 
 	dwc->gadget_driver	= driver;
 
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	dwc->link_state = 0;
+#endif
+
 	if (pm_runtime_active(dwc->dev))
 		__dwc3_gadget_start(dwc);
 
@@ -1808,6 +1824,9 @@ static int dwc3_gadget_stop(struct usb_gadget *g)
 	spin_lock_irqsave(&dwc->lock, flags);
 	__dwc3_gadget_stop(dwc);
 	dwc->gadget_driver	= NULL;
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	dwc->link_state = 0;
+#endif
 	spin_unlock_irqrestore(&dwc->lock, flags);
 
 	free_irq(dwc->irq_gadget, dwc->ev_buf);
@@ -2882,7 +2901,12 @@ static irqreturn_t dwc3_process_event_buf(struct dwc3_event_buffer *evt)
 		evt->lpos = (evt->lpos + 4) % DWC3_EVENT_BUFFERS_SIZE;
 		left -= 4;
 
+#ifdef CONFIG_USB_PATCH_ON_RTK
+		if (dwc->revision < DWC3_REVISION_300A)
+			dwc3_writel(dwc->regs, DWC3_GEVNTCOUNT(0), 4);
+#else
 		dwc3_writel(dwc->regs, DWC3_GEVNTCOUNT(0), 4);
+#endif
 	}
 
 	evt->count = 0;
@@ -2896,6 +2920,10 @@ static irqreturn_t dwc3_process_event_buf(struct dwc3_event_buffer *evt)
 	/* Keep the clearing of DWC3_EVENT_PENDING at the end */
 	evt->flags &= ~DWC3_EVENT_PENDING;
 
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	if (dwc->revision >= DWC3_REVISION_300A)
+		dwc3_writel(dwc->regs, DWC3_GEVNTCOUNT(0), DWC3_EVNT_HANDLER_BUSY);
+#endif
 	return ret;
 }
 
@@ -2934,13 +2962,21 @@ static irqreturn_t dwc3_check_event_buf(struct dwc3_event_buffer *evt)
 	 * irq event handler completes before caching new event to prevent
 	 * losing events.
 	 */
+#ifndef CONFIG_USB_PATCH_ON_RTK
 	if (evt->flags & DWC3_EVENT_PENDING)
 		return IRQ_HANDLED;
+#endif
 
 	count = dwc3_readl(dwc->regs, DWC3_GEVNTCOUNT(0));
 	count &= DWC3_GEVNTCOUNT_MASK;
 	if (!count)
 		return IRQ_NONE;
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	if (evt->flags & DWC3_EVENT_PENDING) {
+		return IRQ_NONE;
+	}
+#endif
 
 	evt->count = count;
 	evt->flags |= DWC3_EVENT_PENDING;
@@ -2949,6 +2985,11 @@ static irqreturn_t dwc3_check_event_buf(struct dwc3_event_buffer *evt)
 	reg = dwc3_readl(dwc->regs, DWC3_GEVNTSIZ(0));
 	reg |= DWC3_GEVNTSIZ_INTMASK;
 	dwc3_writel(dwc->regs, DWC3_GEVNTSIZ(0), reg);
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	if (dwc->revision >= DWC3_REVISION_300A)
+		dwc3_writel(dwc->regs, DWC3_GEVNTCOUNT(0), count);
+#endif
 
 	return IRQ_WAKE_THREAD;
 }
@@ -2970,6 +3011,11 @@ int dwc3_gadget_init(struct dwc3 *dwc)
 {
 	int ret, irq;
 	struct platform_device *dwc3_pdev = to_platform_device(dwc->dev);
+
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	if (dwc->has_gadget) return;
+	dev_info(dwc->dev, "%s Enter\n", __func__);
+#endif
 
 	irq = platform_get_irq_byname(dwc3_pdev, "peripheral");
 	if (irq == -EPROBE_DEFER)
@@ -3033,6 +3079,10 @@ int dwc3_gadget_init(struct dwc3 *dwc)
 		goto err4;
 	}
 
+#ifdef CONFIG_USB_DWC3_RTK
+	of_dma_configure(&dwc->gadget.dev, NULL);
+#endif
+
 	dwc->gadget.ops			= &dwc3_gadget_ops;
 	dwc->gadget.speed		= USB_SPEED_UNKNOWN;
 	dwc->gadget.sg_supported	= true;
@@ -3082,6 +3132,10 @@ int dwc3_gadget_init(struct dwc3 *dwc)
 		goto err5;
 	}
 
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	dwc->has_gadget = true;
+	dev_info(dwc->dev, "%s Exit\n", __func__);
+#endif
 	return 0;
 
 err5:
@@ -3111,6 +3165,13 @@ err0:
 
 void dwc3_gadget_exit(struct dwc3 *dwc)
 {
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	if (!dwc->has_gadget) return;
+
+	dev_info(dwc->dev, "%s Enter\n", __func__);
+	dwc->has_gadget = false;
+#endif
+
 	usb_del_gadget_udc(&dwc->gadget);
 
 	dwc3_gadget_free_endpoints(dwc);
@@ -3126,10 +3187,26 @@ void dwc3_gadget_exit(struct dwc3 *dwc)
 
 	dma_free_coherent(dwc->dev, sizeof(*dwc->ctrl_req),
 			dwc->ctrl_req, dwc->ctrl_req_addr);
+
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	memset(&dwc->gadget, 0x00, sizeof(dwc->gadget));
+
+	dev_info(dwc->dev, "%s Exit\n", __func__);
+#endif
 }
 
 int dwc3_gadget_suspend(struct dwc3 *dwc)
 {
+	int ret;
+
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	dev_info(dwc->dev, "[USB] Enter %s", __func__);
+	if (!dwc->has_gadget) {
+		dev_info(dwc->dev, "[USB] Exit %s (by no gadget)", __func__);
+		return 0;
+	}
+#endif
+
 	if (!dwc->gadget_driver)
 		return 0;
 
@@ -3139,6 +3216,9 @@ int dwc3_gadget_suspend(struct dwc3 *dwc)
 
 	synchronize_irq(dwc->irq_gadget);
 
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	dev_info(dwc->dev, "[USB] Exit %s", __func__);
+#endif
 	return 0;
 }
 
@@ -3149,6 +3229,14 @@ int dwc3_gadget_resume(struct dwc3 *dwc)
 	if (!dwc->gadget_driver)
 		return 0;
 
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	dev_info(dwc->dev, "[USB] Enter %s", __func__);
+	if (!dwc->has_gadget) {
+		dev_info(dwc->dev, "[USB] Exit %s (by no gadget)", __func__);
+		return 0;
+	}
+#endif
+
 	ret = __dwc3_gadget_start(dwc);
 	if (ret < 0)
 		goto err0;
@@ -3156,6 +3244,10 @@ int dwc3_gadget_resume(struct dwc3 *dwc)
 	ret = dwc3_gadget_run_stop(dwc, true, false);
 	if (ret < 0)
 		goto err1;
+
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	dev_info(dwc->dev, "[USB] Exit %s", __func__);
+#endif
 
 	return 0;
 
