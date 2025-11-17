@@ -692,6 +692,10 @@ void sdhci_reset(struct sdhci_host *host, u8 mask);
 void sdhci_set_uhs_signaling(struct sdhci_host *host, unsigned timing);
 int sdhci_execute_tuning(struct mmc_host *mmc, u32 opcode);
 
+#ifdef CONFIG_RTK_PLATFORM
+void rtk_sdhci_close_clk(void);
+#endif /* CONFIG_RTK_PLATFORM */
+
 #ifdef CONFIG_PM
 extern int sdhci_suspend_host(struct sdhci_host *host);
 extern int sdhci_resume_host(struct sdhci_host *host);

@@ -487,4 +487,11 @@ config PHY_MESON8B_USB2
 	  and GXBB SoCs.
 	  If unsure, say N.
 
+config PHY_RTK_SATA
+	tristate "Realtek SATA PHY driver"
+	depends on OF
+	select GENERIC_PHY
+	help
+	  Support for SATA GEN3 PHY on realtek chipsets.
+
 endmenu
