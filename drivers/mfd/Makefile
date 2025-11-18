@@ -212,6 +212,11 @@ obj-$(CONFIG_INTEL_SOC_PMIC)	+= intel-soc-pmic.o
 obj-$(CONFIG_MFD_MT6397)	+= mt6397-core.o
 
 obj-$(CONFIG_MFD_ALTERA_A10SR)	+= altera-a10sr.o
+
+obj-$(CONFIG_MFD_G22XX) += g22xx-core.o
+obj-$(CONFIG_MFD_G2227_I2C) += g2227-i2c.o
+obj-$(CONFIG_MFD_G2237_I2C) += g2237-i2c.o
+
 obj-$(CONFIG_MFD_SUN4I_GPADC)	+= sun4i-gpadc.o
 
 obj-$(CONFIG_MFD_STM32_TIMERS) 	+= stm32-timers.o

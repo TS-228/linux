@@ -1,0 +1,174 @@
+/*
+ *
+ */
+
+/dts-v1/;
+
+#include "../../mach-rtd119x/include/mach/memory.h"
+
+/memreserve/ 0x00000000				SYS_BOOTCODE_MEMSIZE;				/* ROM code */
+/memreserve/ PLAT_NOR_PHYS			PLAT_NOR_SIZE;						/* NOR */
+/memreserve/ ACPU_FIREWARE_PHYS 	ACPU_FIREWARE_SIZE;					/* Audio Firmware */
+/memreserve/ RPC_RINGBUF_PHYS 		RPC_RINGBUF_SIZE;					/* RPC ring buffer */
+
+#include "rtd-119x.dtsi"
+#include "rtd-1195-usb.dtsi"
+
+/ {
+	model= "Realtek_CA7_CA7";
+	compatible = "Realtek,FPGA_v6", "Realtek,rtd-119x";
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	chosen {
+		bootargs = "earlyprintk console=ttyS0,115200 ";
+	        linux,initrd-start = <0x02200000>;
+        	linux,initrd-end = <0x02600000>;
+	};
+
+	memory {
+		device_type = "memory";
+		reg =  <0x00000000 0x40000000>;					/* 1024 MB */
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		rbus@0 {
+			compatible = "rsvmem-remap";
+			save_remap_name = "rbus";
+			reg = <RBUS_BASE_PHYS RBUS_BASE_SIZE>;
+			rtk_rbus_barrier_flag;
+		};
+
+		common@0 {
+			compatible = "rsvmem-remap";
+			save_remap_name = "common";
+			reg = <RPC_COMM_PHYS RPC_COMM_SIZE>;
+		};
+
+		ringbuf@0 {
+			compatible = "rsvmem-remap";
+			save_remap_name = "ringbuf";
+			reg = <RPC_RINGBUF_PHYS RPC_RINGBUF_SIZE>;
+		};
+	};
+
+	soc {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		reg = <0x18000000 0x70000>;
+		compatible = "simple-bus";
+		device_type = "soc";
+		ranges;
+
+	};
+	rtk,ion {
+		compatible = "Realtek,rtk-ion";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		rtk,ion-heap@0 {	/* SYSTEM_HEAP */
+			compatible = "Realtek,rtk-ion-reserve";
+			reg = <0>;
+			rtk,memory-reservation-size = <0x0>;
+		};
+		rtk,ion-heap@1 {	/* System contig */
+			compatible = "Realtek,rtk-ion-reserve";
+			reg = <1>;
+			rtk,memory-reservation-size = <0x0>;
+		};
+		rtk,ion-heap@4 {	/* DMA_HEAP */
+			compatible = "Realtek,rtk-ion-reserve";
+			reg = <4>;
+			rtk,memory-reservation-size = <0x0>;
+		};
+	};
+	fb {
+		compatible = "Realtek,rtk-fb";
+		buffer-cnt = <3>;
+		resolution = <1280 720>;
+		fps = <60>;
+	};
+	timer0@1801b000 {
+		clock-frequency = <27000000>;
+	};
+	timer1@1801b000 {
+		clock-frequency = <27000000>;
+	};
+	uart0: serial0@18007800 {
+		clock-frequency = <27000000>;
+	};
+	uart1: serial1@1801B200 {
+		clock-frequency = <432000000>;
+	};
+
+	rtk_misc_gpio: rtk_misc_gpio@1801b100 {
+		gpios =
+		<&rtk_misc_gpio 4 0 0>, 				/*install button, input, default N/A */
+	//	<&rtk_misc_gpio 5 1 1>, 				/*usb3 power , output, default high */
+		<&rtk_misc_gpio 8 1 1>; 				/*audio dac unmute , output, default high */
+	};
+
+        hdmirx@1800F000 {
+                status = "disabled";
+        };
+
+	rtk_iso_gpio: rtk_iso_gpio@18007100 {
+	};
+	nic: gmac@18016000 {
+		rtl-features = <2>;
+//		mac-address = [00 10 20 30 40 50];
+		status = "okay";
+	};
+	usb_ss: rtk_dwc3@18013200 {
+		realtek,rst-gpio = <&rtk_misc_gpio 5 1 0>;		/*usb3 power , output, default low */
+		dwc3@18020000 {
+			dr_mode = "host";
+		};
+	};
+	suspend@18007400 {
+		compatible = "Realtek,suspend";
+		realtek,wifi-gpio = <&rtk_iso_gpio 13 1 1>;		/*wifi power , output, default high */
+
+	};
+	bt@0{	/* GPIO for rtk_rfkill to disable/enable BT */
+		compatible = "Realtek,bt";
+		gpios =
+			<&rtk_iso_gpio 3 1 0>;                  /*bt enable , output, default low */
+		status = "okay";
+	};
+	bt_wakeup_host@0{
+		compatible = "Realtek,bt_wakeup_host";
+		realtek,bt-wakeup-gpio = <&rtk_iso_gpio 2 0 0>;	/* bt wakeup host pin, input, default N/A */
+		activity_level = "high";						/* "high": high active, "low": low active */
+		status = "disabled";							/* "okay"/"disabled" */
+	};
+
+	cec0@18007500 {
+		compatible = "Realtek,rtk119x-cec0";
+		interrupt-parent = <&mux_intc>;
+		reg = <0x18007500 0xe0>,<0x18007040 0x4>;
+		interrupts = <1 22>;
+		module-enable = <1>;
+		status = "disabled";
+	};
+	crsd@18010400 {
+		gpios = <&rtk_misc_gpio 23 1 1>; 		/*sd power , output, default high  (poweroff) */
+	};
+	sb2@1801a000 {
+		status = "okay";
+	};
+	scpu_wrapper@1801d000 {
+		compatible = "Realtek,rtk-scpu_wrapper";
+		reg = <0x1801d000 0x500>;
+		interrupts = <0 46 4>;
+	};
+	hdmirx@1800F000 {
+                status = "disabled";
+        };
+};
