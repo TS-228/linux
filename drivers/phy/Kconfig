@@ -62,4 +62,11 @@ source "drivers/phy/st/Kconfig"
 source "drivers/phy/tegra/Kconfig"
 source "drivers/phy/ti/Kconfig"
 
+config PHY_RTK_SATA
+	tristate "Realtek SATA PHY driver"
+	depends on OF
+	select GENERIC_PHY
+	help
+	  Support for SATA GEN3 PHY on realtek chipsets.
+
 endmenu

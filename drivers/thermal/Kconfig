@@ -473,4 +473,8 @@ config ZX2967_THERMAL
 	  the primitive temperature sensor embedded in zx2967 SoCs.
 	  This sensor generates the real time die temperature.
 
+menu "Realtek thermal drivers"
+source "drivers/thermal/realtek/Kconfig"
+endmenu
+
 endif

@@ -27,6 +27,10 @@
 #include <linux/list.h>
 #include <linux/dma-mapping.h>
 
+#ifdef CONFIG_USB_DWC3_RTK
+#include <linux/of_device.h>
+#endif
+
 #include <linux/usb/ch9.h>
 #include <linux/usb/gadget.h>
 
