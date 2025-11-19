@@ -100,6 +100,51 @@ static void ion_cma_free(struct ion_buffer *buffer)
 	/* release sg table */
 	sg_free_table(buffer->sg_table);
 	kfree(buffer->sg_table);
+	sg_free_table(info->table);
+	kfree(info->table);
+	kfree(info);
+}
+
+#if defined(CONFIG_ION_RTK)
+/* return physical address in addr */
+static int ion_cma_phys(struct ion_heap *heap, struct ion_buffer *buffer,
+	phys_addr_t *addr, size_t *len)
+{
+	struct ion_cma_heap *cma_heap = to_cma_heap(buffer->heap);
+	struct device *dev = cma_heap->dev;
+	struct ion_cma_buffer_info *info = buffer->priv_virt;
+
+	dev_dbg(dev, "Return buffer %p physical address %pa\n", buffer,
+		&info->handle);
+	*addr = info->handle;
+	*len = buffer->size;
+
+	return 0;
+}
+#endif /* CONFIG_ION_RTK */
+
+static int ion_cma_mmap(struct ion_heap *mapper, struct ion_buffer *buffer,
+			struct vm_area_struct *vma)
+{
+	struct ion_cma_heap *cma_heap = to_cma_heap(buffer->heap);
+	struct device *dev = cma_heap->dev;
+	struct ion_cma_buffer_info *info = buffer->priv_virt;
+
+	return dma_mmap_coherent(dev, vma, info->cpu_addr, info->handle,
+				 buffer->size);
+}
+
+static void *ion_cma_map_kernel(struct ion_heap *heap,
+				struct ion_buffer *buffer)
+{
+	struct ion_cma_buffer_info *info = buffer->priv_virt;
+	/* kernel memory mapping has been done at allocation time */
+	return info->cpu_addr;
+}
+
+static void ion_cma_unmap_kernel(struct ion_heap *heap,
+				 struct ion_buffer *buffer)
+{
 }
 
 static struct ion_heap_ops ion_cma_ops = {
@@ -108,6 +153,12 @@ static struct ion_heap_ops ion_cma_ops = {
 	.map_user = ion_heap_map_user,
 	.map_kernel = ion_heap_map_kernel,
 	.unmap_kernel = ion_heap_unmap_kernel,
+#if defined(CONFIG_ION_RTK)
+	.phys = ion_cma_phys,
+#endif /* CONFIG_ION_RTK */
+	.map_user = ion_cma_mmap,
+	.map_kernel = ion_cma_map_kernel,
+	.unmap_kernel = ion_cma_unmap_kernel,
 };
 
 static struct ion_heap *__ion_cma_heap_create(struct cma *cma)

@@ -46,6 +46,10 @@
 
 #include <acpi/ghes.h>
 
+#ifdef CONFIG_RTK_TRACER
+#include <linux/rtk_trace.h>
+#endif
+
 struct fault_info {
 	int	(*fn)(unsigned long addr, unsigned int esr,
 		      struct pt_regs *regs);
@@ -264,6 +268,12 @@ static void __do_kernel_fault(unsigned long addr, unsigned int esr,
 	if (!is_el1_instruction_abort(esr) && fixup_exception(regs))
 		return;
 
+#ifdef CONFIG_RTK_TRACER
+	uncached_logk(LOGK_DIE, (void *)regs->pc);
+	uncached_logk(LOGK_DIE, (void *)regs->regs[30]);
+	uncached_logk(LOGK_DIE, (void *)addr);
+	rtk_trace_disable();
+#endif
 	/*
 	 * No handler, we'll have to terminate things with extreme prejudice.
 	 */

@@ -28,6 +28,11 @@
 #include <linux/mutex.h>
 #include <linux/random.h>
 #include <linux/pm_qos.h>
+#ifdef CONFIG_USB_PATCH_ON_RTK
+#include <linux/platform_device.h>
+#include <linux/timer.h>
+#include <linux/syscalls.h>
+#endif
 
 #include <linux/uaccess.h>
 #include <asm/byteorder.h>
@@ -45,6 +50,13 @@
 #define USB_PRODUCT_TUSB8041_USB2		0x8142
 #define HUB_QUIRK_CHECK_PORT_AUTOSUSPEND	0x01
 #define HUB_QUIRK_DISABLE_AUTOSUSPEND		0x02
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+#ifdef CONFIG_USB_RTK_CTRL_MANAGER
+extern int RTK_usb_reprobe_usb_storage(struct usb_device *udev);
+extern bool RTK_usb_disable_hub_autosuspend(void);
+#endif
+#endif
 
 /* Protect struct usb_device->state and ->children members
  * Note: Both are also protected by ->dev.sem, except that ->state can
@@ -1791,6 +1803,14 @@ static int hub_probe(struct usb_interface *intf, const struct usb_device_id *id)
 	 */
 	if (hdev->parent) {		/* normal device */
 		usb_enable_autosuspend(hdev);
+#ifdef CONFIG_USB_PATCH_ON_RTK
+#ifdef CONFIG_USB_RTK_CTRL_MANAGER
+		if (RTK_usb_disable_hub_autosuspend()) {
+			dev_warn(&intf->dev, "disable hub autosuspend\n");
+			usb_disable_autosuspend(hdev);
+		}
+#endif
+#endif
 	} else {			/* root hub */
 		const struct hc_driver *drv = bus_to_hcd(hdev->bus)->driver;
 
@@ -3541,6 +3561,38 @@ int usb_port_resume(struct usb_device *udev, pm_message_t msg)
 
 	status = check_port_resume_type(udev,
 			hub, port1, status, portchange, portstatus);
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	/* [DEV_FIX] Disconnect usb port at resume.
+	 * commit 1a50dacafca108bd258f28755e2f4ad9ba4bc8d4
+	 * [BUG_FIX]: ID 46792 [ROOT_CAUSE]: can't recognize usb hub
+	 * commit cd7a079f0a82876abcdbe3e6a0b9409441c94294
+	 * [DEV_FIX]check udev reset_resume flag to disconnect
+	 * the device while resume back .
+	 * commit 8185a91ad51e2fe115d8d7a60d8b1ed4b8eb6c9f
+	 * [DEV_FIX]cant recognize hub after unplug/plug & suspend/resume
+	 * commit 3bbc65af52a4b27ac41114a998ad942aa613c078
+	 * [DEV_FIX]2. force  CONFIG_USB_HUB_DISCONNECT_AT_RESUME
+	 * commit 3e6a470b06ea6e37edded163aa814c8c24f04ced
+	 */
+	if (udev->reset_resume) {
+		int i;
+		if (udev->descriptor.bDeviceClass == USB_CLASS_MASS_STORAGE)
+			status = -1;
+		else
+			for (i = 0; i < udev->actconfig->desc.bNumInterfaces; i++) {
+				struct usb_host_config *config = udev->actconfig;
+				struct usb_interface *intf = config->interface[i];
+				struct usb_interface_descriptor *desc;
+				desc = &intf->cur_altsetting->desc;
+
+				dev_notice(&udev->dev , "%s bInterfaceClass = %d \n", __func__, desc->bInterfaceClass);//hcy test
+				if (desc->bInterfaceClass == USB_CLASS_MASS_STORAGE){
+					status = -1;
+					break;
+				}
+			}
+	}
+#endif
 	if (status == 0)
 		status = finish_port_resume(udev);
 	if (status < 0) {
@@ -5048,6 +5100,12 @@ static void hub_port_connect(struct usb_hub *hub, int port1, u16 portstatus,
 		/* Run it through the hoops (find a driver, etc) */
 		if (!status) {
 			status = usb_new_device(udev);
+#ifdef CONFIG_USB_PATCH_ON_RTK
+#ifdef CONFIG_USB_RTK_CTRL_MANAGER
+			if (!status)
+				RTK_usb_reprobe_usb_storage(udev);
+#endif
+#endif
 			if (status) {
 				mutex_lock(&usb_port_peer_mutex);
 				spin_lock_irq(&device_state_lock);
