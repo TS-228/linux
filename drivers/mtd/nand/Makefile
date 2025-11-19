@@ -67,3 +67,4 @@ nand-objs += nand_macronix.o
 nand-objs += nand_micron.o
 nand-objs += nand_samsung.o
 nand-objs += nand_toshiba.o
+nand-objs := rtk_nand.o nand_base_rtk.o

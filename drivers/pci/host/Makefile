@@ -19,6 +19,11 @@ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
 obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
 obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
 obj-$(CONFIG_VMD) += vmd.o
+obj-$(CONFIG_PCIE_RTD129x_SLOT2) += pcie-rtd129x-slot2.o
+obj-$(CONFIG_PCIE_RTD129x_SLOT1) += pcie-rtd129x-slot1.o
+obj-$(CONFIG_PCIE_RTD139x) += pcie-rtd139x.o
+obj-$(CONFIG_PCIE_RTD16xx_SLOT1) += pcie-rtd16xx-slot1.o
+obj-$(CONFIG_PCIE_RTD16xx_SLOT2) += pcie-rtd16xx-slot2.o
 
 # The following drivers are for devices that use the generic ACPI
 # pci_root.c driver but don't support standard ECAM config access.
