@@ -234,5 +234,11 @@ config POWER_RESET_SC27XX
 	  PMICs includes the SC2720, SC2721, SC2723, SC2730
 	  and SC2731 chips.
 
+config POWER_RESET_G22XX_POWEROFF
+	tristate "GMT G22xx Poweroff Driver"
+	depends on MFD_G22XX
+	help
+	  This driver support for GMT G22xx PMIC Poweroff.
+
 endif
 

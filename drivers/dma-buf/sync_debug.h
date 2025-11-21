@@ -80,4 +80,11 @@ void sync_dump(void);
 # define sync_dump()
 #endif
 
+#ifdef CONFIG_RTK_PLATFORM
+struct sync_timeline *sync_timeline_create(const char *name);
+struct sync_pt *sync_pt_create(struct sync_timeline *obj, unsigned int value);
+void sync_timeline_signal(struct sync_timeline *obj, unsigned int inc);
+void sync_timeline_put(struct sync_timeline *obj);
+#endif /* CONFIG_RTK_PLATFORM */
+
 #endif /* _LINUX_SYNC_H */
