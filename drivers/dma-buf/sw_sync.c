@@ -19,7 +19,11 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 #include <linux/sync_file.h>
-
+#ifdef CONFIG_RTK_PLATFORM
+#include <linux/miscdevice.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#endif /* CONFIG_RTK_PLATFORM */
 #include "sync_debug.h"
 
 #define CREATE_TRACE_POINTS
@@ -104,6 +108,7 @@ static struct sync_timeline *sync_timeline_create(const char *name)
 
 	return obj;
 }
+EXPORT_SYMBOL(sync_timeline_create);
 
 static void sync_timeline_free(struct kref *kref)
 {
@@ -120,10 +125,18 @@ static void sync_timeline_get(struct sync_timeline *obj)
 	kref_get(&obj->kref);
 }
 
+#ifdef CONFIG_RTK_PLATFORM
+void sync_timeline_put(struct sync_timeline *obj)
+{
+	kref_put(&obj->kref, sync_timeline_free);
+}
+#else
 static void sync_timeline_put(struct sync_timeline *obj)
 {
 	kref_put(&obj->kref, sync_timeline_free);
 }
+EXPORT_SYMBOL(sync_timeline_put);
+#endif /* CONFIG_RTK_PLATFORM */
 
 static const char *timeline_fence_get_driver_name(struct dma_fence *fence)
 {
@@ -294,6 +307,7 @@ unlock:
 
 	return pt;
 }
+#endif /* #ifdef CONFIG_RTK_PLATFORM */
 
 /*
  * *WARNING*
@@ -422,3 +436,24 @@ const struct file_operations sw_sync_debugfs_fops = {
 	.unlocked_ioctl = sw_sync_ioctl,
 	.compat_ioctl	= sw_sync_ioctl,
 };
+
+#ifdef CONFIG_RTK_PLATFORM
+static struct miscdevice sw_sync_dev = {
+    .minor  = MISC_DYNAMIC_MINOR,
+    .name   = "sw_sync",
+    .fops   = &sw_sync_debugfs_fops,
+};
+
+static int __init sw_sync_device_init(void)
+{
+    return misc_register(&sw_sync_dev);
+}
+
+static void __exit sw_sync_device_remove(void)
+{
+    misc_deregister(&sw_sync_dev);
+}
+
+module_init(sw_sync_device_init);
+module_exit(sw_sync_device_remove);
+#endif /* CONFIG_RTK_PLATFORM */
