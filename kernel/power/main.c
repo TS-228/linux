@@ -15,6 +15,7 @@
 #include <linux/workqueue.h>
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
+#include <linux/delay.h>
 
 #include "power.h"
 
@@ -571,6 +572,11 @@ power_attr(state);
  * are any wakeup events detected after 'wakeup_count' was written to.
  */
 
+#ifdef CONFIG_RTK_PLATFORM
+extern unsigned int pm_wakelock_mode;
+extern unsigned int pm_block_wakelock;
+#endif /* CONFIG_RTK_PLATFORM */
+
 static ssize_t wakeup_count_show(struct kobject *kobj,
 				struct kobj_attribute *attr,
 				char *buf)
@@ -817,6 +823,9 @@ static int __init pm_init(void)
 	if (error)
 		return error;
 	pm_print_times_init();
+#ifdef CONFIG_RTK_PLATFORM //FIXME: acquire wakelock to prevent system from entering suspend state
+    pm_wake_lock("rtk_awake");
+#endif
 	return pm_autosleep_init();
 }
 
