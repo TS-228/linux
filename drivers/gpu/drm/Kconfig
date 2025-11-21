@@ -283,6 +283,8 @@ source "drivers/gpu/drm/pl111/Kconfig"
 
 source "drivers/gpu/drm/tve200/Kconfig"
 
+source "drivers/gpu/drm/rtk/Kconfig"
+
 # Keep legacy drivers last
 
 menuconfig DRM_LEGACY

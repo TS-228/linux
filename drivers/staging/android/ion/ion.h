@@ -240,6 +240,40 @@ int ion_alloc(size_t len,
  */
 void ion_heap_init_shrinker(struct ion_heap *heap);
 
+#if defined(CONFIG_ION_RTK)
+
+/**
+ * ion_phys - returns the physical address and len of a handle
+ * @client:     the client
+ * @handle:     the handle
+ * @addr:       a pointer to put the address in
+ * @len:        a pointer to put the length in
+ *
+ * This function queries the heap for a particular handle to get the
+ * handle's physical address.  It't output is only correct if
+ * a heap returns physically contiguous memory -- in other cases
+ * this api should not be implemented -- ion_sg_table should be used
+ * instead.  Returns -EINVAL if the handle is invalid.  This has
+ * no implications on the reference counting of the handle --
+ * the returned value may not be valid if the caller is not
+ * holding a reference.
+ */
+
+int ion_phys(struct ion_client *client, struct ion_handle *handle,
+	phys_addr_t *addr, size_t *len);
+
+/**
+ * ion_map_dma - return an sg_table describing a handle
+ * @client:    the client
+ * @handle:    the handle
+ *
+ * This function returns the sg_table describing
+ * a particular ion handle.
+ */
+struct sg_table *ion_sg_table(struct ion_client *client,
+	struct ion_handle *handle);
+#endif /* CONFIG_ION_RTK */
+
 /**
  * ion_heap_init_deferred_free -- initialize deferred free functionality
  * @heap:		the heap
@@ -357,5 +391,11 @@ int ion_page_pool_shrink(struct ion_page_pool *pool, gfp_t gfp_mask,
 long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
 
 int ion_query_heaps(struct ion_heap_query *query);
+
+#if defined(CONFIG_ION_RTK)
+struct ion_handle *ion_import_dma_buf_point(struct ion_client *client, struct dma_buf *dmabuf);
+int ion_mmap_by_handle(struct ion_handle *handle, struct vm_area_struct *vma);
+extern const struct vm_operations_struct ion_vma_ops;
+#endif /* CONFIG_ION_RTK */
 
 #endif /* _ION_H */

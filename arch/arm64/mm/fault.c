@@ -46,6 +46,10 @@
 
 #include <acpi/ghes.h>
 
+#ifdef CONFIG_RTK_TRACER
+#include <linux/rtk_trace.h>
+#endif
+
 struct fault_info {
 	int	(*fn)(unsigned long addr, unsigned int esr,
 		      struct pt_regs *regs);
@@ -326,6 +330,12 @@ static void do_bad_area(unsigned long addr, unsigned int esr, struct pt_regs *re
 	struct task_struct *tsk = current;
 	const struct fault_info *inf;
 
+#ifdef CONFIG_RTK_TRACER
+	uncached_logk(LOGK_DIE, (void *)regs->pc);
+	uncached_logk(LOGK_DIE, (void *)regs->regs[30]);
+	uncached_logk(LOGK_DIE, (void *)addr);
+	rtk_trace_disable();
+#endif
 	/*
 	 * If we are in kernel mode at this point, we have no context to
 	 * handle this fault with.
