@@ -3,6 +3,14 @@
 # Makefile for MMC/SD host controller drivers
 #
 
+ifeq ($(CONFIG_ARCH_RTD119X),y)
+obj-$(CONFIG_MMC_RTK_EMMC)              += rtkemmc_rtd119x.o
+else ifeq ($(CONFIG_ARCH_RTD13xx),y)
+obj-$(CONFIG_MMC_RTK_EMMC)              += rtkemmc_rtd13xx.o
+else
+obj-$(CONFIG_MMC_RTK_EMMC)              += rtkemmc.o
+endif
+
 obj-$(CONFIG_MMC_ARMMMCI) += armmmci.o
 armmmci-y := mmci.o
 armmmci-$(CONFIG_MMC_QCOM_DML) += mmci_qcom_dml.o
@@ -90,10 +98,14 @@ obj-$(CONFIG_MMC_SDHCI_MICROCHIP_PIC32)	+= sdhci-pic32.o
 obj-$(CONFIG_MMC_SDHCI_BRCMSTB)		+= sdhci-brcmstb.o
 obj-$(CONFIG_MMC_SDHCI_OMAP)		+= sdhci-omap.o
 obj-$(CONFIG_MMC_CQHCI)			+= cqhci.o
+obj-$(CONFIG_MMC_SDHCI_RTK)		+= sdhci-rtk.o
 
 ifeq ($(CONFIG_CB710_DEBUG),y)
 	CFLAGS-cb710-mmc	+= -DDEBUG
 endif
+
+obj-$(CONFIG_MMC_RTK_SDMMC)		+= rtk-sdmmc.o
+obj-y					+= sdmmc_export.o
 
 obj-$(CONFIG_MMC_SDHCI_XENON)	+= sdhci-xenon-driver.o
 sdhci-xenon-driver-y		+= sdhci-xenon.o sdhci-xenon-phy.o

@@ -581,6 +581,8 @@
 #define DWC3_OSTS_VBUSVLD		BIT(1)
 #define DWC3_OSTS_CONIDSTS		BIT(0)
 
+#define DWC3_DEVICE_IMODI(n)		((0xffff & (n)))
+
 /* Structures */
 
 struct dwc3_trb;
@@ -1046,6 +1048,12 @@ struct dwc3 {
 	u32			current_otg_role;
 	u32			desired_otg_role;
 	bool			otg_restart_host;
+
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+	bool has_gadget;
+	bool has_xhci;
+#endif
+
 	u32			nr_scratch;
 	u32			u1u2;
 	u32			maximum_speed;
@@ -1148,6 +1156,10 @@ struct dwc3 {
 	unsigned		dis_u2_freeclk_exists_quirk:1;
 	unsigned		dis_del_phy_power_chg_quirk:1;
 	unsigned		dis_tx_ipgap_linecheck_quirk:1;
+#ifdef CONFIG_USB_DWC3_RTK
+	unsigned		dis_ss_park_mode:1;
+	unsigned		dis_hs_park_mode:1;
+#endif
 
 	unsigned		tx_de_emphasis_quirk:1;
 	unsigned		tx_de_emphasis:2;

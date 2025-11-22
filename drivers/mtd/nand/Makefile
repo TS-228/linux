@@ -5,3 +5,5 @@ obj-$(CONFIG_MTD_NAND_CORE) += nandcore.o
 
 obj-y	+= onenand/
 obj-y	+= raw/
+
+nand-objs := rtk_nand.o nand_base_rtk.o
