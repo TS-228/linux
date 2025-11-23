@@ -64,9 +64,16 @@ static struct gic_chip_data gic_data __read_mostly;
 static DEFINE_STATIC_KEY_TRUE(supports_deactivate_key);
 
 static struct gic_kvm_info gic_v3_kvm_info;
+static unsigned int GICR_ISENABLER0_REG = 0;
+static unsigned int GIC_ISENABLER0_REG = 0;
+static unsigned int GIC_ISENABLER1_REG = 0;
+static unsigned int GIC_ISENABLER2_REG = 0;
+static unsigned int GIC_ISENABLER3_REG = 0;
+
 static DEFINE_PER_CPU(bool, has_rss);
 
 #define MPIDR_RS(mpidr)			(((mpidr) & 0xF0UL) >> 4)
+
 #define gic_data_rdist()		(this_cpu_ptr(gic_data.rdists.rdist))
 #define gic_data_rdist_rd_base()	(gic_data_rdist()->rd_base)
 #define gic_data_rdist_sgi_base()	(gic_data_rdist_rd_base() + SZ_64K)
@@ -142,10 +149,16 @@ static void gic_enable_redist(bool enable)
 	rbase = gic_data_rdist_rd_base();
 
 	val = readl_relaxed(rbase + GICR_WAKER);
-	if (enable)
+	if (enable) {
+
+#ifdef CONFIG_RTK_PLATFORM
+		if (readl_relaxed(rbase) & 0x02000000)
+		       writel_relaxed(readl_relaxed(rbase) & 0xFDFFFFFF, rbase);
+#endif /* CONFIG_RTK_PLATFORM */
+
 		/* Wake up this CPU redistributor */
 		val &= ~GICR_WAKER_ProcessorSleep;
-	else
+	} else
 		val |= GICR_WAKER_ProcessorSleep;
 	writel_relaxed(val, rbase + GICR_WAKER);
 
@@ -421,14 +434,31 @@ static void __init gic_dist_init(void)
 	gic_dist_config(base, gic_data.irq_nr, gic_dist_wait_for_rwp);
 
 	/* Enable distributor with ARE, Group1 */
+#ifdef CONFIG_RTK_PLATFORM
+#define GICD_CTLR_E1NWF (1 << 7)
+	writel_relaxed(GICD_CTLR_E1NWF | GICD_CTLR_ARE_NS | GICD_CTLR_ENABLE_G1A | GICD_CTLR_ENABLE_G1,
+		       base + GICD_CTLR);
+#else
 	writel_relaxed(GICD_CTLR_ARE_NS | GICD_CTLR_ENABLE_G1A | GICD_CTLR_ENABLE_G1,
 		       base + GICD_CTLR);
+#endif
 
 	/*
 	 * Set all global interrupts to the boot CPU only. ARE must be
 	 * enabled.
 	 */
 	affinity = gic_mpidr_to_affinity(cpu_logical_map(smp_processor_id()));
+
+#ifdef CONFIG_RTK_PLATFORM
+	/*
+	 * The GIC selects the appropriate core for a SPI.
+	 * GICD_IROUTER<n>.Interrupt_Routing_Mode = 1
+	 */
+
+	affinity |= 0x80000000;
+
+#endif /* CONFIG_RTK_PLATFORM */
+
 	for (i = 32; i < gic_data.irq_nr; i++)
 		gic_write_irouter(affinity, base + GICD_IROUTER + i * 8);
 }
@@ -699,6 +729,19 @@ static int gic_starting_cpu(unsigned int cpu)
 	return 0;
 }
 
+#ifdef CONFIG_RTK_PLATFORM
+static int gic_off_cpu(unsigned int cpu)
+{
+
+	void __iomem *rbase;
+
+	rbase = gic_data_rdist_rd_base();
+	writel_relaxed(readl_relaxed(rbase) | 0x2000000, rbase);
+
+	return 0;
+}
+#endif /* CONFIG_RTK_PLATFORM */
+
 static u16 gic_compute_target_list(int *base_cpu, const struct cpumask *mask,
 				   unsigned long cluster_id)
 {
@@ -773,9 +816,15 @@ static void gic_raise_softirq(const struct cpumask *mask, unsigned int irq)
 static void gic_smp_init(void)
 {
 	set_smp_cross_call(gic_raise_softirq);
+#ifdef CONFIG_RTK_PLATFORM
+	cpuhp_setup_state_nocalls(CPUHP_AP_IRQ_GIC_STARTING,
+				  "irqchip/arm/gicv3:starting",
+				  gic_starting_cpu, gic_off_cpu);
+#else
 	cpuhp_setup_state_nocalls(CPUHP_AP_IRQ_GIC_STARTING,
 				  "irqchip/arm/gicv3:starting",
 				  gic_starting_cpu, NULL);
+#endif /* CONFIG_RTK_PLATFORM */
 }
 
 static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
@@ -805,6 +854,10 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 	reg = gic_dist_base(d) + GICD_IROUTER + (gic_irq(d) * 8);
 	val = gic_mpidr_to_affinity(cpu_logical_map(cpu));
 
+#ifdef CONFIG_RTK_PLATFORM
+	if (cpumask_subset(cpu_online_mask, mask_val))
+		val |= 0x80000000;
+#endif
 	gic_write_irouter(val, reg);
 
 	/*
@@ -835,6 +888,36 @@ static bool gic_dist_security_disabled(void)
 static int gic_cpu_pm_notifier(struct notifier_block *self,
 			       unsigned long cmd, void *v)
 {
+#ifdef CONFIG_RTK_PLATFORM
+	void __iomem *rbase;
+
+	rbase = gic_data_rdist_sgi_base();
+	if (cmd == CPU_PM_EXIT) {
+		pr_err("GICR_ISENABLER0 = %x\n", GICR_ISENABLER0_REG);
+		pr_err("GIC_ISENABLER0 = %x\n", GIC_ISENABLER0_REG);
+		pr_err("GIC_ISENABLER1 = %x\n", GIC_ISENABLER1_REG);
+		pr_err("GIC_ISENABLER2 = %x\n", GIC_ISENABLER2_REG);
+		pr_err("GIC_ISENABLER3 = %x\n", GIC_ISENABLER3_REG);
+		writel_relaxed(GICR_ISENABLER0_REG, rbase + GICR_ISENABLER0);
+		writel_relaxed(GIC_ISENABLER0_REG, gic_data.dist_base + 0x100);
+		writel_relaxed(GIC_ISENABLER1_REG, gic_data.dist_base + 0x104);
+		writel_relaxed(GIC_ISENABLER2_REG, gic_data.dist_base + 0x108);
+		writel_relaxed(GIC_ISENABLER3_REG, gic_data.dist_base + 0x10C);
+
+	} else if (cmd == CPU_PM_ENTER) {
+		GICR_ISENABLER0_REG = readl_relaxed(rbase + GICR_ISENABLER0);
+		GIC_ISENABLER0_REG = readl_relaxed(gic_data.dist_base + 0x100);
+		GIC_ISENABLER1_REG = readl_relaxed(gic_data.dist_base + 0x104);
+		GIC_ISENABLER2_REG = readl_relaxed(gic_data.dist_base + 0x108);
+		GIC_ISENABLER3_REG = readl_relaxed(gic_data.dist_base + 0x10C);
+		pr_err("GICR_ISENABLER0 = %x\n", GICR_ISENABLER0_REG);
+		pr_err("GIC_ISENABLER0 = %x\n", GIC_ISENABLER0_REG);
+		pr_err("GIC_ISENABLER1 = %x\n", GIC_ISENABLER1_REG);
+		pr_err("GIC_ISENABLER2 = %x\n", GIC_ISENABLER2_REG);
+		pr_err("GIC_ISENABLER3 = %x\n", GIC_ISENABLER3_REG);
+	}
+#endif /* CONFIG_RTK_PLATFORM */
+
 	if (cmd == CPU_PM_EXIT) {
 		if (gic_dist_security_disabled())
 			gic_enable_redist(true);

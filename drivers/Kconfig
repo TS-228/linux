@@ -107,6 +107,8 @@ source "drivers/memstick/Kconfig"
 
 source "drivers/leds/Kconfig"
 
+source "drivers/switch/Kconfig"
+
 source "drivers/accessibility/Kconfig"
 
 source "drivers/infiniband/Kconfig"
@@ -218,5 +220,7 @@ source "drivers/visorbus/Kconfig"
 source "drivers/siox/Kconfig"
 
 source "drivers/slimbus/Kconfig"
+
+source "drivers/smartcard/Kconfig"
 
 endmenu

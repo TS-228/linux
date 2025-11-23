@@ -1900,5 +1900,21 @@ config RAVE_SP_CORE
 	  Select this to get support for the Supervisory Processor
 	  device found on several devices in RAVE line of hardware.
 
+config MFD_G22XX
+	tristate
+	select MFD_CORE
+
+config MFD_G2227_I2C
+	tristate "Support for GMT-G2227 PMIC"
+	depends on I2C
+	select MFD_G22XX
+	select RTK_REGMAP_I2C
+
+config MFD_G2237_I2C
+	tristate "Support for GMT-G2237 PMIC"
+	depends on I2C
+	select MFD_G22XX
+	select RTK_REGMAP_I2C
+
 endmenu
 endif

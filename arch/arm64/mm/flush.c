@@ -89,6 +89,10 @@ EXPORT_SYMBOL(flush_dcache_page);
  */
 EXPORT_SYMBOL(__flush_icache_range);
 
+#ifdef CONFIG_RTK_PLATFORM
+EXPORT_SYMBOL(flush_cache_all);
+#endif /* CONFIG_RTK_PLATFORM */
+
 #ifdef CONFIG_ARCH_HAS_PMEM_API
 void arch_wb_cache_pmem(void *addr, size_t size)
 {
