@@ -848,5 +848,10 @@ config CHARGER_SURFACE
 	  Say M or Y here to include AC status support for 7th-generation
 	  Microsoft Surface devices, i.e. Surface Pro 7, Surface Laptop 3,
 	  Surface Book 3, and Surface Laptop Go.
+config RTD1XXX_POWER
+	tristate "RTD1XXX power supply driver"
+	default y
+	help
+	  This driver provides support for the power supply to make Android happy.
 
 endif # POWER_SUPPLY

@@ -20,6 +20,10 @@
 #include <asm/memory.h>
 #include <asm/thread_info.h>
 
+#if defined(CONFIG_ARCH_RTD16xx) || defined(CONFIG_ARCH_RTD139x) || defined(CONFIG_ARCH_RTD129x)
+#define SCTLR_U    (1 << 20)       /* Unprivileged write permission implies PL1 Execute Never (XN) */
+#endif
+
 #if defined(CONFIG_DEBUG_LL) && !defined(CONFIG_DEBUG_SEMIHOSTING)
 #include CONFIG_DEBUG_LL_INCLUDE
 #endif
@@ -470,6 +474,12 @@ __enable_mmu:
 #endif
 #ifdef CONFIG_CPU_ICACHE_DISABLE
 	bic	r0, r0, #CR_I
+#endif
+#if defined(CONFIG_ARCH_RTD16xx) || defined(CONFIG_ARCH_RTD139x) || defined(CONFIG_ARCH_RTD129x)
+	bic	r0, r0, #SCTLR_U
+#endif
+#if defined(CONFIG_ARCH_RTD16xx) || defined(CONFIG_ARCH_RTD139x) || defined(CONFIG_ARCH_RTD129x)
+	bic	r0, r0, #SCTLR_U
 #endif
 #ifdef CONFIG_ARM_LPAE
 	mcrr	p15, 0, r4, r5, c2		@ load TTBR0

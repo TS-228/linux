@@ -46,6 +46,12 @@ struct snd_dma_device {
 #endif
 #define SNDRV_DMA_TYPE_VMALLOC		7	/* vmalloc'ed buffer */
 
+#ifdef CONFIG_RTK_PLATFORM
+/* Use numbers above upstream SNDRV_DMA_TYPE_VMALLOC (7) */
+#define SNDRV_DMA_TYPE_ION_PLAYBACK 8
+#define SNDRV_DMA_TYPE_ION_CAPTURE 9
+#endif /* CONFIG_RTK_PLATFORM */
+
 /*
  * info for buffer allocation
  */

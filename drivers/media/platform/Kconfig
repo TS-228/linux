@@ -603,6 +603,12 @@ endif # V4L_MEM2MEM_DRIVERS
 
 # TI VIDEO PORT Helper Modules
 # These will be selected by VPE and VIP
+source "drivers/media/platform/rtk_hdmitx/Kconfig"
+source "drivers/media/platform/rtk_hdcptx/Kconfig"
+source "drivers/media/platform/rtk_hdmirx/Kconfig"
+source "drivers/media/platform/rtk_cvbsdetect/Kconfig"
+source "drivers/media/platform/rtk_dptx/Kconfig"
+
 config VIDEO_TI_VPDMA
 	tristate
 

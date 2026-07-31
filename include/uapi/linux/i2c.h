@@ -73,6 +73,10 @@
 struct i2c_msg {
 	__u16 addr;
 	__u16 flags;
+#ifdef CONFIG_I2C_RTK
+#define I2C_M_NO_GUARD_TIME   	0x0020  /* Kevin Wang: disable guard time */
+#define I2C_GPIO_RW				0x0080  /* Kevin Wang: Venus I2C */
+#endif
 #define I2C_M_RD		0x0001	/* guaranteed to be 0x0001! */
 #define I2C_M_TEN		0x0010	/* use only if I2C_FUNC_10BIT_ADDR */
 #define I2C_M_DMA_SAFE		0x0200	/* use only in kernel space */
@@ -82,6 +86,17 @@ struct i2c_msg {
 #define I2C_M_REV_DIR_ADDR	0x2000	/* use only if I2C_FUNC_PROTOCOL_MANGLING */
 #define I2C_M_NOSTART		0x4000	/* use only if I2C_FUNC_NOSTART */
 #define I2C_M_STOP		0x8000	/* use only if I2C_FUNC_PROTOCOL_MANGLING */
+#ifdef CONFIG_I2C_RTK
+#define I2C_M_NORMAL_SPEED  	0x0000
+#define I2C_M_FAST_SPEED    	0x0002
+#define I2C_M_HIGH_SPEED    	0x0004
+#define I2C_M_LOW_SPEED       	0x0006
+#define I2C_M_LOW_SPEED_80     	0x0008
+#define I2C_M_LOW_SPEED_66     	0x000a
+#define I2C_M_LOW_SPEED_33     	0x000c
+#define I2C_M_LOW_SPEED_10     	0x000e
+#define I2C_M_SPEED_MASK      	0x000e
+#endif
 	__u16 len;
 	__u8 *buf;
 };

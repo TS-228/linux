@@ -79,6 +79,10 @@ extern void dcache_clean_pou(unsigned long start, unsigned long end);
 extern long caches_clean_inval_user_pou(unsigned long start, unsigned long end);
 extern void sync_icache_aliases(unsigned long start, unsigned long end);
 
+#ifdef CONFIG_RTK_PLATFORM
+extern void flush_cache_all(void);
+#endif /* CONFIG_RTK_PLATFORM */
+
 static inline void flush_icache_range(unsigned long start, unsigned long end)
 {
 	caches_clean_inval_pou(start, end);

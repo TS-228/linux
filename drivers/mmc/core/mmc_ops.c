@@ -634,6 +634,25 @@ int mmc_switch(struct mmc_card *card, u8 set, u8 index, u8 value,
 }
 EXPORT_SYMBOL_GPL(mmc_switch);
 
+#ifdef CONFIG_MMC_SDHCI_RTK
+int mmc_send_tuning_tx(struct mmc_host *host, u32 opcode, int *cmd_error)
+{
+	struct mmc_command cmd = {0};
+        int err;
+
+        cmd.opcode = opcode;
+        cmd.arg = 0x2000;
+        cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_AC;
+
+        err = mmc_wait_for_cmd(host, &cmd, 0);
+        if (err)
+                return err;
+
+        return 0;
+}
+EXPORT_SYMBOL_GPL(mmc_send_tuning_tx);
+#endif
+
 int mmc_send_tuning(struct mmc_host *host, u32 opcode, int *cmd_error)
 {
 	struct mmc_request mrq = {};

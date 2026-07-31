@@ -54,6 +54,9 @@
 #include <linux/memblock.h>
 #include <linux/iommu-helper.h>
 
+#include <linux/of.h>
+#include <linux/of_address.h>
+
 #define CREATE_TRACE_POINTS
 #include <trace/events/swiotlb.h>
 
@@ -83,6 +86,11 @@ static unsigned long default_nslabs = IO_TLB_DEFAULT_SIZE >> IO_TLB_SHIFT;
 static int __init
 setup_io_tlb_npages(char *str)
 {
+	if (io_tlb_nslabs) {
+		/* might be initalized in early_init_dt_check_for_swiotlb() */
+		return 0;
+	}
+	swiotlb_force = SWIOTLB_NORMAL;
 	if (isdigit(*str)) {
 		/* avoid tail segment of size < IO_TLB_SEGSIZE */
 		default_nslabs =
@@ -112,6 +120,15 @@ void swiotlb_set_max_segment(unsigned int val)
 	else
 		max_segment = rounddown(val, PAGE_SIZE);
 }
+
+void swiotlb_init_variable(unsigned long of_io_tlb_nslabs, enum swiotlb_force of_swiotlb_force)
+{
+	default_nslabs = of_io_tlb_nslabs;
+	swiotlb_force = of_swiotlb_force;
+	/* avoid tail segment of size < IO_TLB_SEGSIZE */
+	default_nslabs = ALIGN(default_nslabs, IO_TLB_SEGSIZE);
+}
+EXPORT_SYMBOL_GPL(swiotlb_init_variable);
 
 unsigned long swiotlb_size_or_default(void)
 {
