@@ -162,6 +162,11 @@ int netlink_set_err(struct sock *ssk, __u32 portid, __u32 group, int code);
 int netlink_register_notifier(struct notifier_block *nb);
 int netlink_unregister_notifier(struct notifier_block *nb);
 
+#if defined(CONFIG_RTL_819X)
+extern int rtk_nlrecvmsg(struct sk_buff *_skb,int _len, void *_recv_data);
+extern int rtk_nlsendmsg (int _pid,struct sock *_nl_sk,int _len,void *_send_info);
+#endif
+
 /* finegrained unicast helpers: */
 struct sock *netlink_getsockbyfilp(struct file *filp);
 int netlink_attachskb(struct sock *sk, struct sk_buff *skb,

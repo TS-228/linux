@@ -271,7 +271,12 @@ config PHYS_OFFSET
 	depends on !ARM_PATCH_PHYS_VIRT
 	default DRAM_BASE if !MMU
 	default 0x00000000 if ARCH_EBSA110 || \
-			ARCH_FOOTBRIDGE
+			ARCH_FOOTBRIDGE || \
+			ARCH_RTD119X || \
+			ARCH_RTD129x || \
+			ARCH_RTD139x || \
+			ARCH_RTD16xx || \
+			ARCH_RTD13xx
 	default 0x10000000 if ARCH_OMAP1 || ARCH_RPC
 	default 0x20000000 if ARCH_S5PV210
 	default 0xc0000000 if ARCH_SA1100
@@ -538,7 +543,172 @@ config ARCH_OMAP1
 	help
 	  Support for older TI OMAP1 (omap7xx, omap15xx or omap16xx)
 
+config ARCH_RTD119X
+	bool "Realtek RTD119x family"
+	select ARM_GIC
+	select ARM_AMBA
+	select CLKDEV_LOOKUP
+	select CPU_V7
+	select HAVE_SMP
+	select HAVE_MACH_CLKDEV
+	select GENERIC_CLOCKEVENTS
+	select NEED_MACH_MEMORY_H
+	select ARM_PATCH_PHYS_VIRT
+	select ZONE_DMA
+	select HAVE_SCHED_CLOCK
+	select ARCH_HAS_CPUFREQ
+	select CLKSRC_OF
+	select ARCH_REQUIRE_GPIOLIB
+	select GENERIC_IRQ_CHIP
+	select IRQ_DOMAIN
+	select PINCTRL
+	select COMMON_CLK
+	select ARCH_HAS_BARRIERS
+	select SPARSE_IRQ
+	select RTK_PLATFORM
+	select PM_OPP
+	help
+	  Support for Realtek RTD119x family.
+
+config ARCH_RTD129x
+	bool "Realtek RTD129x family"
+	select ARM_AMBA
+	select ARM_GIC
+	select ARM_GLOBAL_TIMER
+	select CLKDEV_LOOKUP
+	select CPU_V7
+	select HAVE_SMP
+	select HAVE_MACH_CLKDEV
+	select GENERIC_CLOCKEVENTS
+	select ZONE_DMA
+	select HAVE_SCHED_CLOCK
+	select ARCH_HAS_CPUFREQ
+	select CLKSRC_OF
+	select ARCH_REQUIRE_GPIOLIB
+	select GENERIC_IRQ_CHIP
+	select IRQ_DOMAIN
+	select PINCTRL
+	select COMMON_CLK
+	select ARCH_HAS_BARRIERS
+	select SPARSE_IRQ
+	select RTK_PLATFORM
+	select PM_OPP
+	help
+	  Support for Realtek RTD129x Platform
+
+config ARCH_RTD139x
+	bool "Realtek RTD139x family"
+	select ARM_AMBA
+	select ARM_GIC
+	select ARM_GLOBAL_TIMER
+	select CLKDEV_LOOKUP
+	select CPU_V7
+	select HAVE_SMP
+	select HAVE_MACH_CLKDEV
+	select GENERIC_CLOCKEVENTS
+	select ZONE_DMA
+	select HAVE_SCHED_CLOCK
+	select ARCH_HAS_CPUFREQ
+	select CLKSRC_OF
+	select ARCH_REQUIRE_GPIOLIB
+	select GENERIC_IRQ_CHIP
+	select IRQ_DOMAIN
+	select PINCTRL
+	select COMMON_CLK
+	select ARCH_HAS_BARRIERS
+	select SPARSE_IRQ
+	select RTK_PLATFORM
+	select PM_OPP
+	select ARM_HAS_SG_CHAIN
+	select ARM_PATCH_PHYS_VIRT
+	select AUTO_ZRELADDR
+	select MIGHT_HAVE_PCI
+	select MULTI_IRQ_HANDLER
+	select PCI_DOMAINS if PCI
+	select USE_OF
+	help
+	  Support for Realtek RTD139x Platform
+
+config ARCH_RTD16xx
+	bool "Realtek RTD16xx family"
+	select ARM_AMBA
+	select ARM_GIC
+	select ARM_GIC_V3
+	select ARM_PSCI
+	select ARM_GLOBAL_TIMER
+	select CLKDEV_LOOKUP
+	select CPU_V7
+	select HAVE_SMP
+	select HAVE_MACH_CLKDEV
+	select GENERIC_CLOCKEVENTS
+	select ZONE_DMA
+	select HAVE_SCHED_CLOCK
+	select ARCH_HAS_CPUFREQ
+	select CLKSRC_OF
+	select ARCH_REQUIRE_GPIOLIB
+	select GENERIC_IRQ_CHIP
+	select IRQ_DOMAIN
+	select PINCTRL
+	select COMMON_CLK
+	select ARCH_HAS_BARRIERS
+	select SPARSE_IRQ
+	select RTK_PLATFORM
+	select RTK_PLATFORM_PSCI
+	select PM_OPP
+	select ARM_HAS_SG_CHAIN
+	select ARM_PATCH_PHYS_VIRT
+	select AUTO_ZRELADDR
+	select MIGHT_HAVE_PCI
+	select MULTI_IRQ_HANDLER
+	select PCI_DOMAINS if PCI
+	select USE_OF
+	select ARM_GIC_V3_DEBUGFS
+	help
+	  Support for Realtek RTD16xx Platform
+
+config ARCH_RTD13xx
+	bool "Realtek RTD13xx family"
+	select ARM_AMBA
+	select ARM_GIC
+	select ARM_GIC_V3
+	select ARM_PSCI
+	select ARM_GLOBAL_TIMER
+	select CLKDEV_LOOKUP
+	select CPU_V7
+	select HAVE_SMP
+	select HAVE_MACH_CLKDEV
+	select GENERIC_CLOCKEVENTS
+	select ZONE_DMA
+	select HAVE_SCHED_CLOCK
+	select ARCH_HAS_CPUFREQ
+	select CLKSRC_OF
+	select ARCH_REQUIRE_GPIOLIB
+	select GENERIC_IRQ_CHIP
+	select IRQ_DOMAIN
+	select PINCTRL
+	select COMMON_CLK
+	select ARCH_HAS_BARRIERS
+	select SPARSE_IRQ
+	select RTK_PLATFORM
+	select RTK_PLATFORM_PSCI
+	select PM_OPP
+	select ARM_HAS_SG_CHAIN
+	select ARM_PATCH_PHYS_VIRT
+	select AUTO_ZRELADDR
+	select MIGHT_HAVE_PCI
+	select MULTI_IRQ_HANDLER
+	select PCI_DOMAINS if PCI
+	select USE_OF
+	help
+	  Support for Realtek RTD13xx Platform
+
 endchoice
+
+config RTK_PLATFORM
+	def_bool n
+
+config RTK_PLATFORM_PSCI
+	def_bool n
 
 menu "Multiple platform selection"
 	depends on ARCH_MULTIPLATFORM
@@ -634,6 +804,7 @@ source "arch/arm/mach-cns3xxx/Kconfig"
 source "arch/arm/mach-davinci/Kconfig"
 
 source "arch/arm/mach-digicolor/Kconfig"
+
 
 source "arch/arm/mach-dove/Kconfig"
 
@@ -735,6 +906,7 @@ source "arch/arm/mach-tango/Kconfig"
 source "arch/arm/mach-tegra/Kconfig"
 
 source "arch/arm/mach-u300/Kconfig"
+
 
 source "arch/arm/mach-uniphier/Kconfig"
 
@@ -1166,6 +1338,13 @@ config ARM_ERRATA_814220
 endmenu
 
 menu "Kernel Features"
+
+config ARM_NORMAL_WORLD_OS
+        bool "Enable TrustZone"
+        default n
+        help
+		Enable TrustZone configuration
+
 
 config HAVE_SMP
 	bool

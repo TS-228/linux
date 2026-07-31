@@ -95,4 +95,6 @@ obj-$(CONFIG_BOOTTIME_TRACING) += trace_boot.o
 
 obj-$(CONFIG_TRACEPOINT_BENCHMARK) += trace_benchmark.o
 
+obj-$(CONFIG_RTK_TRACER) += rtk_trace.o
+
 libftrace-y := ftrace.o

@@ -413,6 +413,16 @@ void of_reserved_mem_device_release(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(of_reserved_mem_device_release);
 
+void __init of_reserved_mem_remap(void)
+{
+#ifdef CONFIG_RTK_MEM_REMAP
+	/* drivers/soc/realtek/commo/rtk_memory_remap.c */
+	extern void __init rtk_mem_remap_of_init_by_DT(struct reserved_mem *, int);
+	rtk_mem_remap_of_init_by_DT( reserved_mem, reserved_mem_count);
+#endif
+}
+EXPORT_SYMBOL_GPL(of_reserved_mem_remap);
+
 /**
  * of_reserved_mem_lookup() - acquire reserved_mem from a device node
  * @np:		node pointer of the desired reserved-memory region

@@ -69,6 +69,12 @@ static struct device_type sdio_type = {
 	.groups = sdio_std_groups,
 };
 
+#ifdef CONFIG_MMC_SDHCI_RTK
+void set_SDIO_version(int version);
+int get_SDIO_version(void);
+void rtk_register_set(void);
+#endif
+
 static int sdio_read_fbr(struct sdio_func *func)
 {
 	int ret;
@@ -197,6 +203,16 @@ static int sdio_read_cccr(struct mmc_card *card, u32 ocr)
 			if (ret)
 				goto out;
 
+#ifdef CONFIG_MMC_SDHCI_RTK
+                        set_SDIO_version(3);
+                        rtk_register_set();
+#endif
+
+#ifdef CONFIG_MMC_SDHCI_RTK
+                        set_SDIO_version(3);
+                        rtk_register_set();
+#endif
+
 			if (mmc_host_uhs(card->host)) {
 				if (data & SDIO_UHS_DDR50)
 					card->sw_caps.sd3_bus_mode
@@ -208,10 +224,17 @@ static int sdio_read_cccr(struct mmc_card *card, u32 ocr)
 						|= SD_MODE_UHS_SDR50 | SD_MODE_UHS_SDR25
 							| SD_MODE_UHS_SDR12;
 
-				if (data & SDIO_UHS_SDR104)
+				if (data & SDIO_UHS_SDR104) {
 					card->sw_caps.sd3_bus_mode
 						|= SD_MODE_UHS_SDR104 | SD_MODE_UHS_SDR50
 							| SD_MODE_UHS_SDR25 | SD_MODE_UHS_SDR12;
+#ifdef CONFIG_MMC_SDHCI_RTK
+					if (card->host->caps & MMC_CAP_UHS_SDR104) {
+						set_SDIO_version(4);
+						rtk_register_set();
+					}
+#endif
+				}
 			}
 
 			ret = mmc_io_rw_direct(card, 0, 0,
@@ -226,9 +249,17 @@ static int sdio_read_cccr(struct mmc_card *card, u32 ocr)
 			if (data & SDIO_DRIVE_SDTD)
 				card->sw_caps.sd3_drv_type |= SD_DRIVER_TYPE_D;
 		}
+#ifdef CONFIG_MMC_SDHCI_RTK
+            set_SDIO_version(2);
+            rtk_register_set();
+#endif
 
 		/* if no uhs mode ensure we check for high speed */
 		if (!card->sw_caps.sd3_bus_mode) {
+#ifdef CONFIG_MMC_SDHCI_RTK
+            set_SDIO_version(2);
+            rtk_register_set();
+#endif
 			if (speed & SDIO_SPEED_SHS) {
 				card->cccr.high_speed = 1;
 				card->sw_caps.hs_max_dtr = 50000000;

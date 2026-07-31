@@ -126,6 +126,12 @@ EXPORT_SYMBOL(gic_nonsecure_priorities);
 static refcount_t *ppi_nmi_refs;
 
 static struct gic_kvm_info gic_v3_kvm_info;
+static unsigned int GICR_ISENABLER0_REG = 0;
+static unsigned int GIC_ISENABLER0_REG = 0;
+static unsigned int GIC_ISENABLER1_REG = 0;
+static unsigned int GIC_ISENABLER2_REG = 0;
+static unsigned int GIC_ISENABLER3_REG = 0;
+
 static DEFINE_PER_CPU(bool, has_rss);
 
 #define MPIDR_RS(mpidr)			(((mpidr) & 0xF0UL) >> 4)
@@ -257,10 +263,16 @@ static void gic_enable_redist(bool enable)
 	rbase = gic_data_rdist_rd_base();
 
 	val = readl_relaxed(rbase + GICR_WAKER);
-	if (enable)
+	if (enable) {
+
+#ifdef CONFIG_RTK_PLATFORM
+		if (readl_relaxed(rbase) & 0x02000000)
+		       writel_relaxed(readl_relaxed(rbase) & 0xFDFFFFFF, rbase);
+#endif /* CONFIG_RTK_PLATFORM */
+
 		/* Wake up this CPU redistributor */
 		val &= ~GICR_WAKER_ProcessorSleep;
-	else
+	} else
 		val |= GICR_WAKER_ProcessorSleep;
 	writel_relaxed(val, rbase + GICR_WAKER);
 
@@ -1157,6 +1169,19 @@ static int gic_starting_cpu(unsigned int cpu)
 	return 0;
 }
 
+#ifdef CONFIG_RTK_PLATFORM
+static int gic_off_cpu(unsigned int cpu)
+{
+
+	void __iomem *rbase;
+
+	rbase = gic_data_rdist_rd_base();
+	writel_relaxed(readl_relaxed(rbase) | 0x2000000, rbase);
+
+	return 0;
+}
+#endif /* CONFIG_RTK_PLATFORM */
+
 static u16 gic_compute_target_list(int *base_cpu, const struct cpumask *mask,
 				   unsigned long cluster_id)
 {
@@ -1279,6 +1304,10 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 	reg = gic_dist_base(d) + offset + (index * 8);
 	val = gic_mpidr_to_affinity(cpu_logical_map(cpu));
 
+#ifdef CONFIG_RTK_PLATFORM
+	if (cpumask_subset(cpu_online_mask, mask_val))
+		val |= 0x80000000;
+#endif
 	gic_write_irouter(val, reg);
 
 	/*

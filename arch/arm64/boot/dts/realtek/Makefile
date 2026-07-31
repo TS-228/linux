@@ -2,6 +2,17 @@
 
 dtb-$(CONFIG_ARCH_REALTEK) += rtd1293-ds418j.dtb
 
+dts-dirs += rtd129x
+dts-dirs += rtd139x
+dts-dirs += rtd16xx
+dts-dirs += rtd13xx
+
+always-y		:= $(dtb-y)
+subdir-y	:= $(dts-dirs)
+clean-files	:= rtd129x/*.dtb *.dtb
+clean-files	:= rtd139x/*.dtb *.dtb
+clean-files	:= rtd16xx/*.dtb *.dtb
+clean-files	:= rtd13xx/*.dtb *.dtb
 dtb-$(CONFIG_ARCH_REALTEK) += rtd1295-mele-v9.dtb
 dtb-$(CONFIG_ARCH_REALTEK) += rtd1295-probox2-ava.dtb
 dtb-$(CONFIG_ARCH_REALTEK) += rtd1295-xnano-x5.dtb

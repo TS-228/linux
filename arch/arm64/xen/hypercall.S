@@ -105,6 +105,19 @@ SYM_FUNC_START(HYPERVISOR_dm_op)
 	ret
 SYM_FUNC_END(HYPERVISOR_dm_op);
 
+#ifdef CONFIG_RTK_TRACER
+ENTRY(privcmd_call)
+	rtktrace_record
+	mov x16, x0
+	mov x0, x1
+	mov x1, x2
+	mov x2, x3
+	mov x3, x4
+	mov x4, x5
+	hvc XEN_IMM
+	ret
+ENDPROC(privcmd_call);
+#else /* !CONFIG_RTK_TRACER */
 SYM_FUNC_START(privcmd_call)
 	mov x16, x0
 	mov x0, x1
@@ -129,3 +142,4 @@ SYM_FUNC_START(privcmd_call)
 	uaccess_ttbr0_disable x6, x7
 	ret
 SYM_FUNC_END(privcmd_call);
+#endif /* CONFIG_RTK_TRACER */
