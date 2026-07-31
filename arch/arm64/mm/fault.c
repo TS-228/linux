@@ -39,6 +39,10 @@
 #include <asm/tlbflush.h>
 #include <asm/traps.h>
 
+#ifdef CONFIG_RTK_TRACER
+#include <linux/rtk_trace.h>
+#endif
+
 struct fault_info {
 	int	(*fn)(unsigned long addr, unsigned int esr,
 		      struct pt_regs *regs);
@@ -571,6 +575,12 @@ retry:
 		return 0;
 	}
 
+#ifdef CONFIG_RTK_TRACER
+	uncached_logk(LOGK_DIE, (void *)regs->pc);
+	uncached_logk(LOGK_DIE, (void *)regs->regs[30]);
+	uncached_logk(LOGK_DIE, (void *)addr);
+	rtk_trace_disable();
+#endif
 	/*
 	 * If we are in kernel mode at this point, we have no context to
 	 * handle this fault with.

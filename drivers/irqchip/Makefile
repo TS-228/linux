@@ -88,6 +88,12 @@ obj-$(CONFIG_LS_SCFG_MSI)		+= irq-ls-scfg-msi.o
 obj-$(CONFIG_EZNPS_GIC)			+= irq-eznps.o
 obj-$(CONFIG_ARCH_ASPEED)		+= irq-aspeed-vic.o irq-aspeed-i2c-ic.o
 obj-$(CONFIG_STM32_EXTI) 		+= irq-stm32-exti.o
+obj-$(CONFIG_ARCH_RTD119X)		+= irq-rtd119x.o
+obj-$(CONFIG_ARCH_RTD129x) 		+= irq-rtd129x.o
+obj-$(CONFIG_ARCH_RTD139x) 		+= irq-rtd139x.o
+obj-$(CONFIG_ARCH_RTD16xx)		+= irq-rtd16xx.o
+obj-$(CONFIG_ARCH_RTD13xx)		+= irq-rtd13xx.o
+
 obj-$(CONFIG_QCOM_IRQ_COMBINER)		+= qcom-irq-combiner.o
 obj-$(CONFIG_IRQ_UNIPHIER_AIDET)	+= irq-uniphier-aidet.o
 obj-$(CONFIG_ARCH_SYNQUACER)		+= irq-sni-exiu.o

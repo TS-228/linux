@@ -1303,3 +1303,14 @@ dtb-$(CONFIG_ARCH_ASPEED) += \
 	aspeed-bmc-opp-zaius.dtb \
 	aspeed-bmc-portwell-neptune.dtb \
 	aspeed-bmc-quanta-q71l.dtb
+
+dts-dirs += realtek
+
+subdir-y	:= $(dts-dirs)
+
+dtstree		:= $(srctree)/$(src)
+dtb-$(CONFIG_OF_ALL_DTBS) := $(patsubst $(dtstree)/%.dts,%.dtb,  $(foreach d,$(dts-dirs), $(wildcard $(dtstree)/*.dts)))
+
+
+always		:= $(dtb-y)
+clean-files	:= *.dtb

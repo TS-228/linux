@@ -28,3 +28,5 @@ obj-y					+= broadcom/	\
 					   socionext/	\
 					   st/		\
 					   ti/
+
+obj-$(CONFIG_PHY_RTK_SATA)      += phy-rtk-sata.o

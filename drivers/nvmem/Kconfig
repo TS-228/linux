@@ -230,4 +230,14 @@ config NVMEM_ZYNQMP
 
 	  If sure, say yes. If unsure, say no.
 
+config RTK_EFUSE
+	tristate "Realtek SoCs eFuse support"
+	depends on RTK_PLATFORM || COMPILE_TEST
+	depends on HAS_IOMEM
+	default y if RTK_PLATFORM
+	help
+	  This is a driver to access specific data from eFuse
+
+	  This driver can also be built as a module. If so, the module
+	  will be called efuse-rtk.
 endif

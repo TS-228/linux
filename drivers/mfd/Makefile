@@ -247,6 +247,10 @@ obj-$(CONFIG_MFD_ALTERA_SYSMGR) += altera-sysmgr.o
 obj-$(CONFIG_MFD_STPMIC1)	+= stpmic1.o
 obj-$(CONFIG_MFD_SUN4I_GPADC)	+= sun4i-gpadc.o
 
+obj-$(CONFIG_MFD_G22XX) += g22xx-core.o
+obj-$(CONFIG_MFD_G2227_I2C) += g2227-i2c.o
+obj-$(CONFIG_MFD_G2237_I2C) += g2237-i2c.o
+
 obj-$(CONFIG_MFD_STM32_LPTIMER)	+= stm32-lptimer.o
 obj-$(CONFIG_MFD_STM32_TIMERS) 	+= stm32-timers.o
 obj-$(CONFIG_MFD_MXS_LRADC)     += mxs-lradc.o

@@ -52,15 +52,55 @@
 #include <asm/asm-uaccess.h>
 #include <xen/interface/xen.h>
 
+#ifdef CONFIG_RTK_TRACER
+#define LOGK_HVC	(13) /* sync with linux/rtk_trace.h */
+.extern uncached_logk
+
+.macro rtktrace_record
+	stp x29, x30, [sp,#-64]!
+	stp x19, x20, [sp,#16]
+	stp x21, x22, [sp,#32]
+	stp x23, x24, [sp,#48]
+	mov x19, x0
+	mov x20, x1
+	mov x21, x2
+	mov x22, x3
+	mov x23, x4
+	mov x24, x5
+	mov x1, x0
+	mov x0, #LOGK_HVC
+	bl uncached_logk
+	mov x0, x19
+	mov x1, x20
+	mov x2, x21
+	mov x3, x22
+	mov x4, x23
+	mov x5, x24
+	ldp x19, x20, [sp,#16]
+	ldp x21, x22, [sp,#32]
+	ldp x23, x24, [sp,#48]
+	ldp x29, x30, [sp], #64
+.endm
+#endif
 
 #define XEN_IMM 0xEA1
 
+#ifdef CONFIG_RTK_TRACER
+#define HYPERCALL_SIMPLE(hypercall)		\
+ENTRY(HYPERVISOR_##hypercall)			\
+	rtktrace_record;			\
+	mov x16, #__HYPERVISOR_##hypercall;	\
+	hvc XEN_IMM;				\
+	ret;					\
+ENDPROC(HYPERVISOR_##hypercall)
+#else /* !CONFIG_RTK_TRACER */
 #define HYPERCALL_SIMPLE(hypercall)		\
 ENTRY(HYPERVISOR_##hypercall)			\
 	mov x16, #__HYPERVISOR_##hypercall;	\
 	hvc XEN_IMM;				\
 	ret;					\
 ENDPROC(HYPERVISOR_##hypercall)
+#endif /* CONFIG_RTK_TRACER */
 
 #define HYPERCALL0 HYPERCALL_SIMPLE
 #define HYPERCALL1 HYPERCALL_SIMPLE
@@ -105,6 +145,19 @@ SYM_FUNC_START(HYPERVISOR_dm_op)
 	ret
 SYM_FUNC_END(HYPERVISOR_dm_op);
 
+#ifdef CONFIG_RTK_TRACER
+ENTRY(privcmd_call)
+	rtktrace_record
+	mov x16, x0
+	mov x0, x1
+	mov x1, x2
+	mov x2, x3
+	mov x3, x4
+	mov x4, x5
+	hvc XEN_IMM
+	ret
+ENDPROC(privcmd_call);
+#else /* !CONFIG_RTK_TRACER */
 ENTRY(privcmd_call)
 	mov x16, x0
 	mov x0, x1
@@ -129,3 +182,4 @@ ENTRY(privcmd_call)
 	uaccess_ttbr0_disable x6, x7
 	ret
 ENDPROC(privcmd_call);
+#endif /* CONFIG_RTK_TRACER */

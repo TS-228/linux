@@ -965,6 +965,14 @@ config RTD119X_WATCHDOG
 	help
 	  Say Y here to include support for the watchdog timer in
 	  Realtek RTD1295 SoCs.
+config RTK_WATCHDOG
+    tristate "Realtek watchdog support"
+    depends on RTK_PLATFORM
+    select WATCHDOG_CORE
+    help
+      Realtek  watchdog support.
+
+# AVR32 Architecture
 
 config SPRD_WATCHDOG
 	tristate "Spreadtrum watchdog support"

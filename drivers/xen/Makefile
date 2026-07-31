@@ -4,6 +4,7 @@ obj-y	+= grant-table.o features.o balloon.o manage.o preempt.o time.o
 obj-y	+= mem-reservation.o
 obj-y	+= events/
 obj-y	+= xenbus/
+obj-y	+= xenusb/
 
 nostackp := $(call cc-option, -fno-stack-protector)
 CFLAGS_features.o			:= $(nostackp)

@@ -17,6 +17,11 @@
 
 #include "ion.h"
 
+#if defined(CONFIG_ION_RTK)
+#include "../uapi/ion_rtk.h"
+#include "realtek/ion_rtk_carveout_heap.h"
+#endif
+
 void *ion_heap_map_kernel(struct ion_heap *heap,
 			  struct ion_buffer *buffer)
 {
@@ -85,6 +90,21 @@ int ion_heap_map_user(struct ion_heap *heap, struct ion_buffer *buffer,
 			offset = 0;
 		}
 		len = min(len, remainder);
+
+		/* 20130208 charleslin: supports noncached mmap for user space */
+#if defined(CONFIG_ION_RTK)
+#if 0
+		if (heap->type == RTK_PHOENIX_ION_HEAP_TYPE_MEDIA ||
+			heap->type == RTK_PHOENIX_ION_HEAP_TYPE_AUDIO ||
+			heap->type == RTK_PHOENIX_ION_HEAP_TYPE_TILER)
+#else
+			if (buffer->flags & ION_FLAG_NONCACHED)
+#endif
+				vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+			else
+				if (!(buffer->flags & ION_FLAG_CACHED))
+					vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
+#endif
 		ret = remap_pfn_range(vma, addr, page_to_pfn(page), len,
 				      vma->vm_page_prot);
 		if (ret)
@@ -313,3 +333,96 @@ int ion_heap_init_shrinker(struct ion_heap *heap)
 
 	return register_shrinker(&heap->shrinker);
 }
+
+struct ion_heap *ion_heap_create(struct ion_platform_heap *heap_data)
+{
+	struct ion_heap *heap = NULL;
+
+#if defined(CONFIG_ION_RTK)
+	switch ((int)heap_data->type) {
+#else
+	switch (heap_data->type) {
+#endif
+	case ION_HEAP_TYPE_SYSTEM_CONTIG:
+		heap = ion_system_contig_heap_create(heap_data);
+		break;
+	case ION_HEAP_TYPE_SYSTEM:
+		heap = ion_system_heap_create(heap_data);
+		break;
+	case ION_HEAP_TYPE_CARVEOUT:
+		heap = ion_carveout_heap_create(heap_data);
+		break;
+	case ION_HEAP_TYPE_CHUNK:
+		heap = ion_chunk_heap_create(heap_data);
+		break;
+	case ION_HEAP_TYPE_DMA:
+		heap = ion_cma_heap_create(heap_data);
+		break;
+#if defined(CONFIG_ION_RTK)
+	case RTK_PHOENIX_ION_HEAP_TYPE_TILER:
+	case RTK_PHOENIX_ION_HEAP_TYPE_MEDIA:
+	case RTK_PHOENIX_ION_HEAP_TYPE_AUDIO:
+	case RTK_PHOENIX_ION_HEAP_TYPE_SECURE:
+		heap = ion_rtk_carveout_heap_create(heap_data);
+		if (!IS_ERR_OR_NULL(heap))
+			heap->type = heap_data->type;
+		break;
+#endif
+	default:
+		pr_err("%s: Invalid heap type %d\n", __func__,
+		       heap_data->type);
+		return ERR_PTR(-EINVAL);
+	}
+
+	if (IS_ERR_OR_NULL(heap)) {
+		pr_err("%s: error creating heap %s type %d base %lu size %zu\n",
+		       __func__, heap_data->name, heap_data->type,
+		       heap_data->base, heap_data->size);
+		return ERR_PTR(-EINVAL);
+	}
+
+	heap->name = heap_data->name;
+	heap->id = heap_data->id;
+	return heap;
+}
+EXPORT_SYMBOL(ion_heap_create);
+
+void ion_heap_destroy(struct ion_heap *heap)
+{
+	if (!heap)
+		return;
+
+#if defined(CONFIG_ION_RTK)
+	switch ((int)heap->type) {
+#else
+	switch (heap->type) {
+#endif
+	case ION_HEAP_TYPE_SYSTEM_CONTIG:
+		ion_system_contig_heap_destroy(heap);
+		break;
+	case ION_HEAP_TYPE_SYSTEM:
+		ion_system_heap_destroy(heap);
+		break;
+	case ION_HEAP_TYPE_CARVEOUT:
+		ion_carveout_heap_destroy(heap);
+		break;
+	case ION_HEAP_TYPE_CHUNK:
+		ion_chunk_heap_destroy(heap);
+		break;
+	case ION_HEAP_TYPE_DMA:
+		ion_cma_heap_destroy(heap);
+		break;
+#if defined(CONFIG_ION_RTK)
+	case RTK_PHOENIX_ION_HEAP_TYPE_TILER:
+	case RTK_PHOENIX_ION_HEAP_TYPE_MEDIA:
+	case RTK_PHOENIX_ION_HEAP_TYPE_AUDIO:
+	case RTK_PHOENIX_ION_HEAP_TYPE_SECURE:
+		ion_rtk_carveout_heap_destroy(heap);
+		break;
+#endif
+	default:
+		pr_err("%s: Invalid heap type %d\n", __func__,
+		       heap->type);
+	}
+}
+EXPORT_SYMBOL(ion_heap_destroy);
