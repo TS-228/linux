@@ -3829,7 +3829,6 @@ static int rtk_sdmmc_remove(struct platform_device *pdev)
 
 	return 0;
 }
-EXPORT_SYMBOL_GPL(rtk_sdmmc_remove);
 
 static struct platform_driver rtk_sdmmc_driver = {
 	.probe = rtk_sdmmc_probe,

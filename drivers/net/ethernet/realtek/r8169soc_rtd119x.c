@@ -7440,7 +7440,7 @@ rtl_init_one(struct platform_device *pdev)
 	int rtl_config;
 	int mac_version;
 	int irq;
-	const char *mac_addr;
+	u8 mac_addr[ETH_ALEN];
 
 	struct clk *clk_etn  = clk_get(&pdev->dev, "etn");
 	if (IS_ERR(clk_etn)) {
@@ -7642,9 +7642,8 @@ rtl_init_one(struct platform_device *pdev)
 	mutex_init(&tp->wk.mutex);
 
 	/* Get MAC address */
-	mac_addr = of_get_mac_address(pdev->dev.of_node);
-	if (!IS_ERR_OR_NULL(mac_addr))
-		rtl_rar_set(tp, (u8 *)mac_addr);
+	if (!of_get_mac_address(pdev->dev.of_node, mac_addr))
+		rtl_rar_set(tp, mac_addr);
 
 	for (i = 0; i < ETH_ALEN; i++)
 		ndev->dev_addr[i] = RTL_R8(MAC0 + i);

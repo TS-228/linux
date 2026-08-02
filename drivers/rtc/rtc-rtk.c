@@ -1,562 +1,441 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /*
- * rtc-rtk.c - Realtek real timer clock driver
+ * rtc-rtk.c - Realtek RTD1xxx SoC RTC
  *
  * Copyright (c) 2017 Realtek Semiconductor Corp.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
+ * The counter is a plain day/hour/minute/half-second chain counting from
+ * January 1st of the "rtc-base-year" given in the device tree. The alarm
+ * block only stores day/hour/minute, so alarms have minute resolution.
  */
 
-#include <linux/fs.h>
-#include <linux/err.h>
-#include <linux/module.h>
-#include <linux/init.h>
-#include <linux/platform_device.h>
-#include <linux/slab.h>
-#include <linux/rtc.h>
-#include <linux/of.h>
-#include <linux/of_address.h>
-#include <linux/of_irq.h>
+#include <linux/bitops.h>
 #include <linux/clk.h>
+#include <linux/io.h>
+#include <linux/math64.h>
+#include <linux/module.h>
+#include <linux/of.h>
+#include <linux/platform_device.h>
 #include <linux/reset.h>
+#include <linux/rtc.h>
+#include <linux/spinlock.h>
+#include <linux/time.h>
 
-#include "rtc-rtk.h"
+#define REG_RTCSEC		0x00
+#define REG_RTCMIN		0x04
+#define REG_RTCHR		0x08
+#define REG_RTCDATE_LOW		0x0c
+#define REG_RTCDATE_HIGH	0x10
+#define REG_ALARMMIN		0x14
+#define REG_ALARMHR		0x18
+#define REG_ALARMDATE_LOW	0x1c
+#define REG_ALARMDATE_HIGH	0x20
+#define REG_RTCSTOP		0x24
+#define REG_RTCACR		0x28
+#define REG_RTCEN		0x2c
+#define REG_RTCCR		0x30
 
-#define RTC_TEST 0
+/* Isolated (always-on) block, second reg range. */
+#define REG_ISO_ISR		0x00
+#define REG_ISO_RTC		0x34
 
-#define DEV_NAME "[RTK_RTC]"
-#define REG_RTCSEC 0x00
-#define REG_RTCMIN 0x04
-#define REG_RTCHR 0x08
-#define REG_RTCDATE_LOW 0x0C
-#define REG_RTCDATE_HIGH 0x10
-#define REG_ALARMMIN 0x14
-#define REG_ALARMHR 0x18
-#define REG_ALARMDATE_LOW 0x1C
-#define REG_ALARMDATE_HIGH 0x20
-#define REG_RTCSTOP 0x24
-#define REG_RTCACR 0x28
-#define REG_RTCEN 0x2C
-#define REG_RTCCR 0x30
+#define ISO_ISR_RTC_ALARM	BIT(13)
+#define ISO_RTC_ALARM_EN	BIT(0)
 
-#define REG_ISO_ISR 0x00
-#define REG_ISO_RTC 0x34
+#define RTCACR_RTCPWR		BIT(7)	/* powers the RTC counter domain */
+#define RTCSTOP_STOP		BIT(0)
+#define RTCCR_RTCRST		BIT(6)
+#define RTCEN_MAGIC		0x5a
 
-#define LEAPS_THRU_END_OF(y) ((y)/4 - (y)/100 + (y)/400)
+#define RTC_SEC_MASK		0x7f	/* counts half seconds */
+#define RTC_MIN_MASK		0x3f
+#define RTC_HR_MASK		0x1f
+#define RTC_DAY_HIGH_MASK	0x3f
+#define RTC_DAY_MAX		16383
 
-static void __iomem *rtk_rtc_base;
-static void __iomem *rtk_iso_base;
-static struct clk *rtc_clk;
-static struct reset_control *rtc_rstc;
+struct rtk_rtc {
+	struct device *dev;
+	struct rtc_device *rtc;
+	void __iomem *base;
+	void __iomem *iso_base;
+	struct clk *clk;
+	struct reset_control *rstc;
+	time64_t base_secs;
+	spinlock_t lock;
+};
 
-static long rtk_base_year;
-
-DEFINE_SPINLOCK(rtk_rtc_lock);
-
-static void rtk_rtc_check_rtcacr(struct device *dev)
+static void rtk_rtc_hw_enable(struct rtk_rtc *rtc, bool enable)
 {
-	unsigned long flags;
-	unsigned int val;
-	unsigned int sec;
-	unsigned int min;
-	unsigned int hr;
-	unsigned int date_low;
-	unsigned int date_high;
-
-	spin_lock_irqsave(&rtk_rtc_lock, flags);
-
-	val = readl(rtk_rtc_base + REG_RTCACR);
-	dev_info(dev, "rtk_rtc rtcacr = 0x%x\n", val);
-
-
-	if ((val & 0x80) == 0x80)
-		goto err;
-
-	dev_info(dev, "rtk_rtc set rtcacr\n");
-	writel(0x80, rtk_rtc_base + REG_RTCACR);
-
-	/* we set sefault 0 , 0 , 0 , 0 */
-	writel(0x40, rtk_rtc_base + REG_RTCCR);
-	writel(0x0, rtk_rtc_base + REG_RTCCR);
-	writel(0, rtk_rtc_base + REG_RTCMIN);
-	writel(0, rtk_rtc_base + REG_RTCHR);
-	writel(0, rtk_rtc_base + REG_RTCDATE_LOW);
-	writel(0, rtk_rtc_base + REG_RTCDATE_HIGH);
-
-	sec = readl(rtk_rtc_base + REG_RTCSEC);
-	min = readl(rtk_rtc_base + REG_RTCMIN);
-	hr = readl(rtk_rtc_base + REG_RTCHR);
-	date_low = readl(rtk_rtc_base + REG_RTCDATE_LOW);
-	date_high = readl(rtk_rtc_base + REG_RTCDATE_HIGH);
-
-	dev_info(dev, "rtcacr 2 REG_SEC = 0x%x\n", sec);
-	dev_info(dev, "rtcacr 2 REG_MIN = 0x%x\n", min);
-	dev_info(dev, "rtcacr 2 REG_HR = 0x%x\n", hr);
-	dev_info(dev, "rtcacr 2 REG_DATA_LOW = 0x%x\n", date_low);
-	dev_info(dev, "rtcacr 2 REG_DATE_HIGH = 0x%x\n", date_high);
-
-err:
-	spin_unlock_irqrestore(&rtk_rtc_lock, flags);
+	writel(enable ? RTCEN_MAGIC : 0, rtc->base + REG_RTCEN);
 }
 
-static void rtk_rtc_enable(struct device *dev, int en)
+/*
+ * The day/hour/minute/second registers are read one by one, so a carry
+ * happening mid-sequence would yield a bogus time. Bracket the sequence with
+ * two reads of the seconds register and retry while it moves.
+ */
+static void rtk_rtc_read_counter(struct rtk_rtc *rtc, unsigned int *dayp,
+				 unsigned int *hourp, unsigned int *minp,
+				 unsigned int *secp)
 {
-	unsigned long flags;
-	unsigned int sec;
-	unsigned int min;
-	unsigned int hr;
-	unsigned int date_low;
-	unsigned int date_high;
+	unsigned int day, hour, min, sec, sec2;
+	int tries = 3;
 
-	spin_lock_irqsave(&rtk_rtc_lock, flags);
+	do {
+		sec = readl(rtc->base + REG_RTCSEC) & RTC_SEC_MASK;
+		min = readl(rtc->base + REG_RTCMIN) & RTC_MIN_MASK;
+		hour = readl(rtc->base + REG_RTCHR) & RTC_HR_MASK;
+		day = readl(rtc->base + REG_RTCDATE_LOW) & 0xff;
+		day |= (readl(rtc->base + REG_RTCDATE_HIGH) &
+			RTC_DAY_HIGH_MASK) << 8;
+		sec2 = readl(rtc->base + REG_RTCSEC) & RTC_SEC_MASK;
+	} while (sec != sec2 && --tries);
 
-	if (rtk_rtc_base == NULL)
-		goto err;
-
-	if (!en) {
-		dev_err(dev, "rtk_rtc_disable");
-		writel(0x00, rtk_rtc_base + REG_RTCEN);
-
-	} else if ((readl(rtk_rtc_base + REG_RTCEN) & 0xff) != 0x5A) {
-		dev_err(dev, "rtk_rtc_enable");
-		writel(0x5A, rtk_rtc_base + REG_RTCEN);
-	} else {
-		dev_err(dev, "rtk_rtc already enabled ");
-	}
-
-	sec = readl(rtk_rtc_base + REG_RTCSEC);
-	min = readl(rtk_rtc_base + REG_RTCMIN);
-	hr = readl(rtk_rtc_base + REG_RTCHR);
-	date_low = readl(rtk_rtc_base + REG_RTCDATE_LOW);
-	date_high = readl(rtk_rtc_base + REG_RTCDATE_HIGH);
-
-	dev_info(dev, "enable REG_SEC = 0x%x\n", sec);
-	dev_info(dev, "enable REG_MIN = 0x%x\n", min);
-	dev_info(dev, "enable REG_HR = 0x%x\n", hr);
-	dev_info(dev, "enable REG_DATA_LOW = 0x%x\n", date_low);
-	dev_info(dev, "enable REG_DATE_HIGH = 0x%x\n", date_high);
-
-err:
-	spin_unlock_irqrestore(&rtk_rtc_lock, flags);
+	*dayp = day;
+	*hourp = hour;
+	*minp = min;
+	*secp = sec >> 1;
 }
 
-static void venus_rtc_alarm_aie_enable(int state)
+static int rtk_rtc_read_time(struct device *dev, struct rtc_time *tm)
 {
-	unsigned long flags;
-
-	spin_lock_irqsave(&rtk_rtc_lock, flags);
-	if (state) {
-		writel(0x2000, rtk_iso_base + REG_ISO_ISR);
-		writel(0x1, rtk_iso_base + REG_ISO_RTC);
-	} else {
-		writel(0, rtk_iso_base + REG_ISO_RTC);
-	}
-
-	spin_unlock_irqrestore(&rtk_rtc_lock, flags);
-}
-
-#ifdef ALARM_ENABLE
-static int venus_rtc_alarm_aie_state(void)
-{
-	unsigned long flags;
-	int ret;
-
-	spin_lock_irqsave(&rtk_rtc_lock, flags);
-	ret = readl(rtk_iso_base + REG_ISO_RTC) && 0x1;
-	spin_unlock_irqrestore(&rtk_rtc_lock, flags);
-
-	return ret;
-}
-
-static void venus_rtc_read_alarm_persistent_clock(struct timespec64 *ts)
-{
-	int day, hour, min;
-	int ret;
-	unsigned long flags;
-	unsigned long cur_time;
-
-	ret = venus_rtc_alarm_aie_state();
-	if (ret) {
-		spin_lock_irqsave(&rtk_rtc_lock, flags);
-		min = readl(rtk_rtc_base + REG_ALARMMIN);
-		hour = readl(rtk_rtc_base + REG_ALARMHR);
-		day = readl(rtk_rtc_base + REG_ALARMDATE_LOW);
-		day += readl(rtk_rtc_base + REG_ALARMDATE_HIGH) << 8;
-		spin_unlock_irqrestore(&rtk_rtc_lock, flags);
-	} else {
-		min = 0;
-		hour = 0;
-		day = 0;
-	}
-
-	cur_time = mktime64(rtk_base_year + 1900, 1, 1, 0, 0, 0);
-	ts->tv_sec = ((day * 24 + hour) * 60 + min) * 60 + cur_time;
-	ts->tv_nsec = 0;
-}
-
-static int venus_rtc_set_alarm_mmss(unsigned long nowtime)
-{
-	unsigned long flags;
-	int day, hour, min, hms;
-	unsigned long off_sec;
-	unsigned long base_sec = mktime64(rtk_base_year + 1900, 1, 1, 0, 0, 0);
-
-	off_sec = nowtime - base_sec;
-	if (base_sec > nowtime) {
-		pr_err("%s RTC alarm set time error! ", DEV_NAME);
-		pr_err("The time cannot be set to the date before year %ld\n",
-			rtk_base_year);
-
-		return -EINVAL;
-	}
-
-	day = off_sec / (24*60*60);
-	hms = off_sec % (24*60*60);
-	hour = hms / 3600;
-	min = (hms % 3600) / 60;
-
-	if (day > 16383) {
-		pr_err("%s RTC alarm day field overflow.\n", DEV_NAME);
-		return -EINVAL;
-	}
-
-	/* irq are locally disabled here, but I still like to use
-	 * spin_lock_irqsave
-	 */
-	spin_lock_irqsave(&rtk_rtc_lock, flags);
-	writel(min, rtk_rtc_base + REG_ALARMMIN);
-	writel(hour, rtk_rtc_base + REG_ALARMHR);
-	writel(day & 0x00ff, rtk_rtc_base + REG_ALARMDATE_LOW);
-	writel((day & 0x3f00) >> 8, rtk_rtc_base + REG_ALARMDATE_HIGH);
-	spin_unlock_irqrestore(&rtk_rtc_lock, flags);
-
-	return 0;
-}
-#endif /*ALARM_ENABLE*/
-
-static void rtk_read_persistent_clock(struct device *dev, struct timespec64 *ts)
-{
-	unsigned int retried = 0;
+	struct rtk_rtc *rtc = dev_get_drvdata(dev);
 	unsigned int day, hour, min, sec;
 	unsigned long flags;
-	unsigned long cur_time;
 
-	spin_lock_irqsave(&rtk_rtc_lock, flags);
-retry:
-	/*One unit represents half second */
-	sec = readl(rtk_rtc_base + REG_RTCSEC) >> 1;
-	min = readl(rtk_rtc_base + REG_RTCMIN);
-	hour = readl(rtk_rtc_base + REG_RTCHR);
-	day = readl(rtk_rtc_base + REG_RTCDATE_LOW);
-	day += readl(rtk_rtc_base + REG_RTCDATE_HIGH)<<8;
-	dev_info(dev, "sec=0x%x , min=0x%x . day=0x%x\n", sec, min, day);
+	spin_lock_irqsave(&rtc->lock, flags);
+	rtk_rtc_read_counter(rtc, &day, &hour, &min, &sec);
+	spin_unlock_irqrestore(&rtc->lock, flags);
 
-	if (sec == 0 && !retried) {
-		retried++;
-		goto retry;
-	}
-	spin_unlock_irqrestore(&rtk_rtc_lock, flags);
-
-	cur_time = mktime64(rtk_base_year + 1900, 1, 1, 0, 0, 0);
-	ts->tv_sec = ((day * 24 + hour) * 60 + min) * 60 + sec + cur_time;
-	ts->tv_nsec = 0;
+	rtc_time64_to_tm(rtc->base_secs +
+			 ((day * 24 + hour) * 60 + min) * 60 + sec, tm);
+	return 0;
 }
 
-static int rtc_mips_set_mmss(struct device *dev, unsigned long nowtime)
+static int rtk_rtc_split(struct rtk_rtc *rtc, time64_t secs, unsigned int *dayp,
+			 unsigned int *hourp, unsigned int *minp,
+			 unsigned int *secp)
+{
+	time64_t offset;
+	u32 hms;
+
+	if (secs < rtc->base_secs)
+		return -EINVAL;
+
+	offset = secs - rtc->base_secs;
+	*dayp = div_u64_rem(offset, 86400, &hms);
+	if (*dayp > RTC_DAY_MAX)
+		return -EINVAL;
+
+	*hourp = hms / 3600;
+	*minp = hms % 3600 / 60;
+	*secp = hms % 60;
+	return 0;
+}
+
+static int rtk_rtc_set_time(struct device *dev, struct rtc_time *tm)
+{
+	struct rtk_rtc *rtc = dev_get_drvdata(dev);
+	unsigned int day, hour, min, sec;
+	unsigned long flags;
+	int ret;
+
+	ret = rtk_rtc_split(rtc, rtc_tm_to_time64(tm), &day, &hour, &min, &sec);
+	if (ret)
+		return ret;
+
+	spin_lock_irqsave(&rtc->lock, flags);
+	rtk_rtc_hw_enable(rtc, false);
+	writel(sec * 2, rtc->base + REG_RTCSEC);
+	writel(min, rtc->base + REG_RTCMIN);
+	writel(hour, rtc->base + REG_RTCHR);
+	writel(day & 0xff, rtc->base + REG_RTCDATE_LOW);
+	writel((day >> 8) & RTC_DAY_HIGH_MASK, rtc->base + REG_RTCDATE_HIGH);
+	rtk_rtc_hw_enable(rtc, true);
+	spin_unlock_irqrestore(&rtc->lock, flags);
+
+	return 0;
+}
+
+static void rtk_rtc_alarm_enable(struct rtk_rtc *rtc, bool enable)
 {
 	unsigned long flags;
-	int day, hour, min, sec, hms;
-	unsigned long off_sec;
-	unsigned long base_sec = mktime64(rtk_base_year + 1900, 1, 1, 0, 0, 0);
 
-	off_sec = nowtime - base_sec;
-	if (base_sec > nowtime) {
-		pr_err("%s RTC set time error! ", DEV_NAME);
-		pr_err("The time can't be set to the date before year");
-		pr_err(" %ld\n", rtk_base_year + 1900);
-		return -EINVAL;
+	spin_lock_irqsave(&rtc->lock, flags);
+	if (enable) {
+		writel(ISO_ISR_RTC_ALARM, rtc->iso_base + REG_ISO_ISR);
+		writel(ISO_RTC_ALARM_EN, rtc->iso_base + REG_ISO_RTC);
+	} else {
+		writel(0, rtc->iso_base + REG_ISO_RTC);
 	}
+	spin_unlock_irqrestore(&rtc->lock, flags);
+}
 
-	day = off_sec / (24 * 60 * 60);
-	hms = off_sec % (24 * 60 * 60);
-	hour = hms / 3600;
-	min = (hms % 3600) / 60;
-	sec = ((hms % 3600) % 60) * 2; /* One unit represents half second */
+static bool rtk_rtc_alarm_enabled(struct rtk_rtc *rtc)
+{
+	unsigned long flags;
+	bool enabled;
 
-	if (day > 16383) {
-		dev_err(dev, "RTC day field overflow....\n");
-		return -EINVAL;
-	}
-	rtk_rtc_enable(dev, 0);
+	spin_lock_irqsave(&rtc->lock, flags);
+	enabled = readl(rtc->iso_base + REG_ISO_RTC) & ISO_RTC_ALARM_EN;
+	spin_unlock_irqrestore(&rtc->lock, flags);
 
-	/* irq are locally disabled here, but I still like to use
-	 * spin_lock_irqsave
-	 */
-	spin_lock_irqsave(&rtk_rtc_lock, flags);
+	return enabled;
+}
 
-	writel(sec, rtk_rtc_base + REG_RTCSEC);
-	writel(min, rtk_rtc_base + REG_RTCMIN);
-	writel(hour, rtk_rtc_base + REG_RTCHR);
-	writel((day & 0xFF), rtk_rtc_base + REG_RTCDATE_LOW);
-	writel(((day >> 8) & 0x7F), rtk_rtc_base + REG_RTCDATE_HIGH);
+static int rtk_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *alrm)
+{
+	struct rtk_rtc *rtc = dev_get_drvdata(dev);
+	unsigned int day, hour, min;
+	unsigned long flags;
 
-	spin_unlock_irqrestore(&rtk_rtc_lock, flags);
+	spin_lock_irqsave(&rtc->lock, flags);
+	min = readl(rtc->base + REG_ALARMMIN) & RTC_MIN_MASK;
+	hour = readl(rtc->base + REG_ALARMHR) & RTC_HR_MASK;
+	day = readl(rtc->base + REG_ALARMDATE_LOW) & 0xff;
+	day |= (readl(rtc->base + REG_ALARMDATE_HIGH) &
+		RTC_DAY_HIGH_MASK) << 8;
+	spin_unlock_irqrestore(&rtc->lock, flags);
 
-	rtk_rtc_enable(dev, 1);
+	rtc_time64_to_tm(rtc->base_secs + ((day * 24 + hour) * 60 + min) * 60,
+			 &alrm->time);
+	alrm->enabled = rtk_rtc_alarm_enabled(rtc);
 
 	return 0;
 }
 
-/* rtc_class_ops */
-static int rtk_rtc_gettime(struct device *dev, struct rtc_time *tm)
+static int rtk_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *alrm)
 {
-	struct timespec64 ts;
+	struct rtk_rtc *rtc = dev_get_drvdata(dev);
+	unsigned int day, hour, min, sec;
+	unsigned long flags;
+	int ret;
 
-	rtk_read_persistent_clock(dev, &ts);
-	rtc_time64_to_tm(ts.tv_sec, tm);
-	dev_info(dev, "time read as %04d.%02d.%02d %02d:%02d:%02d",
-		1900+tm->tm_year,
-		tm->tm_mon,
-		tm->tm_mday,
-		tm->tm_hour,
-		tm->tm_min,
-		tm->tm_sec);
+	ret = rtk_rtc_split(rtc, rtc_tm_to_time64(&alrm->time), &day, &hour,
+			    &min, &sec);
+	if (ret)
+		return ret;
 
-	return rtc_valid_tm(tm);
-}
+	rtk_rtc_alarm_enable(rtc, false);
 
-static int rtk_rtc_settime(struct device *dev, struct rtc_time *tm)
-{
-	unsigned long cur_sec;
-
-	dev_info(dev, "set time %04d.%02d.%02d %02d:%02d:%02d",
-		1900+tm->tm_year,
-		tm->tm_mon,
-		tm->tm_mday,
-		tm->tm_hour,
-		tm->tm_min,
-		tm->tm_sec);
-
-	cur_sec = mktime64(tm->tm_year + 1900,
-			tm->tm_mon + 1,
-			tm->tm_mday,
-			tm->tm_hour,
-			tm->tm_min,
-			tm->tm_sec);
-	rtc_mips_set_mmss(dev, cur_sec);
-
-	return 0;
-}
-
-#ifdef ALARM_ENABLE
-static int rtk_rtc_getalarm(struct device *dev, struct rtc_wkalrm *alrm)
-{
-	struct timespec64 ts;
-
-	venus_rtc_read_alarm_persistent_clock(&ts);
-	rtc_time64_to_tm(ts.tv_sec, &alrm->time);
-	alrm->enabled = venus_rtc_alarm_aie_state();
-
-	return 0;
-}
-
-static int rtk_rtc_setalarm(struct device *dev, struct rtc_wkalrm *alrm)
-{
-	unsigned long cur_sec;
-
-	venus_rtc_alarm_aie_enable(0);
-	cur_sec = mktime64(alrm->time.tm_year + 1900, alrm->time.tm_mon + 1,
-			alrm->time.tm_mday, alrm->time.tm_hour,
-			alrm->time.tm_min, alrm->time.tm_sec);
-	venus_rtc_set_alarm_mmss(cur_sec);
+	spin_lock_irqsave(&rtc->lock, flags);
+	writel(min, rtc->base + REG_ALARMMIN);
+	writel(hour, rtc->base + REG_ALARMHR);
+	writel(day & 0xff, rtc->base + REG_ALARMDATE_LOW);
+	writel((day >> 8) & RTC_DAY_HIGH_MASK, rtc->base + REG_ALARMDATE_HIGH);
+	spin_unlock_irqrestore(&rtc->lock, flags);
 
 	if (alrm->enabled)
-		venus_rtc_alarm_aie_enable(1);
+		rtk_rtc_alarm_enable(rtc, true);
 
 	return 0;
 }
 
-static int rtk_rtc_setaie(struct device *dev, unsigned int enabled)
+static int rtk_rtc_alarm_irq_enable(struct device *dev, unsigned int enabled)
 {
-	venus_rtc_alarm_aie_enable(enabled);
-	return 0;
-}
-#endif /*ALARM_ENABLE*/
-
-static int rtk_rtc_ioctl(struct device *dev, unsigned int cmd,
-	unsigned long arg)
-{
-	switch (cmd) {
-	case RTC_AIE_ON:
-		venus_rtc_alarm_aie_enable(1);
-		break;
-	case RTC_AIE_OFF:
-		venus_rtc_alarm_aie_enable(0);
-		break;
-	default:
-		return -ENOIOCTLCMD;
-	}
+	rtk_rtc_alarm_enable(dev_get_drvdata(dev), enabled);
 	return 0;
 }
 
-static const struct rtc_class_ops rtk_rtcops = {
-	.read_time = rtk_rtc_gettime,
-	.set_time = rtk_rtc_settime,
-#ifdef ALARM_ENABLE
-	.read_alarm = rtk_rtc_getalarm,
-	.set_alarm = rtk_rtc_setalarm,
-	.alarm_irq_enable = rtk_rtc_setaie,
-#endif /*ALARM_ENABLE*/
-	.ioctl	= rtk_rtc_ioctl,
-//	.proc = rtk_rtc_proc,
+static const struct rtc_class_ops rtk_rtc_ops = {
+	.read_time = rtk_rtc_read_time,
+	.set_time = rtk_rtc_set_time,
+	.read_alarm = rtk_rtc_read_alarm,
+	.set_alarm = rtk_rtc_set_alarm,
+	.alarm_irq_enable = rtk_rtc_alarm_irq_enable,
 };
+
+static void rtk_rtc_dump(struct rtk_rtc *rtc)
+{
+	dev_info(rtc->dev,
+		"sec=%02x min=%02x hr=%02x day=%02x%02x stop=%02x acr=%02x en=%02x cr=%02x\n",
+		readl(rtc->base + REG_RTCSEC), readl(rtc->base + REG_RTCMIN),
+		readl(rtc->base + REG_RTCHR),
+		readl(rtc->base + REG_RTCDATE_HIGH),
+		readl(rtc->base + REG_RTCDATE_LOW),
+		readl(rtc->base + REG_RTCSTOP), readl(rtc->base + REG_RTCACR),
+		readl(rtc->base + REG_RTCEN), readl(rtc->base + REG_RTCCR));
+}
+
+/*
+ * RTCPWR powers the counter domain and survives across reboots, so a clear bit
+ * means the block has just come up cold and the counter holds garbage.
+ * RTCACR is also the only plain read/write register here (RTCEN is a magic-key
+ * register and the counter registers are clocked by the 32kHz domain), so its
+ * readback doubles as the liveness check for the whole block.
+ */
+static int rtk_rtc_power_on(struct rtk_rtc *rtc)
+{
+	unsigned long flags;
+	bool cold;
+	u32 acr;
+
+	spin_lock_irqsave(&rtc->lock, flags);
+
+	cold = !(readl(rtc->base + REG_RTCACR) & RTCACR_RTCPWR);
+	if (cold)
+		writel(readl(rtc->base + REG_RTCACR) | RTCACR_RTCPWR,
+		       rtc->base + REG_RTCACR);
+
+	acr = readl(rtc->base + REG_RTCACR);
+	if (!(acr & RTCACR_RTCPWR)) {
+		spin_unlock_irqrestore(&rtc->lock, flags);
+		dev_err(rtc->dev,
+			"cannot power on RTC (RTCACR reads 0x%02x); no 32kHz crystal fitted?\n",
+			acr);
+		return -ENODEV;
+	}
+
+	if (cold) {
+		dev_info(rtc->dev, "cold start, resetting counter to base year\n");
+
+		writel(RTCCR_RTCRST, rtc->base + REG_RTCCR);
+		writel(0, rtc->base + REG_RTCCR);
+		writel(0, rtc->base + REG_RTCMIN);
+		writel(0, rtc->base + REG_RTCHR);
+		writel(0, rtc->base + REG_RTCDATE_LOW);
+		writel(0, rtc->base + REG_RTCDATE_HIGH);
+		writel(readl(rtc->base + REG_RTCSTOP) & ~RTCSTOP_STOP,
+		       rtc->base + REG_RTCSTOP);
+	}
+
+	spin_unlock_irqrestore(&rtc->lock, flags);
+
+	return 0;
+}
+
+static void __iomem *rtk_rtc_map(struct platform_device *pdev, int index)
+{
+	struct resource *res;
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, index);
+	if (!res)
+		return IOMEM_ERR_PTR(-ENXIO);
+
+	/*
+	 * Plain devm_ioremap(): both windows sit inside larger RBUS ranges
+	 * that neighbouring nodes (timer0, iso gpio) also describe, so
+	 * requesting the regions exclusively would fail.
+	 */
+	return devm_ioremap(&pdev->dev, res->start, resource_size(res)) ?:
+		IOMEM_ERR_PTR(-ENOMEM);
+}
 
 static int rtk_rtc_probe(struct platform_device *pdev)
 {
-	struct rtc_device *rtc;
 	struct device *dev = &pdev->dev;
+	struct rtk_rtc *rtc;
+	u32 base_year = 2016;
 	int ret;
-	const u32 *prop;
 
-	dev_info(dev, "%s", __func__);
+	rtc = devm_kzalloc(dev, sizeof(*rtc), GFP_KERNEL);
+	if (!rtc)
+		return -ENOMEM;
+
+	rtc->dev = dev;
+	spin_lock_init(&rtc->lock);
+	platform_set_drvdata(pdev, rtc);
+
+	rtc->base = rtk_rtc_map(pdev, 0);
+	if (IS_ERR(rtc->base))
+		return dev_err_probe(dev, PTR_ERR(rtc->base),
+				     "cannot map RTC registers\n");
+
+	rtc->iso_base = rtk_rtc_map(pdev, 1);
+	if (IS_ERR(rtc->iso_base))
+		return dev_err_probe(dev, PTR_ERR(rtc->iso_base),
+				     "cannot map ISO registers\n");
+
+	of_property_read_u32(dev->of_node, "rtc-base-year", &base_year);
+	rtc->base_secs = mktime64(base_year, 1, 1, 0, 0, 0);
 
 	/*
-	 * The rstn and clk_en of rtc should be set for RTD-119x,
-	 * and clk_en should be set for RTD-129x.
+	 * RTD119x gates both the clock and the reset of the RTC block; without
+	 * these the registers read back as zero. RTD129x only has the gate.
 	 */
-	rtc_clk = devm_clk_get(dev, NULL);
-	if (IS_ERR(rtc_clk)) {
-		dev_dbg(dev, "clk_get() reutrns %ld\n", PTR_ERR(rtc_clk));
-		rtc_clk = NULL;
+	rtc->clk = devm_clk_get_optional(dev, NULL);
+	if (IS_ERR(rtc->clk))
+		return dev_err_probe(dev, PTR_ERR(rtc->clk),
+				     "cannot get clock\n");
+
+	rtc->rstc = devm_reset_control_get_optional_exclusive(dev, NULL);
+	if (IS_ERR(rtc->rstc))
+		return dev_err_probe(dev, PTR_ERR(rtc->rstc),
+				     "cannot get reset control\n");
+
+	ret = clk_prepare_enable(rtc->clk);
+	if (ret)
+		return dev_err_probe(dev, ret, "cannot enable clock\n");
+
+	ret = reset_control_deassert(rtc->rstc);
+	if (ret) {
+		dev_err(dev, "cannot deassert reset: %d\n", ret);
+		goto err_clk;
 	}
 
-	rtc_rstc = devm_reset_control_get(dev, NULL);
-	if (IS_ERR(rtc_rstc)) {
-		dev_dbg(dev, "reset_control_get() reutrns %ld\n", PTR_ERR(rtc_rstc));
-		rtc_rstc = NULL;
-	}
-	clk_prepare_enable(rtc_clk);
-	if (rtc_rstc)
-		reset_control_deassert(rtc_rstc);
+	ret = rtk_rtc_power_on(rtc);
+	if (ret)
+		goto err_clk;
 
-	prop = of_get_property(pdev->dev.of_node, "rtc-base-year", NULL);
-	if (prop)
-		rtk_base_year = of_read_number(prop, 1);
-	else
-		rtk_base_year = 1900;
+	rtk_rtc_hw_enable(rtc, true);
+	rtk_rtc_dump(rtc);
 
-	dev_info(dev, "rtk_base_year = %ld\n", rtk_base_year);
-	rtk_base_year -= 1900;
-
-	rtk_rtc_base = of_iomap(pdev->dev.of_node, 0);
-	rtk_iso_base = of_iomap(pdev->dev.of_node, 1);
-	dev_info(dev, "rtk_rtc_base = 0x%llx\n", (u64)rtk_rtc_base);
-	dev_info(dev, "rtk_iso_base = 0x%llx\n", (u64)rtk_iso_base);
-
-	rtk_rtc_check_rtcacr(&pdev->dev);
-	rtk_rtc_enable(&pdev->dev, 1);
-
-#if RTC_TEST
-	{
-		struct rtc_time tm;
-
-		tm.tm_year = 115;
-		tm.tm_mon = 2;
-		tm.tm_mday = 28;
-		tm.tm_hour = 12;
-		tm.tm_min = 0;
-		tm.tm_sec = 1;
-
-		rtk_rtc_settime(&pdev->dev, &tm);
+	rtc->rtc = devm_rtc_allocate_device(dev);
+	if (IS_ERR(rtc->rtc)) {
+		ret = PTR_ERR(rtc->rtc);
+		goto err_clk;
 	}
 
-	{
-		struct rtc_wkalrm alrm;
+	rtc->rtc->ops = &rtk_rtc_ops;
+	rtc->rtc->range_min = rtc->base_secs;
+	rtc->rtc->range_max = rtc->base_secs + (RTC_DAY_MAX + 1) * 86400LL - 1;
+	/* The alarm block has no seconds field and no interrupt line. */
+	set_bit(RTC_FEATURE_ALARM_RES_MINUTE, rtc->rtc->features);
+	rtc->rtc->uie_unsupported = 1;
 
-		alrm.time.tm_year = 116;
-		alrm.time.tm_mon = 2;
-		alrm.time.tm_mday = 29;
-		alrm.time.tm_hour = 13;
-		alrm.time.tm_min = 1;
-		alrm.time.tm_sec = 2;
+	ret = devm_rtc_register_device(rtc->rtc);
+	if (ret)
+		goto err_clk;
 
-		dev_err(dev, "alrm set as %04d.%02d.%02d %02d:%02d:%02d",
-			1900+alrm.time.tm_year,
-			alrm.time.tm_mon,
-			alrm.time.tm_mday,
-			alrm.time.tm_hour,
-			alrm.time.tm_min,
-			alrm.time.tm_sec);
-
-		rtk_rtc_setalarm(&pdev->dev, &alrm);
-	}
-
-	{
-		struct rtc_wkalrm alrm;
-
-		rtk_rtc_getalarm(&pdev->dev, &alrm);
-
-		dev_err(dev, "alrm read as %04d.%02d.%02d %02d:%02d:%02d",
-			1900+alrm.time.tm_year,
-			alrm.time.tm_mon,
-			alrm.time.tm_mday,
-			alrm.time.tm_hour,
-			alrm.time.tm_min,
-			alrm.time.tm_sec);
-	}
-#endif /* RTC_TEST */
-
-	device_init_wakeup(&pdev->dev, true);
-
-	rtc = devm_rtc_device_register(&pdev->dev, "rtc", &rtk_rtcops,
-		THIS_MODULE);
-	if (IS_ERR(rtc)) {
-		dev_err(dev, "cannot attach rtc");
-		ret = PTR_ERR(rtc);
-		goto err_nortc;
-	}
-
-	platform_set_drvdata(pdev, rtc);
+	device_init_wakeup(dev, true);
 
 	return 0;
 
-err_nortc:
-	if (rtc_rstc)
-		reset_control_assert(rtc_rstc);
-	clk_disable_unprepare(rtc_clk);
+err_clk:
+	clk_disable_unprepare(rtc->clk);
 	return ret;
 }
 
-static int  rtk_rtc_remove(struct platform_device *pdev)
+static int rtk_rtc_remove(struct platform_device *pdev)
 {
-	struct rtc_device *rtc = platform_get_drvdata(pdev);
+	struct rtk_rtc *rtc = platform_get_drvdata(pdev);
 
-	dev_info(&pdev->dev, "%s %s", __FILE__, __func__);
-
-	if (rtc_rstc)
-		reset_control_assert(rtc_rstc);
-	clk_disable_unprepare(rtc_clk);
-
-	platform_set_drvdata(pdev, NULL);
+	/*
+	 * Leave the block out of reset so it keeps counting; only drop the
+	 * clock reference we took in probe.
+	 */
+	clk_disable_unprepare(rtc->clk);
 
 	return 0;
 }
 
 static const struct of_device_id rtk_rtc_ids[] = {
+	{ .compatible = "Realtek,rtk-rtc" },
 	{ .compatible = "realtek,rtk-rtc" },
-	{},
+	{ .compatible = "Realtek,rtk119x-rtc" },
+	{ /* sentinel */ }
 };
-MODULE_DEVICE_TABLE(of, rtd1295_watchdog_match);
+MODULE_DEVICE_TABLE(of, rtk_rtc_ids);
 
 static struct platform_driver rtk_rtc_driver = {
 	.probe = rtk_rtc_probe,
 	.remove = rtk_rtc_remove,
 	.driver = {
-		.name = DEV_NAME,
-		.of_match_table	= rtk_rtc_ids,
+		.name = "rtk-rtc",
+		.of_match_table = rtk_rtc_ids,
 	},
 };
-
 module_platform_driver(rtk_rtc_driver);
+
+MODULE_DESCRIPTION("Realtek RTD1xxx SoC RTC");
+MODULE_LICENSE("GPL");

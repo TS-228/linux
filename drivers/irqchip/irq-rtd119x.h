@@ -19,7 +19,12 @@ enum misc_int_en {
 	MISC_INT_RVD = 0xFE,
 	MISC_INT_EN_GSPI = 27,
 	MISC_INT_EN_I2C2 = 26,
-	MISC_INT_EN_I2C3 = 23,
+	/*
+	 * I2C3 is the one source whose SCPU_INT_EN bit does not match its
+	 * MISC_ISR status bit (23) - which is exactly what irq_map_tab
+	 * translates.
+	 */
+	MISC_INT_EN_I2C3 = 28,
 	MISC_INT_EN_LSADC = 21,
 	MISC_INT_EN_GPIODA = 20,
 	MISC_INT_EN_GPIOA = 19,

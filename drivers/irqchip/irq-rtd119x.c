@@ -184,7 +184,13 @@ static void mux_irq_handle(struct irq_desc *desc)
 						enable);
 				}
 			} else {
-				pr_err("[%s] irq(%u) should not happen"
+				/*
+				 * A source with no enabled handler cannot be
+				 * cleared here, so it re-asserts forever.
+				 * Rate-limit, or the console spam alone
+				 * livelocks the boot.
+				 */
+				pr_err_ratelimited("[%s] irq(%u) should not happen"
 					"(st:0x%08x en:0x%08x)\n",
 					DEV_NAME,
 					mux_irq,
@@ -205,7 +211,7 @@ static void mux_irq_handle(struct irq_desc *desc)
 
 	if (check_status == status) {
 		if (count > 1) {
-			pr_err("[%s] (%u) %s irq status is not change"
+			pr_err_ratelimited("[%s] (%u) %s irq status is not change"
 				"clear it! (st:0x%08x en:0x%08x)\n",
 				DEV_NAME,
 				irq,

@@ -13,6 +13,7 @@
 #define pr_fmt(fmt) "rtktrace: " fmt
 
 #include <linux/atomic.h>
+#include <linux/panic_notifier.h>
 #include <linux/export.h>
 #include <linux/kernel.h>
 #include <linux/module.h>

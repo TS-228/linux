@@ -494,7 +494,7 @@
 		clock-output-names =
 			"",           "misc_i2c_5", "",           "",
 			"vpu",        "",           "",           "",
-			"",           "misc_rtc",   "",           "",
+			"",           "",           "misc_rtc",   "",
 			"",           "misc_i2c_4", "misc_i2c_3", "misc_i2c_2",
 			"misc_i2c_1", "",           "",           "",
 			"",           "",           "",           "",

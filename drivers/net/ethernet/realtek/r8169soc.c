@@ -10007,7 +10007,7 @@ rtl_init_one(struct platform_device *pdev)
 	u32 tmp;
 	int irq;
 	int retry;
-	const char *mac_addr;
+	u8 mac_addr[ETH_ALEN];
 	struct property *wake_mask;
 	char tmp_str[80];
 #ifdef RTL_PROC
@@ -10427,9 +10427,8 @@ rtl_init_one(struct platform_device *pdev)
 	mutex_init(&tp->wk.mutex);
 
 	/* Get MAC address */
-	mac_addr = of_get_mac_address(pdev->dev.of_node);
-	if (mac_addr)
-		rtl_rar_set(tp, (u8*)mac_addr);
+	if (!of_get_mac_address(pdev->dev.of_node, mac_addr))
+		rtl_rar_set(tp, mac_addr);
 
 	/* workaround: avoid getting deadbeef */
 	#define RETRY_MAX	10

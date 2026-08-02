@@ -533,6 +533,7 @@ config ARCH_RTD119X
 	select COMMON_CLK
 	select ARCH_HAS_BARRIERS
 	select SPARSE_IRQ
+	select GENERIC_IRQ_MULTI_HANDLER
 	select RTK_PLATFORM
 	select PM_OPP
 	help
@@ -559,6 +560,7 @@ config ARCH_RTD129x
 	select COMMON_CLK
 	select ARCH_HAS_BARRIERS
 	select SPARSE_IRQ
+	select GENERIC_IRQ_MULTI_HANDLER
 	select RTK_PLATFORM
 	select PM_OPP
 	help
@@ -585,6 +587,7 @@ config ARCH_RTD139x
 	select COMMON_CLK
 	select ARCH_HAS_BARRIERS
 	select SPARSE_IRQ
+	select GENERIC_IRQ_MULTI_HANDLER
 	select RTK_PLATFORM
 	select PM_OPP
 	select ARM_HAS_SG_CHAIN
@@ -620,6 +623,7 @@ config ARCH_RTD16xx
 	select COMMON_CLK
 	select ARCH_HAS_BARRIERS
 	select SPARSE_IRQ
+	select GENERIC_IRQ_MULTI_HANDLER
 	select RTK_PLATFORM
 	select RTK_PLATFORM_PSCI
 	select PM_OPP
@@ -657,6 +661,7 @@ config ARCH_RTD13xx
 	select COMMON_CLK
 	select ARCH_HAS_BARRIERS
 	select SPARSE_IRQ
+	select GENERIC_IRQ_MULTI_HANDLER
 	select RTK_PLATFORM
 	select RTK_PLATFORM_PSCI
 	select PM_OPP

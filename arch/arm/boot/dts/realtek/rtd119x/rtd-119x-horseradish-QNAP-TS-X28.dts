@@ -107,6 +107,16 @@
 		clock-frequency = <432000000>;
 	};
 
+	/* I2C3 carries the Epson RX-8010 RTC, as on the vendor kernel. */
+	i2c@0x1801B900 {
+		status = "okay";
+
+		rtc@32 {
+			compatible = "epson,rx8010";
+			reg = <0x32>;
+		};
+	};
+
 	rtk_misc_gpio: rtk_misc_gpio@1801b100 {
 		gpios =
 		<&rtk_misc_gpio 4 0 0>, 				/*install button, input, default N/A */
@@ -171,4 +181,17 @@
 	hdmirx@1800F000 {
                 status = "disabled";
         };
+};
+
+/*
+ * The shared rtd-119x.dtsi leaves i2c_pins_3 unmuxed; the vendor TS-X28 DTB
+ * muxes it, which is what puts the RX-8010 on the wire. The whole list has to
+ * be restated because a DT property is replaced wholesale, not merged.
+ */
+&pinctrl {
+	pinctrl-0 = <&ir_rx_pins>, <&ir_tx_pins>,
+		<&i2c_pins_0>, <&i2c_pins_1>, <&i2c_pins_3>,
+		<&i2c_pins_5>, <&i2c_pins_6>,
+		<&sdio_pins>, <&uart1_pins_loc_iso>,
+		<&vfd_pins>, <&mmc_pins>;
 };

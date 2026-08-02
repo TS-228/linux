@@ -1,4 +1,5 @@
 #include <linux/kernel.h>
+#include <linux/reboot.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/printk.h>
@@ -50,10 +51,12 @@ static void setup_restart_action(RESET_ACTION action)
 	writel(reset_action, rst_ctrl_base + rst_ctrl_reg_offset);
 }
 
-void rtk_machine_restart(char mode, const char *cmd)
+static int rtk_machine_restart(struct notifier_block *nb,
+				 unsigned long mode, void *cmd)
 {
-	if (cmd) {
-		if (!strncmp("bootloader", cmd, 11)) {
+	const char *c = cmd;
+	if (c) {
+		if (!strncmp("bootloader", c, 11)) {
 			setup_restart_action(RESET_ACTION_FASTBOOT);
 		} else {
 			setup_restart_action(RESET_ACTION_NO_ACTION);
@@ -71,10 +74,16 @@ void rtk_machine_restart(char mode, const char *cmd)
 	writel(0x000000FF, wdt_base + WDT_CTL);
 	while (1)
 		mdelay(100);
+	return NOTIFY_DONE;
 }
 
+static struct notifier_block rtk_restart_nb = {
+	.notifier_call = rtk_machine_restart,
+	.priority = 128,
+};
+
 static struct of_device_id rtk_restart_ids[] = {
-	{.compatible = "Realtek,rtk-watchdog", .data = rtk_machine_restart},
+	{.compatible = "Realtek,rtk-watchdog"},
 	{}
 };
 
@@ -85,7 +94,6 @@ static struct of_device_id rtk_reset_control_ids[] = {
 
 static int rtk_setup_restart(void)
 {
-	const struct of_device_id *of_id;
 	struct device_node *np;
 
 	/* setup Watchdog */
@@ -99,10 +107,7 @@ static int rtk_setup_restart(void)
 	if (of_property_read_u32_index(np, "rst-oe", 0, &wdt_oe))
 		wdt_oe = -1;
 
-	of_id = of_match_node(rtk_restart_ids, np);
-	WARN(!of_id, "restart not available");
-
-	arm_pm_restart = of_id->data;
+	register_restart_handler(&rtk_restart_nb);
 
 #ifdef CONFIG_ARCH_RTD129X
 	/* setup Reset Control */

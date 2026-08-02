@@ -1,6 +1,7 @@
 #!/bin/bash
+set -euo pipefail
 
-# Arm GNU Toolchain 11.2 (recommended for Linux 5.10)
+# Arm GNU Toolchain 11.2 (recommended for Linux 5.15)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export PATH="${SCRIPT_DIR}/../compiler/gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf/bin:$PATH"
 export CROSS_COMPILE=arm-none-linux-gnueabihf-
@@ -25,8 +26,13 @@ fi
 # Backup the current config
 cp -f "$CONFIG_FILE" "$CONFIG_BACKUP"
 
-# Configure the build
-make menuconfig
+# Configure the build (skip when non-interactive / SKIP_MENUCONFIG=1)
+if [[ -z "${SKIP_MENUCONFIG:-}" && -t 0 ]]; then
+    make menuconfig
+else
+    echo "Skipping menuconfig (non-interactive); running olddefconfig"
+    make olddefconfig
+fi
 
 CONFIG_ADDR="0x00108000"
 
@@ -34,8 +40,10 @@ CONFIG_ADDR="0x00108000"
 make -j$(nproc) uImage LOADADDR=$CONFIG_ADDR
 make dtbs
 
-# Copy the DTB file (if necessary)
-sudo cp arch/arm/boot/dts/realtek/rtd119x/rtd-119x-horseradish-QNAP-TS-X28.dtb /var/lib/tftpboot/rescue.emmc.dtb
-sudo cp arch/arm/boot/uImage /var/lib/tftpboot/emmc.uImage
+# Copy the DTB file (optional tftp deploy)
+if [[ -z "${SKIP_TFTP_COPY:-}" ]]; then
+    sudo cp arch/arm/boot/dts/realtek/rtd119x/rtd-119x-horseradish-QNAP-TS-X28.dtb /var/lib/tftpboot/rescue.emmc.dtb
+    sudo cp arch/arm/boot/uImage /var/lib/tftpboot/emmc.uImage
+fi
 
 echo "tftp \$fdt_loadaddr \$serverip:\$rescue_dtb && tftp \$kernel_loadaddr \$serverip:\$rescue_vmlinux && bootm \$kernel_loadaddr - \$fdt_loadaddr"

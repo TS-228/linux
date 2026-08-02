@@ -429,7 +429,6 @@ void __init of_reserved_mem_remap(void)
 	rtk_mem_remap_of_init_by_DT( reserved_mem, reserved_mem_count);
 #endif
 }
-EXPORT_SYMBOL_GPL(of_reserved_mem_remap);
 
 /**
  * of_reserved_mem_lookup() - acquire reserved_mem from a device node

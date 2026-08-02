@@ -216,6 +216,20 @@ static const struct i2c_algorithm rtk_i2c_algo = {
 	.functionality = rtk_i2c_func,
 };
 
+/*
+ * The MISC/ISO interrupt is level-triggered and the irq mux can only clear a
+ * source that has a handler attached. An enabled controller with no handler
+ * therefore livelocks the parent irq, so every probe failure past
+ * rtk_i2c_init() has to leave the controller silent.
+ */
+static void rtk_i2c_quiesce(struct rtk_i2c_handler *handler)
+{
+	SET_IC_INTR_MASK(handler, 0);
+	SET_IC_ENABLE(handler, 0);
+	CLR_IC_INTR(handler);
+	SET_I2C_ISR(handler, handler->reg_map.I2C_INT);
+}
+
 static int  rtk_i2c_init(struct rtk_i2c_dev *i2c_dev)
 {
 	i2c_dev->handler = create_rtk_i2c_handle(
@@ -223,8 +237,10 @@ static int  rtk_i2c_init(struct rtk_i2c_dev *i2c_dev)
 		ADDR_MODE_7BITS, SPD_MODE_SS, i2c_dev->irq,
 		(unsigned long)i2c_dev->base);
 
-	if (i2c_dev->handler == NULL)
-		pr_info("[I2C%d] handler is NULL, FAIL!!!!\n", i2c_dev->id);
+	if (i2c_dev->handler == NULL) {
+		pr_err("[I2C%d] handler is NULL, FAIL!!!!\n", i2c_dev->id);
+		return -ENOMEM;
+	}
 
 	return i2c_dev->handler->init(i2c_dev->handler);
 }
@@ -251,9 +267,10 @@ static int rtk_i2c_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
+	/* irq_of_parse_and_map() reports failure as 0, not as a negative errno. */
 	irq = irq_of_parse_and_map(pdev->dev.of_node, 0);
-	if (irq < 0) {
-		pr_err("i2c no irq\n");
+	if (irq <= 0) {
+		dev_err(&pdev->dev, "no usable irq\n");
 		return -EINVAL;
 	}
 
@@ -273,6 +290,9 @@ static int rtk_i2c_probe(struct platform_device *pdev)
 		pr_warn("Failed to device reset: %d\n", ret);
 
 	i2c_dev = devm_kzalloc(&pdev->dev, sizeof(*i2c_dev), GFP_KERNEL);
+	if (!i2c_dev)
+		return -ENOMEM;
+
 	i2c_dev->base = base;
 	i2c_dev->div_clk = div_clk;
 	i2c_dev->adapter.algo = &rtk_i2c_algo;
@@ -304,6 +324,12 @@ static int rtk_i2c_probe(struct platform_device *pdev)
 	ret = devm_request_irq(&pdev->dev, i2c_dev->irq, rtk_i2c_isr,
 		IRQF_SHARED, dev_name(&pdev->dev),
 		(void *)i2c_dev->handler);
+	if (ret) {
+		dev_err(&pdev->dev, "failed to request irq %d: %d\n",
+			i2c_dev->irq, ret);
+		rtk_i2c_quiesce(i2c_dev->handler);
+		return ret;
+	}
 
 	i2c_set_adapdata(&i2c_dev->adapter, i2c_dev);
 	i2c_dev->adapter.owner = THIS_MODULE;
@@ -318,8 +344,14 @@ static int rtk_i2c_probe(struct platform_device *pdev)
 
 	if (ret) {
 		dev_err(&pdev->dev, "Failed to add I2C adapter\n");
+		rtk_i2c_quiesce(i2c_dev->handler);
 		return ret;
 	}
+
+	dev_info(&pdev->dev, "I2C%d ready on i2c-%d, irq %d, %u Hz\n",
+		i2c_dev->id, i2c_dev->adapter.nr, i2c_dev->irq,
+		i2c_dev->bus_clk_rate);
+
 	return 0;
 }
 

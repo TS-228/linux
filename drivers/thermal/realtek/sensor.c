@@ -46,8 +46,8 @@ static int thermal_sensor_device_add(struct device *dev,
 		return PTR_ERR(tdev->tz);
 
 	list_add(&tdev->list, &sensor_device_list);
-	tdev->passive_delay = tdev->tz->passive_delay;
-	tdev->polling_delay = tdev->tz->polling_delay;
+	tdev->passive_delay = jiffies_to_msecs(tdev->tz->passive_delay_jiffies);
+	tdev->polling_delay = jiffies_to_msecs(tdev->tz->polling_delay_jiffies);
 	return 0;
 }
 
