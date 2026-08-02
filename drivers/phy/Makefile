@@ -39,3 +39,5 @@ obj-y					+= allwinner/	\
 					   tegra/	\
 					   ti/		\
 					   xilinx/
+
+obj-$(CONFIG_PHY_RTK_SATA)		+= phy-rtk-sata.o

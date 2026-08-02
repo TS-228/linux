@@ -819,6 +819,19 @@ void __init paging_init(void)
 	declare_kernel_vmas();
 }
 
+#ifdef CONFIG_RTK_PLATFORM
+/*
+ * Enable the identity mapping to allow the MMU disabling.
+ */
+void setup_mm_for_reboot(void)
+{
+	cpu_set_reserved_ttbr0();
+	flush_tlb_all();
+	cpu_set_idmap_tcr_t0sz();
+	cpu_switch_mm(idmap_pg_dir, &init_mm);
+}
+#endif /* CONFIG_RTK_PLATFORM */
+
 #ifdef CONFIG_MEMORY_HOTPLUG
 static void free_hotplug_page_range(struct page *page, size_t size,
 				    struct vmem_altmap *altmap)

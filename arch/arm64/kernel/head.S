@@ -117,6 +117,19 @@ SYM_CODE_START(primary_entry)
 
 1:	mov	x0, x19
 	bl	init_kernel_el			// w0=cpu_boot_mode
+#ifdef CONFIG_RTK_PLATFORM_FPGA
+#ifdef CONFIG_ARCH_RTD16xx
+	bl	gicv3_pre_init
+#endif
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD139x)
+	bl	gic_pre_init
+#endif
+	bl	armv8_switch_to_el2
+	ldr	x0, =DTB_ADDR
+	ldr	x1, =0x0
+	ldr	x2, =0x0
+	ldr	x3, =0x0
+#endif /* CONFIG_RTK_PLATFORM_FPGA */
 	mov	x20, x0
 
 	/*

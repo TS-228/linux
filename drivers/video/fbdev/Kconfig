@@ -1660,6 +1660,15 @@ config FB_SH7760
 	  and 8, 15 or 16 bpp color; 90 degrees clockwise display rotation for
 	  panels <= 320 pixel horizontal resolution.
 
+config FB_RTK
+	tristate "RTK Framebuffer support"
+	default n
+	select SYNC
+	select SW_SYNC
+	select SW_SYNC_USER
+	help
+	  Realtek Frame Buffer driver
+
 config FB_VIRTUAL
 	tristate "Virtual Frame Buffer support (ONLY FOR TESTING!)"
 	depends on FB

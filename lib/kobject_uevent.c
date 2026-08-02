@@ -56,6 +56,10 @@ static const char *kobject_actions[] = {
 	[KOBJ_OFFLINE] =	"offline",
 	[KOBJ_BIND] =		"bind",
 	[KOBJ_UNBIND] =		"unbind",
+#if defined(CONFIG_R8168) || defined(CONFIG_R8169SOC) || defined(CONFIG_RTD_1295_HWNAT)
+	[KOBJ_LINKUP] =		"linkup",
+	[KOBJ_LINKDOWN] =	"linkdown",
+#endif
 };
 
 static int kobject_action_type(const char *buf, size_t count,

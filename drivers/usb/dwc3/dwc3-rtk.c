@@ -1,432 +1,424 @@
-// SPDX-License-Identifier: GPL-2.0
-/*
+/**
  * dwc3-rtk.c - Realtek DWC3 Specific Glue layer
  *
- * Copyright (C) 2023 Realtek Semiconductor Corporation
+ * Copyright (C) 2017 Realtek Semiconductor Corporation
  *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
 
-#include <linux/cleanup.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/slab.h>
 #include <linux/platform_device.h>
+#include <linux/dma-mapping.h>
+#include <linux/clk.h>
+#include <linux/usb/otg.h>
+#include <linux/usb/usb_phy_generic.h>
+#include <linux/usb/of.h>
 #include <linux/of.h>
 #include <linux/of_platform.h>
+#include <linux/of_address.h>
 #include <linux/suspend.h>
-#include <linux/sys_soc.h>
-#include <linux/usb/otg.h>
-#include <linux/usb/of.h>
-#include <linux/usb/role.h>
+#include <soc/realtek/rtk_chip.h>
 
-#include "core.h"
+#include "../host/xhci.h" //hcy test added
+#include "core.h" //hcy test added
 
-#define WRAP_CTR_REG  0x0
+#define WRAP_CTR_reg  0x0
+#define USB2_PHY_reg  0x70
+
+#define EN_PHY_PLL_PORT0 BIT(12)
+#define EN_PHY_PLL_PORT1 BIT(13)
 #define DISABLE_MULTI_REQ BIT(1)
-#define DESC_R2W_MULTI_DISABLE BIT(9)
-#define FORCE_PIPE3_PHY_STATUS_TO_0 BIT(13)
-
-#define WRAP_USB2_PHY_UTMI_REG 0x8
-#define TXHSVM_EN BIT(3)
-
-#define WRAP_PHY_PIPE_REG 0xC
-#define RESET_DISABLE_PIPE3_P0 BIT(0)
-#define CLOCK_ENABLE_FOR_PIPE3_PCLK BIT(1)
-
-#define WRAP_USB_HMAC_CTR0_REG 0x60
-#define U3PORT_DIS BIT(8)
-
-#define WRAP_USB2_PHY_REG  0x70
-#define USB2_PHY_EN_PHY_PLL_PORT0 BIT(12)
-#define USB2_PHY_EN_PHY_PLL_PORT1 BIT(13)
 #define USB2_PHY_SWITCH_MASK 0x707
 #define USB2_PHY_SWITCH_DEVICE 0x0
 #define USB2_PHY_SWITCH_HOST 0x606
 
-#define WRAP_APHY_REG 0x128
-#define USB3_MBIAS_ENABLE BIT(1)
-
-/* pm control */
-#define WRAP_USB_DBUS_PWR_CTRL_REG 0x160
-#define USB_DBUS_PWR_CTRL_REG 0x0
-#define DBUS_PWR_CTRL_EN BIT(0)
-
 struct dwc3_rtk {
-	struct device *dev;
-	void __iomem *regs;
-	size_t regs_size;
-	void __iomem *pm_base;
+	struct platform_device	*usb2_phy;
+	struct platform_device	*usb3_phy;
+	struct device		*dev;
 
-	struct dwc3 *dwc;
+	void __iomem		*regs;
+	size_t		regs_size;
 
-	enum usb_role cur_role;
-	struct usb_role_switch *role_switch;
+	struct clk		*clk;
+	struct platform_device *dwc; //hjcy added
+
+	struct work_struct work;
 };
 
-static void switch_usb2_role(struct dwc3_rtk *rtk, enum usb_role role)
-{
-	void __iomem *reg;
-	int val;
-
-	reg = rtk->regs + WRAP_USB2_PHY_REG;
-	val = ~USB2_PHY_SWITCH_MASK & readl(reg);
-
-	switch (role) {
-	case USB_ROLE_DEVICE:
-		writel(USB2_PHY_SWITCH_DEVICE | val, reg);
-		break;
-	case USB_ROLE_HOST:
-		writel(USB2_PHY_SWITCH_HOST | val, reg);
-		break;
-	default:
-		dev_dbg(rtk->dev, "%s: role=%d\n", __func__, role);
-		break;
-	}
-}
-
-static void switch_dwc3_role(struct dwc3_rtk *rtk, enum usb_role role)
-{
-	if (!rtk->dwc->role_sw)
-		return;
-
-	usb_role_switch_set_role(rtk->dwc->role_sw, role);
-}
-
-static enum usb_role dwc3_rtk_get_role(struct dwc3_rtk *rtk)
-{
-	enum usb_role role;
-
-	role = rtk->cur_role;
-
-	if (rtk->dwc && rtk->dwc->role_sw)
-		role = usb_role_switch_get_role(rtk->dwc->role_sw);
-	else
-		dev_dbg(rtk->dev, "%s not usb_role_switch role=%d\n", __func__, role);
-
-	return role;
-}
-
-static void dwc3_rtk_set_role(struct dwc3_rtk *rtk, enum usb_role role)
-{
-	rtk->cur_role = role;
-
-	switch_dwc3_role(rtk, role);
-	mdelay(10);
-	switch_usb2_role(rtk, role);
-}
-
-#if IS_ENABLED(CONFIG_USB_ROLE_SWITCH)
-static int dwc3_usb_role_switch_set(struct usb_role_switch *sw, enum usb_role role)
-{
-	struct dwc3_rtk *rtk = usb_role_switch_get_drvdata(sw);
-
-	dwc3_rtk_set_role(rtk, role);
-
-	return 0;
-}
-
-static enum usb_role dwc3_usb_role_switch_get(struct usb_role_switch *sw)
-{
-	struct dwc3_rtk *rtk = usb_role_switch_get_drvdata(sw);
-
-	return dwc3_rtk_get_role(rtk);
-}
-
-static int dwc3_rtk_setup_role_switch(struct dwc3_rtk *rtk)
-{
-	struct usb_role_switch_desc dwc3_role_switch = {NULL};
-
-	dwc3_role_switch.name = dev_name(rtk->dev);
-	dwc3_role_switch.driver_data = rtk;
-	dwc3_role_switch.allow_userspace_control = true;
-	dwc3_role_switch.fwnode = dev_fwnode(rtk->dev);
-	dwc3_role_switch.set = dwc3_usb_role_switch_set;
-	dwc3_role_switch.get = dwc3_usb_role_switch_get;
-	rtk->role_switch = usb_role_switch_register(rtk->dev, &dwc3_role_switch);
-	if (IS_ERR(rtk->role_switch))
-		return PTR_ERR(rtk->role_switch);
-
-	return 0;
-}
-
-static int dwc3_rtk_remove_role_switch(struct dwc3_rtk *rtk)
-{
-	if (rtk->role_switch)
-		usb_role_switch_unregister(rtk->role_switch);
-
-	rtk->role_switch = NULL;
-
-	return 0;
-}
-#else
-#define dwc3_rtk_setup_role_switch(x) 0
-#define dwc3_rtk_remove_role_switch(x) 0
+#ifdef CONFIG_RTK_USB3PHY
+extern void rtk_usb3_phy_toggle(struct usb_phy *usb3_phy, bool isConnect,
+	    int port);
 #endif
 
-static const char *const speed_names[] = {
-	[USB_SPEED_UNKNOWN] = "UNKNOWN",
-	[USB_SPEED_LOW] = "low-speed",
-	[USB_SPEED_FULL] = "full-speed",
-	[USB_SPEED_HIGH] = "high-speed",
-	[USB_SPEED_WIRELESS] = "wireless",
-	[USB_SPEED_SUPER] = "super-speed",
-	[USB_SPEED_SUPER_PLUS] = "super-speed-plus",
-};
-
-static enum usb_device_speed __get_dwc3_maximum_speed(struct device_node *np)
+void RTK_dwc3_usb3_phy_toggle(struct device *hcd_dev, bool isConnect, int port)
 {
-	const char *maximum_speed;
-	int ret;
+	struct device *dwc3_dev = NULL;
+	struct dwc3 *dwc = NULL;
+	if (hcd_dev == NULL) return;
 
-	struct device_node *dwc3_np __free(device_node) = of_get_compatible_child(np,
-										  "snps,dwc3");
-	if (!dwc3_np)
-		return USB_SPEED_UNKNOWN;
+	dwc3_dev = hcd_dev->parent;
+	if (dwc3_dev == NULL) return;
 
-	ret = of_property_read_string(dwc3_np, "maximum-speed", &maximum_speed);
-	if (ret < 0)
-		return USB_SPEED_UNKNOWN;
-
-	ret = match_string(speed_names, ARRAY_SIZE(speed_names), maximum_speed);
-
-	return (ret < 0) ? USB_SPEED_UNKNOWN : ret;
+	dwc = dev_get_drvdata(dwc3_dev);
+#ifdef CONFIG_RTK_USB3PHY
+	dev_dbg(dwc3_dev, "%s port=%d\n", __func__, port);
+	if (dwc != NULL)
+		rtk_usb3_phy_toggle(dwc->usb3_phy, isConnect, port);
+#endif
 }
 
-static int dwc3_rtk_init(struct dwc3_rtk *rtk)
+#ifdef CONFIG_RTK_USB2PHY
+extern void rtk_usb2_phy_toggle(struct usb_phy *usb3_phy, bool isConnect,
+	    int port);
+#endif
+
+int RTK_dwc3_usb2_phy_toggle(struct device *hcd_dev, bool isConnect, int port)
 {
-	struct device *dev = rtk->dev;
-	void __iomem *reg;
-	int val;
-	enum usb_device_speed maximum_speed;
-	const struct soc_device_attribute rtk_soc_kylin_a00[] = {
-		{ .family = "Realtek Kylin", .revision = "A00", },
-		{ /* empty */ } };
-	const struct soc_device_attribute rtk_soc_hercules[] = {
-		{ .family = "Realtek Hercules", }, { /* empty */ } };
-	const struct soc_device_attribute rtk_soc_thor[] = {
-		{ .family = "Realtek Thor", }, { /* empty */ } };
+	struct device *dwc3_dev = NULL;
+	struct dwc3 *dwc = NULL;
+	if (hcd_dev == NULL) return -1;
 
-	if (soc_device_match(rtk_soc_kylin_a00)) {
-		reg = rtk->regs + WRAP_CTR_REG;
-		val = readl(reg);
-		writel(DISABLE_MULTI_REQ | val, reg);
-		dev_info(dev, "[bug fixed] 1295/1296 A00: add workaround to disable multiple request for D-Bus");
-	}
+	dwc3_dev = hcd_dev->parent;
+	if (dwc3_dev == NULL) return -1;
 
-	if (soc_device_match(rtk_soc_hercules)) {
-		reg = rtk->regs + WRAP_USB2_PHY_REG;
-		val = readl(reg);
-		writel(USB2_PHY_EN_PHY_PLL_PORT1 | val, reg);
-		dev_info(dev, "[bug fixed] 1395 add workaround to disable usb2 port 2 suspend!");
-	}
+	dwc = dev_get_drvdata(dwc3_dev);
+	if (dwc == NULL) return -1;
 
-	reg = rtk->regs + WRAP_USB2_PHY_UTMI_REG;
-	val = readl(reg);
-	writel(TXHSVM_EN | val, reg);
-
-	maximum_speed = __get_dwc3_maximum_speed(dev->of_node);
-	if (maximum_speed != USB_SPEED_UNKNOWN && maximum_speed <= USB_SPEED_HIGH) {
-		if (soc_device_match(rtk_soc_thor)) {
-			reg = rtk->regs + WRAP_USB_HMAC_CTR0_REG;
-			val = readl(reg);
-			writel(U3PORT_DIS | val, reg);
-		} else {
-			reg = rtk->regs + WRAP_CTR_REG;
-			val = readl(reg);
-			writel(FORCE_PIPE3_PHY_STATUS_TO_0 | val, reg);
-
-			reg = rtk->regs + WRAP_PHY_PIPE_REG;
-			val = ~CLOCK_ENABLE_FOR_PIPE3_PCLK & readl(reg);
-			writel(RESET_DISABLE_PIPE3_P0 | val, reg);
-
-			reg =  rtk->regs + WRAP_USB_HMAC_CTR0_REG;
-			val = readl(reg);
-			writel(U3PORT_DIS | val, reg);
-
-			reg = rtk->regs + WRAP_APHY_REG;
-			val = readl(reg);
-			writel(~USB3_MBIAS_ENABLE & val, reg);
-
-			dev_dbg(rtk->dev, "%s: disable usb 3.0 phy\n", __func__);
-		}
-	}
-
-	reg = rtk->regs + WRAP_CTR_REG;
-	val = readl(reg);
-	writel(DESC_R2W_MULTI_DISABLE | val, reg);
-
-	/* Set phy Dp/Dm initial state to host mode to avoid the Dp glitch */
-	reg = rtk->regs + WRAP_USB2_PHY_REG;
-	val = ~USB2_PHY_SWITCH_MASK & readl(reg);
-	writel(USB2_PHY_SWITCH_HOST | val, reg);
-
-	if (rtk->pm_base) {
-		reg = rtk->pm_base + USB_DBUS_PWR_CTRL_REG;
-		val = DBUS_PWR_CTRL_EN | readl(reg);
-		writel(val, reg);
-	}
-
+#ifdef CONFIG_RTK_USB2PHY
+	dev_dbg(dwc3_dev, "%s port=%d\n", __func__, port);
+	rtk_usb2_phy_toggle(dwc->usb2_phy, isConnect, port);
+#endif
 	return 0;
 }
 
-static int dwc3_rtk_probe_dwc3_core(struct dwc3_rtk *rtk)
+static int dwc3_rtk_register_phys(struct dwc3_rtk *rtk)
 {
-	struct device *dev = rtk->dev;
-	struct device_node *node = dev->of_node;
-	struct platform_device *dwc3_pdev;
-	struct device *dwc3_dev;
-	enum usb_dr_mode dr_mode;
-	int ret = 0;
+	struct platform_device	*pdev;
+	int			ret;
 
-	ret = dwc3_rtk_init(rtk);
+	/* usb_phy_generic_platform_data was removed; phy-generic defaults to USB2 */
+	pdev = platform_device_alloc("usb_phy_generic", PLATFORM_DEVID_AUTO);
+	if (!pdev)
+		return -ENOMEM;
+
+	rtk->usb2_phy = pdev;
+
+	pdev = platform_device_alloc("usb_phy_generic", PLATFORM_DEVID_AUTO);
+	if (!pdev) {
+		ret = -ENOMEM;
+		goto err1;
+	}
+
+	rtk->usb3_phy = pdev;
+
+	ret = platform_device_add(rtk->usb2_phy);
 	if (ret)
-		return -EINVAL;
+		goto err2;
 
-	ret = of_platform_populate(node, NULL, NULL, dev);
-	if (ret) {
-		dev_err(dev, "failed to add dwc3 core\n");
-		return ret;
-	}
-
-	struct device_node *dwc3_node __free(device_node) = of_get_compatible_child(node,
-										    "snps,dwc3");
-	if (!dwc3_node) {
-		dev_err(dev, "failed to find dwc3 core node\n");
-		ret = -ENODEV;
-		goto depopulate;
-	}
-
-	dwc3_pdev = of_find_device_by_node(dwc3_node);
-	if (!dwc3_pdev) {
-		dev_err(dev, "failed to find dwc3 core platform_device\n");
-		ret = -ENODEV;
-		goto depopulate;
-	}
-
-	dwc3_dev = &dwc3_pdev->dev;
-	rtk->dwc = platform_get_drvdata(dwc3_pdev);
-	if (!rtk->dwc) {
-		dev_err(dev, "failed to find dwc3 core\n");
-		ret = -ENODEV;
-		goto err_pdev_put;
-	}
-
-	dr_mode = usb_get_dr_mode(dwc3_dev);
-	if (dr_mode != rtk->dwc->dr_mode) {
-		dev_info(dev, "dts set dr_mode=%d, but dwc3 set dr_mode=%d\n",
-			 dr_mode, rtk->dwc->dr_mode);
-		dr_mode = rtk->dwc->dr_mode;
-	}
-
-	switch (dr_mode) {
-	case USB_DR_MODE_PERIPHERAL:
-		rtk->cur_role = USB_ROLE_DEVICE;
-		break;
-	case USB_DR_MODE_HOST:
-		rtk->cur_role = USB_ROLE_HOST;
-		break;
-	default:
-		dev_dbg(rtk->dev, "%s: dr_mode=%d\n", __func__, dr_mode);
-		break;
-	}
-
-	if (device_property_read_bool(dwc3_dev, "usb-role-switch")) {
-		ret = dwc3_rtk_setup_role_switch(rtk);
-		if (ret) {
-			dev_err(dev, "dwc3_rtk_setup_role_switch fail=%d\n", ret);
-			goto err_pdev_put;
-		}
-		rtk->cur_role = dwc3_rtk_get_role(rtk);
-	}
-
-	switch_usb2_role(rtk, rtk->cur_role);
-
-	platform_device_put(dwc3_pdev);
+	ret = platform_device_add(rtk->usb3_phy);
+	if (ret)
+		goto err3;
 
 	return 0;
 
-err_pdev_put:
-	platform_device_put(dwc3_pdev);
-depopulate:
-	of_platform_depopulate(dev);
+err3:
+	platform_device_del(rtk->usb2_phy);
+
+err2:
+	platform_device_put(rtk->usb3_phy);
+
+err1:
+	platform_device_put(rtk->usb2_phy);
 
 	return ret;
 }
 
+/*
+static int dwc3_rtk_remove_child(struct device *dev, void *unused)
+{
+	struct platform_device *pdev = to_platform_device(dev);
+
+	platform_device_unregister(pdev);
+
+	return 0;
+}
+*/
+
+static void dwc3_rtk_int_dr_mode(struct dwc3_rtk *rtk, int dr_mode)
+{
+	switch (dr_mode) {
+	case USB_DR_MODE_PERIPHERAL:
+		writel(USB2_PHY_SWITCH_DEVICE |
+			    (~USB2_PHY_SWITCH_MASK & readl(rtk->regs + USB2_PHY_reg)),
+			    rtk->regs + USB2_PHY_reg);
+		break;
+	case USB_DR_MODE_HOST:
+		writel(USB2_PHY_SWITCH_HOST |
+			    (~USB2_PHY_SWITCH_MASK & readl(rtk->regs + USB2_PHY_reg)),
+			    rtk->regs + USB2_PHY_reg);
+		break;
+	case USB_DR_MODE_OTG:
+		//writel(BIT(11) , rtk->regs + USB2_PHY_reg);
+		dev_info(rtk->dev, "%s: USB_DR_MODE_OTG\n", __func__);
+		break;
+	}
+}
+
+static int dwc3_rtk_init(struct dwc3_rtk *rtk)
+{
+	struct device		*dev = rtk->dev;
+	//struct device_node	*node = dev->of_node;
+	void __iomem		*regs = rtk->regs;
+
+	if ((get_rtd_chip_id() == CHIP_ID_RTD1295 ||
+		    get_rtd_chip_id() == CHIP_ID_RTD1296) &&
+		    get_rtd_chip_revision() == RTD_CHIP_A00) {
+		writel(DISABLE_MULTI_REQ | readl(regs + WRAP_CTR_reg),
+				regs + WRAP_CTR_reg);
+		dev_info(dev, "[bug fixed] 1295/1296 A00: add workaround to "
+			    "disable multiple request for D-Bus");
+	}
+
+	if (get_rtd_chip_id() == CHIP_ID_RTD1395 ||
+		    get_rtd_chip_id() == CHIP_ID_RTD1392) {
+		writel(EN_PHY_PLL_PORT1 | readl(regs + USB2_PHY_reg),
+			    regs + USB2_PHY_reg);
+		dev_info(dev, "[bug fixed] 1395 add workaround to "
+			    "disable usb2 port 2 suspend!");
+
+	}
+	return 0;
+}
+
+extern void rtk_usb_init_gpio_power_on(struct device *dev);
+extern int rtk_usb_manager_schedule_work(struct device *usb_dev, struct work_struct *work);
+
+static int dwc3_rtk_probe_dwc3core(struct dwc3_rtk *rtk)
+{
+	struct device		*dev = rtk->dev;
+	struct device_node	*node = dev->of_node;
+	struct device_node	*next_node;
+	int    ret = 0;
+
+	dwc3_rtk_init(rtk);
+
+	if (node) {
+		ret = of_platform_populate(node, NULL, NULL, dev);
+		if (ret) {
+			dev_err(dev, "failed to add dwc3 core\n");
+			return ret;
+		}
+		/* hcy adde below */
+		//node =  of_find_compatible_node(NULL, NULL, "synopsys,dwc3");
+		next_node = of_get_next_child(node, NULL);
+		if (next_node != NULL) {
+			struct device *next_dev;
+			int dr_mode;
+
+			rtk->dwc = of_find_device_by_node(next_node);
+			next_dev = &(rtk->dwc)->dev;
+			dr_mode = usb_get_dr_mode(next_dev);
+			dwc3_rtk_int_dr_mode(rtk, dr_mode);
+		}
+	}
+
+	rtk_usb_init_gpio_power_on(dev);
+
+	return ret;
+}
+
+static void dwc3_rtk_probe_work(struct work_struct *work)
+{
+	struct dwc3_rtk *rtk = container_of(work, struct dwc3_rtk, work);
+	struct device		*dev = rtk->dev;
+	int    ret = 0;
+
+	unsigned long probe_time = jiffies;
+
+	dev_info(dev, "%s Start ...\n", __func__);
+
+	ret = dwc3_rtk_probe_dwc3core(rtk);
+
+	if (ret)
+		dev_err(dev, "%s failed to add dwc3 core\n", __func__);
+
+	dev_info(dev, "%s End ... ok! (take %d ms)\n", __func__,
+		    jiffies_to_msecs(jiffies - probe_time));
+}
+
 static int dwc3_rtk_probe(struct platform_device *pdev)
 {
-	struct dwc3_rtk *rtk;
-	struct device *dev = &pdev->dev;
-	struct resource *res;
-	void __iomem *regs;
+	struct dwc3_rtk	*rtk;
+//	struct clk		*clk;
+	struct device		*dev = &pdev->dev;
+	struct device_node	*node = dev->of_node;
+
+	struct resource         *res;
+	void __iomem            *regs;
+
+	int			ret = -ENOMEM;
+	unsigned long probe_time = jiffies;
+
+	dev_info(&pdev->dev, "Probe Realtek-SoC USB DWC3 Host Controller\n");
 
 	rtk = devm_kzalloc(dev, sizeof(*rtk), GFP_KERNEL);
-	if (!rtk)
-		return -ENOMEM;
+	if (!rtk) {
+		dev_err(dev, "not enough memory\n");
+		goto err1;
+	}
+
+	/*
+	 * Right now device-tree probed devices don't get dma_mask set.
+	 * Since shared usb code relies on it, set it here for now.
+	 * Once we move to full device tree support this will vanish off.
+	 */
+	if (!dev->dma_mask)
+		dev->dma_mask = &dev->coherent_dma_mask;
+	if (!dev->coherent_dma_mask)
+		dev->coherent_dma_mask = DMA_BIT_MASK(32);
 
 	platform_set_drvdata(pdev, rtk);
 
-	rtk->dev = dev;
+	ret = dwc3_rtk_register_phys(rtk);
+	if (ret) {
+		dev_err(dev, "couldn't register PHYs\n");
+		goto err1;
+	}
 
-	regs = devm_platform_get_and_ioremap_resource(pdev, 0, &res);
-	if (IS_ERR(regs))
-		return PTR_ERR(regs);
+	rtk->dev	= dev;
+
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!res) {
+		dev_err(dev, "missing memory resource\n");
+		return -ENODEV;
+	}
+
+	regs = devm_ioremap_resource(dev, res);
+	if (IS_ERR(regs)) {
+		ret = PTR_ERR(regs);
+		goto err1;
+	}
 
 	rtk->regs = regs;
 	rtk->regs_size = resource_size(res);
 
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-	if (res) {
-		rtk->pm_base = devm_ioremap_resource(dev, res);
-		if (IS_ERR(rtk->pm_base))
-			return PTR_ERR(rtk->pm_base);
+	if (node) {
+		if (of_property_read_bool(node, "delay_probe_work")) {
+			INIT_WORK(&rtk->work, dwc3_rtk_probe_work);
+			if (of_property_read_bool(node, "ordered_probe"))
+				rtk_usb_manager_schedule_work(dev, &rtk->work);
+			else
+				schedule_work(&rtk->work);
+		} else {
+			ret = dwc3_rtk_probe_dwc3core(rtk);
+			if (ret) {
+				dev_err(dev, "%s failed to add dwc3 core\n", __func__);
+				goto err2;
+			}
+		}
+	} else {
+		dev_err(dev, "no device node, failed to add dwc3 core\n");
+		ret = -ENODEV;
+		goto err2;
 	}
+	dev_info(dev, "dwc3_rtk_probe ok! (take %d ms)\n",
+		    jiffies_to_msecs(jiffies - probe_time));
 
-	return dwc3_rtk_probe_dwc3_core(rtk);
+	return 0;
+
+err2:
+err1:
+	return ret;
 }
 
 static void dwc3_rtk_remove(struct platform_device *pdev)
 {
-	struct dwc3_rtk *rtk = platform_get_drvdata(pdev);
-
-	rtk->dwc = NULL;
-
-	dwc3_rtk_remove_role_switch(rtk);
+	struct dwc3_rtk	*rtk = platform_get_drvdata(pdev);
 
 	of_platform_depopulate(rtk->dev);
+	//device_for_each_child(&pdev->dev, NULL, dwc3_rtk_remove_child);
+	platform_device_unregister(rtk->usb2_phy);
+	platform_device_unregister(rtk->usb3_phy);
+
+	clk_disable_unprepare(rtk->clk);
 }
 
 static void dwc3_rtk_shutdown(struct platform_device *pdev)
 {
-	struct dwc3_rtk *rtk = platform_get_drvdata(pdev);
+	struct dwc3_rtk	*rtk = platform_get_drvdata(pdev);
+	struct device		*dev = &pdev->dev;
+
+	dev_info(dev, "dwc3_rtk_shutdown start ...\n");
 
 	of_platform_depopulate(rtk->dev);
+	//device_for_each_child(&pdev->dev, NULL, dwc3_rtk_remove_child);
+	platform_device_unregister(rtk->usb2_phy);
+	platform_device_unregister(rtk->usb3_phy);
+
+	clk_disable_unprepare(rtk->clk);
+	dev_info(dev, "dwc3_rtk_shutdown ok!\n");
 }
 
+#ifdef CONFIG_OF
 static const struct of_device_id rtk_dwc3_match[] = {
-	{ .compatible = "realtek,rtd-dwc3" },
+	{ .compatible = "Realtek,dwc3" },
+	{ .compatible = "Realtek,rtk119x-dwc3" },
+	{ .compatible = "Realtek,rtd129x-dwc3-drd" },
+	{ .compatible = "Realtek,rtd129x-dwc3-u2h" },
+	{ .compatible = "Realtek,rtd129x-dwc3-u3h" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, rtk_dwc3_match);
+#endif
 
 #ifdef CONFIG_PM_SLEEP
 static int dwc3_rtk_suspend(struct device *dev)
 {
+	dev_info(dev, "[USB] Enter %s", __func__);
+	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+		//For idle mode
+		dev_info(dev, "[USB] %s Idle mode\n", __func__);
+		goto out;
+	}
+	//For suspend mode
+	dev_info(dev,  "[USB] %s Suspend mode\n", __func__);
+
+out:
+	dev_info(dev, "[USB] Exit %s", __func__);
 	return 0;
 }
 
 static int dwc3_rtk_resume(struct device *dev)
 {
 	struct dwc3_rtk *rtk = dev_get_drvdata(dev);
+	struct dwc3 *dwc = platform_get_drvdata(rtk->dwc);
+
+	dev_info(dev, "[USB] Enter %s", __func__);
+	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+		//For idle mode
+		dev_info(dev, "[USB] %s Idle mode\n", __func__);
+		goto out;
+	}
+	//For suspend mode
+	dev_info(dev,  "[USB] %s Suspend mode\n", __func__);
 
 	dwc3_rtk_init(rtk);
 
-	switch_usb2_role(rtk, rtk->cur_role);
+	dwc3_rtk_int_dr_mode(rtk, dwc->dr_mode);
 
 	/* runtime set active to reflect active state. */
 	pm_runtime_disable(dev);
 	pm_runtime_set_active(dev);
 	pm_runtime_enable(dev);
 
+out:
+	dev_info(dev, "[USB] Exit %s", __func__);
 	return 0;
 }
 
@@ -441,19 +433,16 @@ static const struct dev_pm_ops dwc3_rtk_dev_pm_ops = {
 
 static struct platform_driver dwc3_rtk_driver = {
 	.probe		= dwc3_rtk_probe,
-	.remove_new	= dwc3_rtk_remove,
+	.remove		= dwc3_rtk_remove,
 	.driver		= {
 		.name	= "rtk-dwc3",
-		.of_match_table = rtk_dwc3_match,
+		.of_match_table = of_match_ptr(rtk_dwc3_match),
 		.pm	= DEV_PM_OPS,
 	},
-	.shutdown	= dwc3_rtk_shutdown,
+	.shutdown 	= dwc3_rtk_shutdown,
 };
 
 module_platform_driver(dwc3_rtk_driver);
 
-MODULE_AUTHOR("Stanley Chang <stanley_chang@realtek.com>");
-MODULE_DESCRIPTION("DesignWare USB3 Realtek Glue Layer");
 MODULE_ALIAS("platform:rtk-dwc3");
 MODULE_LICENSE("GPL");
-MODULE_SOFTDEP("pre: phy_rtk_usb2 phy_rtk_usb3");

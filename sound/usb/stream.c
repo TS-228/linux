@@ -10,6 +10,10 @@
 #include <linux/usb/audio-v2.h>
 #include <linux/usb/audio-v3.h>
 
+#ifdef CONFIG_RTK_PLATFORM
+#include <linux/switch.h>
+#endif /* CONFIG_RTK_PLATFORM */
+
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/control.h>
@@ -35,6 +39,11 @@ static void audioformat_free(struct audioformat *fp)
 	kfree(fp->chmap);
 	kfree(fp);
 }
+
+#ifdef CONFIG_RTK_PLATFORM
+extern struct switch_dev *usbaudiosdev;
+extern int num_playback_device;
+#endif /* CONFIG_RTK_PLATFORM */
 
 /*
  * free a substream
@@ -528,6 +537,10 @@ int snd_usb_add_audio_stream(struct snd_usb_audio *chip,
 		if (err < 0)
 			return err;
 		snd_usb_init_substream(as, stream, fp, pdptr);
+#ifdef CONFIG_RTK_PLATFORM
+		if (stream == SNDRV_PCM_STREAM_PLAYBACK && usbaudiosdev != NULL)
+			num_playback_device++;
+#endif /* CONFIG_RTK_PLATFORM */
 		return add_chmap(as->pcm, stream, subs);
 	}
 
@@ -569,6 +582,11 @@ int snd_usb_add_audio_stream(struct snd_usb_audio *chip,
 	chip->pcm_devs++;
 
 	snd_usb_proc_pcm_format_add(as);
+
+#ifdef CONFIG_RTK_PLATFORM
+	if (stream == SNDRV_PCM_STREAM_PLAYBACK && usbaudiosdev != NULL)
+		num_playback_device++;
+#endif
 
 	return add_chmap(pcm, stream, &as->substream[stream]);
 }

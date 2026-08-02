@@ -18,6 +18,10 @@
 #include "libata.h"
 #include "libata-transport.h"
 
+#ifdef CONFIG_AHCI_RTK
+extern void rtk_sata_phy_poweron(struct ata_link *link);
+#endif
+
 /* debounce timing parameters in msecs { interval, duration, timeout } */
 const unsigned int sata_deb_timing_normal[]		= {   5,  100, 2000 };
 EXPORT_SYMBOL_GPL(sata_deb_timing_normal);
@@ -326,6 +330,10 @@ int sata_link_resume(struct ata_link *link, const unsigned int *params,
 		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
 			return rc;
 	} while ((scontrol & 0xf0f) != 0x300 && --tries);
+
+#if defined(CONFIG_AHCI_RTK)
+	rtk_sata_phy_poweron(link);
+#endif
 
 	if ((scontrol & 0xf0f) != 0x300) {
 		ata_link_warn(link, "failed to resume link (SControl %X)\n",

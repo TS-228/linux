@@ -5,6 +5,11 @@
 #include <asm/assembler.h>
 #include <asm/smp.h>
 
+#ifdef CONFIG_RTK_PLATFORM
+#define GICD_BASE 0xFF011000
+#define GICC_BASE 0xFF012000
+#endif /* CONFIG_RTK_PLATFORM */
+
 	.text
 /*
  * Implementation of MPIDR_EL1 hash algorithm through shifting

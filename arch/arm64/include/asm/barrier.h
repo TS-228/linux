@@ -13,6 +13,10 @@
 
 #include <asm/alternative-macros.h>
 
+#ifdef CONFIG_RTK_RBUS_BARRIER
+extern void rtk_bus_sync(void);
+#endif /* CONFIG_RTK_RBUS_BARRIER */
+
 #define __nops(n)	".rept	" #n "\nnop\n.endr\n"
 #define nops(n)		asm volatile(__nops(n))
 

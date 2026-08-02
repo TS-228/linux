@@ -30,6 +30,7 @@
 #include <linux/workqueue.h>
 
 #include <asm/softirq_stack.h>
+#include <linux/rtk_trace.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/irq.h>
@@ -576,6 +577,9 @@ restart:
 		kstat_incr_softirqs_this_cpu(vec_nr);
 
 		trace_softirq_entry(vec_nr);
+#ifdef CONFIG_RTK_TRACER
+		uncached_logk(LOGK_SOFTIRQ, (void *)(h->action));
+#endif
 		h->action();
 		trace_softirq_exit(vec_nr);
 		if (unlikely(prev_count != preempt_count())) {
