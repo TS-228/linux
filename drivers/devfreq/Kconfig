@@ -152,5 +152,6 @@ config ARM_SUN8I_A33_MBUS_DEVFREQ
 	  Allwinner sun8i (A33 through H3) and sun50i (A64 and H5) SoCs.
 
 source "drivers/devfreq/event/Kconfig"
+source "drivers/devfreq/realtek/Kconfig"
 
 endif # PM_DEVFREQ

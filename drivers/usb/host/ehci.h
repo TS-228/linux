@@ -221,6 +221,9 @@ struct ehci_hcd {			/* one per controller */
 	unsigned		imx28_write_fix:1; /* For Freescale i.MX28 */
 	unsigned		spurious_oc:1;
 	unsigned		is_aspeed:1;
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	unsigned		fixed_async_list_addr_bug:1;
+#endif
 	unsigned		zx_wakeup_clear_needed:1;
 
 	/* required for usb32 quirk */

@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-2.0
+menu "Android"
+
+source "drivers/staging/android/ion/Kconfig"
+
+config ANDROID_LOGGER
+	tristate "Android log driver"
+	default n
+	help
+	  Enable Android-style logging support.
+
+endmenu

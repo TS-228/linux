@@ -344,7 +344,11 @@ static const char *snd_device_type_name(int type)
 	case SNDRV_DEVICE_TYPE_TIMER:
 		return "timer";
 	case SNDRV_DEVICE_TYPE_COMPRESS:
+#ifdef CONFIG_RTK_PLATFORM
+		return "compress audio";
+#else
 		return "compress";
+#endif
 	default:
 		return "?";
 	}

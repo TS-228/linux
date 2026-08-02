@@ -27,6 +27,17 @@
 
 static const struct snd_malloc_ops *snd_dma_get_ops(struct snd_dma_buffer *dmab);
 
+#ifdef CONFIG_SND_REALTEK
+#include "../../drivers/staging/android/ion/ion.h"
+#include "../../drivers/staging/android/uapi/ion_rtk.h"
+
+extern struct ion_device *rtk_phoenix_ion_device;
+static struct ion_client *rtk_ion_playback_client;
+static struct ion_handle *rtk_ion_playback_handle;
+static struct ion_client *rtk_ion_capture_client;
+static struct ion_handle *rtk_ion_capture_handle;
+#endif /* CONFIG_SND_REALTEK */
+
 #ifdef CONFIG_SND_DMA_SGBUF
 static void *snd_dma_sg_fallback_alloc(struct snd_dma_buffer *dmab, size_t size);
 #endif
@@ -121,10 +132,32 @@ EXPORT_SYMBOL(snd_dma_alloc_pages_fallback);
  */
 void snd_dma_free_pages(struct snd_dma_buffer *dmab)
 {
-	const struct snd_malloc_ops *ops = snd_dma_get_ops(dmab);
+#ifdef CONFIG_SND_REALTEK
+	if (dmab->dev.type == SNDRV_DMA_TYPE_ION_PLAYBACK) {
+		if (rtk_ion_playback_handle != NULL) {
+			ion_unmap_kernel(rtk_ion_playback_client, rtk_ion_playback_handle);
+			ion_free(rtk_ion_playback_client, rtk_ion_playback_handle);
+			ion_client_destroy(rtk_ion_playback_client);
+			rtk_ion_playback_handle = NULL;
+		}
+		return;
+	}
+	if (dmab->dev.type == SNDRV_DMA_TYPE_ION_CAPTURE) {
+		if (rtk_ion_capture_handle != NULL) {
+			ion_unmap_kernel(rtk_ion_capture_client, rtk_ion_capture_handle);
+			ion_free(rtk_ion_capture_client, rtk_ion_capture_handle);
+			ion_client_destroy(rtk_ion_capture_client);
+			rtk_ion_capture_client = NULL;
+		}
+		return;
+	}
+#endif /* CONFIG_SND_REALTEK */
+	{
+		const struct snd_malloc_ops *ops = snd_dma_get_ops(dmab);
 
-	if (ops && ops->free)
-		ops->free(dmab);
+		if (ops && ops->free)
+			ops->free(dmab);
+	}
 }
 EXPORT_SYMBOL(snd_dma_free_pages);
 

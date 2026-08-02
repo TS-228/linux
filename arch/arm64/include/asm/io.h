@@ -142,6 +142,11 @@ extern void __memset_io(volatile void __iomem *, int, size_t);
 bool ioremap_allowed(phys_addr_t phys_addr, size_t size, unsigned long prot);
 #define ioremap_allowed ioremap_allowed
 
+#ifdef CONFIG_RTK_TRACER
+bool iounmap_allowed(void *addr);
+#define iounmap_allowed iounmap_allowed
+#endif
+
 #define _PAGE_IOREMAP PROT_DEVICE_nGnRE
 
 #define ioremap_wc(addr, size)	\

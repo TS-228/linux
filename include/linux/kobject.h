@@ -59,6 +59,10 @@ enum kobject_action {
 	KOBJ_OFFLINE,
 	KOBJ_BIND,
 	KOBJ_UNBIND,
+#if defined(CONFIG_R8168) || defined(CONFIG_R8169SOC) || defined(CONFIG_RTD_1295_HWNAT)
+	KOBJ_LINKUP,
+	KOBJ_LINKDOWN,
+#endif
 };
 
 struct kobject {

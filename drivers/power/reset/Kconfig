@@ -297,6 +297,12 @@ config NVMEM_REBOOT_MODE
 	  then the bootloader can read it and take different
 	  action according to the mode.
 
+config POWER_RESET_G22XX_POWEROFF
+	tristate "GMT G22xx Poweroff Driver"
+	depends on MFD_G22XX
+	help
+	  This driver support for GMT G22xx PMIC Poweroff.
+
 config POWER_MLXBF
 	tristate "Mellanox BlueField power handling driver"
 	depends on (GPIO_MLXBF2 || GPIO_MLXBF3) && ACPI

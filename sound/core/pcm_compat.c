@@ -51,6 +51,32 @@ static int snd_pcm_ioctl_forward_compat(struct snd_pcm_substream *substream,
 	return err < 0 ? err : 0;
 }
 
+#ifdef CONFIG_RTK_PLATFORM
+static int snd_pcm_ioctl_get_fw_delay_compat(struct snd_pcm_substream *substream,
+	s32 __user *src)
+{
+	snd_pcm_sframes_t fw_delay;
+	mm_segment_t fs;
+	int err = -ENOTTY;
+
+	fs = snd_enter_user();
+	if ((strcmp(substream->pcm->card->driver, "RTK") == 0)) {
+		err = substream->ops->ioctl(substream, SNDRV_PCM_IOCTL_GET_FW_DELAY, &fw_delay);
+	} else {
+		/* for other sound card, it has no additional delay */
+		fw_delay = 0;
+		err = 0;
+	}
+
+	snd_leave_user(fs);
+	if (err < 0)
+		return err;
+	if (put_user(fw_delay, src))
+		return -EFAULT;
+	return err;
+}
+#endif /* CONFIG_RTK_PLATFORM */
+
 struct snd_pcm_hw_params32 {
 	u32 flags;
 	struct snd_mask masks[SNDRV_PCM_HW_PARAM_LAST_MASK - SNDRV_PCM_HW_PARAM_FIRST_MASK + 1]; /* this must be identical */

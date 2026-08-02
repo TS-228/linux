@@ -41,6 +41,10 @@ struct snd_dma_device {
 #define SNDRV_DMA_TYPE_VMALLOC		7	/* vmalloc'ed buffer */
 #define SNDRV_DMA_TYPE_NONCONTIG	8	/* non-coherent SG buffer */
 #define SNDRV_DMA_TYPE_NONCOHERENT	9	/* non-coherent buffer */
+#ifdef CONFIG_RTK_PLATFORM
+#define SNDRV_DMA_TYPE_ION_PLAYBACK	12
+#define SNDRV_DMA_TYPE_ION_CAPTURE	13
+#endif /* CONFIG_RTK_PLATFORM */
 #ifdef CONFIG_SND_DMA_SGBUF
 #define SNDRV_DMA_TYPE_DEV_SG		SNDRV_DMA_TYPE_NONCONTIG
 #define SNDRV_DMA_TYPE_DEV_WC_SG	6	/* SG write-combined */
