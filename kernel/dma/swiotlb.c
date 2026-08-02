@@ -82,6 +82,7 @@ struct io_tlb_slot {
 
 static bool swiotlb_force_bounce;
 static bool swiotlb_force_disable;
+static bool swiotlb_preset;
 
 #ifdef CONFIG_SWIOTLB_DYNAMIC
 
@@ -185,6 +186,10 @@ static unsigned int limit_nareas(unsigned int nareas, unsigned long nslots)
 static int __init
 setup_io_tlb_npages(char *str)
 {
+	if (swiotlb_preset) {
+		/* might be initialized in swiotlb_init_variable() */
+		return 0;
+	}
 	if (isdigit(*str)) {
 		/* avoid tail segment of size < IO_TLB_SEGSIZE */
 		default_nslabs =
@@ -209,6 +214,29 @@ unsigned long swiotlb_size_or_default(void)
 {
 	return default_nslabs << IO_TLB_SHIFT;
 }
+
+enum {
+	SWIOTLB_FORCE_NORMAL = 0,
+	SWIOTLB_FORCE_ENABLE = 1,
+	SWIOTLB_FORCE_DISABLE = 2,
+};
+
+void swiotlb_init_variable(unsigned long of_io_tlb_nslabs, int of_swiotlb_force)
+{
+	default_nslabs = ALIGN(of_io_tlb_nslabs, IO_TLB_SEGSIZE);
+	swiotlb_preset = true;
+	switch (of_swiotlb_force) {
+	case SWIOTLB_FORCE_ENABLE:
+		swiotlb_force_bounce = true;
+		break;
+	case SWIOTLB_FORCE_DISABLE:
+		swiotlb_force_disable = true;
+		break;
+	default:
+		break;
+	}
+}
+EXPORT_SYMBOL_GPL(swiotlb_init_variable);
 
 void __init swiotlb_adjust_size(unsigned long size)
 {

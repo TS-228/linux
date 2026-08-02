@@ -35,6 +35,14 @@
 #include <linux/usb/of.h>
 #include <linux/usb/otg.h>
 
+#ifdef CONFIG_USB_DWC3_RTK
+#include <linux/of_address.h>
+#endif
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+#include <linux/suspend.h>
+#endif
+
 #include "core.h"
 #include "gadget.h"
 #include "io.h"
@@ -566,6 +574,18 @@ int dwc3_event_buffers_setup(struct dwc3 *dwc)
 	dwc3_writel(dwc->regs, DWC3_GEVNTCOUNT(0), reg);
 	return 0;
 }
+
+#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
+int rtk_dwc3_drd_core_soft_reset(struct dwc3 *dwc)
+{
+    return dwc3_core_soft_reset(dwc);
+}
+
+int rtk_dwc3_drd_event_buffers_setup(struct dwc3 *dwc)
+{
+	return dwc3_event_buffers_setup(dwc);
+}
+#endif
 
 void dwc3_event_buffers_cleanup(struct dwc3 *dwc)
 {
@@ -1380,6 +1400,36 @@ static int dwc3_core_init(struct dwc3 *dwc)
 
 	dwc3_config_threshold(dwc);
 
+#ifdef CONFIG_USB_DWC3_RTK
+	/* workaround: to avoid transaction error and cause port reset
+	 * we enable threshold control for TX/RX
+	 */
+#define RX_THRESHOLD_EN			(1 << 29)
+#define RX_PKT_CNT(n)			((n) << 24)
+#define RX_MAX_BURST_SZ(n)		((n) << 19)
+
+	dwc3_writel(dwc->regs, DWC3_GTXTHRCFG, 0x01010000);
+	dwc3_writel(dwc->regs, DWC3_GRXTHRCFG, RX_THRESHOLD_EN |
+		    RX_PKT_CNT(3) | RX_MAX_BURST_SZ(3));
+	dwc3_writel(dwc->regs, DWC3_GUCTL,
+		    dwc3_readl(dwc->regs, DWC3_GUCTL) | (1 << 14));
+
+	if (dwc->dis_ss_park_mode)
+		dwc3_writel(dwc->regs, DWC3_GUCTL1,
+			    dwc3_readl(dwc->regs, DWC3_GUCTL1) | (1 << 17));
+
+	if (dwc->dis_hs_park_mode)
+		dwc3_writel(dwc->regs, DWC3_GUCTL1,
+			    dwc3_readl(dwc->regs, DWC3_GUCTL1) | (1 << 16));
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	if (dwc->revision >= DWC3_REVISION_300A)
+		dwc3_writel(dwc->regs, DWC3_DEV_IMOD(0),
+			    dwc3_readl(dwc->regs, DWC3_DEV_IMOD(0)) |
+			    DWC3_DEVICE_IMODI(0x1));
+#endif
+#endif
+
 	return 0;
 
 err_power_off_phy:
@@ -1637,6 +1687,12 @@ static void dwc3_get_properties(struct dwc3 *dwc)
 				"snps,parkmode-disable-ss-quirk");
 	dwc->parkmode_disable_hs_quirk = device_property_read_bool(dev,
 				"snps,parkmode-disable-hs-quirk");
+#ifdef CONFIG_USB_DWC3_RTK
+	dwc->dis_ss_park_mode = device_property_read_bool(dev,
+			"snps,dis_ss_park_mode");
+	dwc->dis_hs_park_mode = device_property_read_bool(dev,
+			"snps,dis_hs_park_mode");
+#endif
 	dwc->gfladj_refclk_lpm_sel = device_property_read_bool(dev,
 				"snps,gfladj-refclk-lpm-sel-quirk");
 
@@ -1950,6 +2006,16 @@ static int dwc3_probe(struct platform_device *pdev)
 	dwc->xhci_resources[0].flags = res->flags;
 	dwc->xhci_resources[0].name = res->name;
 
+	res->start += DWC3_GLOBALS_REGS_START;
+
+#ifdef CONFIG_USB_DWC3_RTK
+	/* due to rtk dwc3 ip DWC3_GLOBALS_REGS_START is not standard (0xc100)
+	 * we need to fixed it
+	 */
+	regs = of_iomap(dev->of_node, 0);
+	regs += 0x8100;
+	dev_info(dev, "rtk dwc3 fixed dwc3 globals register start address 0x%p\n", regs);
+#else
 	/*
 	 * Request memory region but exclude xHCI regs,
 	 * since it will be requested by the xhci-plat driver.
@@ -1969,11 +2035,19 @@ static int dwc3_probe(struct platform_device *pdev)
 	}
 
 	regs = devm_ioremap_resource(dev, &dwc_res);
+#endif
 	if (IS_ERR(regs))
 		return PTR_ERR(regs);
 
 	dwc->regs	= regs;
+#ifdef CONFIG_USB_DWC3_RTK
+	/* due to rtk dwc3 ip DWC3_GLOBALS_REGS_START is not standard (0xc100)
+	 * we need to fixed it
+	 */
+	dwc->regs_size	= resource_size(res) - 0x8100;
+#else
 	dwc->regs_size	= resource_size(&dwc_res);
+#endif
 
 	dwc3_get_properties(dwc);
 
@@ -2366,10 +2440,34 @@ static int dwc3_runtime_idle(struct device *dev)
 #endif /* CONFIG_PM */
 
 #ifdef CONFIG_PM_SLEEP
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+/* [DEV_FIX]implement New USB reset mechanism with CRT reset to workaround any HW or IP issues
+ * commit 319ff9f5c298b94517a10d4ced59812b54994347
+ */
+static int dwc3_suspend(struct device *dev);
+int RTK_dwc3_suspend(struct device *dev)
+{
+	return dwc3_suspend(dev);
+}
+#endif
+
 static int dwc3_suspend(struct device *dev)
 {
 	struct dwc3	*dwc = dev_get_drvdata(dev);
 	int		ret;
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	dev_info(dev, "[USB] Enter %s", __func__);
+	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+		//For idle mode
+		dev_info(dev, "[USB] %s Idle mode\n", __func__);
+		return 0;
+	}
+	//For suspend mode
+	dev_info(dev,  "[USB] %s Suspend mode\n", __func__);
+
+#endif
 
 	ret = dwc3_suspend_common(dwc, PMSG_SUSPEND);
 	if (ret)
@@ -2377,13 +2475,71 @@ static int dwc3_suspend(struct device *dev)
 
 	pinctrl_pm_select_sleep_state(dev);
 
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	dev_info(dev, "[USB] Exit %s", __func__);
+#endif
+
 	return 0;
 }
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+/* [DEV_FIX]implement New USB reset mechanism with CRT reset to workaround any HW or IP issues
+ * commit 319ff9f5c298b94517a10d4ced59812b54994347
+ */
+static int dwc3_resume(struct device *dev);
+int RTK_dwc3_resume(struct device *dev)
+{
+	return dwc3_resume(dev);
+}
+#endif
 
 static int dwc3_resume(struct device *dev)
 {
 	struct dwc3	*dwc = dev_get_drvdata(dev);
 	int		ret;
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	dev_info(dev, "[USB] Enter %s", __func__);
+	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+		//For idle mode
+		dev_info(dev, "[USB] %s Idle mode\n", __func__);
+		return 0;
+	}
+	//For suspend mode
+	dev_info(dev,  "[USB] %s Suspend mode\n", __func__);
+#endif
+
+#ifdef CONFIG_USB_DWC3_RTK
+	/* workaround: to avoid transaction error and cause port reset
+	 * we enable threshold control for TX/RX
+	 * [Dev_Fix] Enable DWC3 threshold control for USB compatibility issue
+	 * commit 77f116ba77cc089ee2a6ceca1d2aa496b39c98ba
+	 * [Dev_Fix] change RX threshold packet count from 1 to 3,
+	 * it will get better performance
+	 * commit fe8905c2112f899f9ec3ddbfd83e0f183d3fbf7d
+	 * [DEV_FIX] In case there may have transaction error once system bus busy
+	 * commit b36294740c5cf66932c0fec429f4c5399e26f591
+	 * */
+#define RX_THRESHOLD_EN			(1<<29)
+#define RX_PKT_CNT(n)			(n<<24)
+#define RX_MAX_BURST_SZ(n)		(n<<19)
+
+	dwc3_writel(dwc->regs, DWC3_GTXTHRCFG, 0x01010000);
+	dwc3_writel(dwc->regs, DWC3_GRXTHRCFG,  RX_THRESHOLD_EN  |
+											RX_PKT_CNT(3)    |
+											RX_MAX_BURST_SZ(3));
+	// enable auto retry
+	dwc3_writel(dwc->regs, DWC3_GUCTL,
+					dwc3_readl(dwc->regs, DWC3_GUCTL) | (1<<14));
+
+#ifdef CONFIG_USB_PATCH_ON_RTK
+	if (dwc->revision >= DWC3_REVISION_300A)
+		dwc3_writel(dwc->regs, DWC3_DEV_IMOD(0),
+			    dwc3_readl(dwc->regs, DWC3_DEV_IMOD(0)) |
+			        DWC3_DEVICE_IMODI(0x1));
+#endif
+
+#endif
 
 	pinctrl_pm_select_default_state(dev);
 
@@ -2395,6 +2551,10 @@ static int dwc3_resume(struct device *dev)
 	pm_runtime_set_active(dev);
 	pm_runtime_enable(dev);
 
+#ifdef CONFIG_USB_PATCH_ON_RTK
+out:
+	dev_info(dev, "[USB] Exit %s", __func__);
+#endif
 	return 0;
 }
 

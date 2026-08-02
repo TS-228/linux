@@ -3811,7 +3811,7 @@ int sdhci_resume_host(struct sdhci_host *host)
 	} else {
 		ret = request_threaded_irq(host->irq, sdhci_irq,
 					   sdhci_thread_irq, IRQF_SHARED,
-					   mmc_hostname(mmc), host);
+					   DRIVER_NAME, host);
 		if (ret)
 			return ret;
 	}
@@ -4139,6 +4139,14 @@ void __sdhci_read_caps(struct sdhci_host *host, const u16 *ver,
 		host->caps |= lower_32_bits(dt_caps);
 	}
 
+#ifdef CONFIG_MMC_SDHCI_RTK
+#ifdef CONFIG_ARCH_RTD119X
+	host->caps |= SDHCI_CAN_VDD_330;
+#else
+        host->caps |= (SDHCI_CAN_VDD_180 | SDHCI_CAN_VDD_330);
+#endif
+#endif
+
 	if (host->version < SDHCI_SPEC_300)
 		return;
 
@@ -4268,6 +4276,17 @@ int sdhci_setup_host(struct sdhci_host *host)
 	sdhci_read_caps(host);
 
 	override_timeout_clk = host->timeout_clk;
+#ifdef CONFIG_MMC_SDHCI_RTK
+#ifdef CONFIG_ARCH_RTD119X
+	host->version = SDHCI_SPEC_200;
+#else
+        host->version = SDHCI_SPEC_300;         //workaround, kylin register cannot be showed correctly, so just set host capability 3.0
+#endif
+#else
+        host->version = sdhci_readw(host, SDHCI_HOST_VERSION);
+        host->version = (host->version & SDHCI_SPEC_VER_MASK)
+                                >> SDHCI_SPEC_VER_SHIFT;
+#endif
 
 	if (host->version > SDHCI_SPEC_420) {
 		pr_err("%s: Unknown controller version (%d). You may experience problems.\n",
@@ -4387,10 +4406,17 @@ int sdhci_setup_host(struct sdhci_host *host)
 		mmc_dev(mmc)->dma_mask = &host->dma_mask;
 	}
 
+#ifdef CONFIG_MMC_SDHCI_RTK
+	if (host->version >= SDHCI_SPEC_300)
+		host->max_clk = 200;
+	else
+		host->max_clk = 100;
+#else
 	if (host->version >= SDHCI_SPEC_300)
 		host->max_clk = FIELD_GET(SDHCI_CLOCK_V3_BASE_MASK, host->caps);
 	else
 		host->max_clk = FIELD_GET(SDHCI_CLOCK_BASE_MASK, host->caps);
+#endif
 
 	host->max_clk *= 1000000;
 	if (host->max_clk == 0 || host->quirks &
@@ -4831,7 +4857,7 @@ int __sdhci_add_host(struct sdhci_host *host)
 	sdhci_init(host, 0);
 
 	ret = request_threaded_irq(host->irq, sdhci_irq, sdhci_thread_irq,
-				   IRQF_SHARED,	mmc_hostname(mmc), host);
+				   IRQF_SHARED,	DRIVER_NAME, host);
 	if (ret) {
 		pr_err("%s: Failed to request IRQ %d: %d\n",
 		       mmc_hostname(mmc), host->irq, ret);

@@ -290,6 +290,19 @@ config USB_M66592
 
 source "drivers/usb/gadget/udc/bdc/Kconfig"
 
+config USB_RTK_UDC
+	tristate "RTK USB2.0 Device Controller"
+	depends on ARCH_RTD129x
+	help
+		RTD129x Soc include a high speed USB2.0 OTG controller, which can be
+		configured as high speed or full speed USB peripheral.
+
+config USB_RTK_UDC_OTG_SWITCH
+	tristate "RTK USB2.0 HOST/Device switch by sysfs"
+	depends on USB_RTK_UDC && ARCH_RTD129x
+	help
+		Use sysfs to switch RTK 129x SOC USB2.0 OTG controller.
+
 #
 # Controllers available only in discrete form (and all PCI controllers)
 #

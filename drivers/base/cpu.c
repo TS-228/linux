@@ -25,6 +25,10 @@
 #include "base.h"
 
 static DEFINE_PER_CPU(struct device *, cpu_sys_devices);
+#ifdef CONFIG_RTK_PLATFORM
+extern void rtk_cpu_power_down(int cpu);
+extern void rtk_cpu_power_up(int cpu);
+#endif /* CONFIG_RTK_PLATFORM */
 
 static int cpu_subsys_match(struct device *dev, struct device_driver *drv)
 {

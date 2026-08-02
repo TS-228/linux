@@ -514,6 +514,20 @@ config PWM_RZ_MTU3
 	  To compile this driver as a module, choose M here: the module
 	  will be called pwm-rz-mtu3.
 
+menuconfig PWM_RTK
+	tristate "Realtek PWM support"
+	depends on RTK_PLATFORM
+	default n
+	help
+	  Say Y, if you want to enable PWM feature on Realtek platform.
+
+config RTK_PWM_DEBUG
+	bool "Enable debug message"
+	depends on PWM_RTK
+	default n
+	help
+	  Enable RTK PWM driver debug message
+
 config PWM_SAMSUNG
 	tristate "Samsung PWM support"
 	depends on PLAT_SAMSUNG || ARCH_S5PV210 || ARCH_EXYNOS || COMPILE_TEST

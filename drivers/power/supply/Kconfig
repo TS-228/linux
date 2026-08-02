@@ -952,4 +952,10 @@ config CHARGER_QCOM_SMB2
 	  adds support for the SMB2 switch mode battery charger found
 	  in PMI8998 and related PMICs.
 
+config RTD1XXX_POWER
+	tristate "RTD1XXX power supply driver"
+	default y
+	help
+	  This driver provides support for the power supply to make Android happy.
+
 endif # POWER_SUPPLY

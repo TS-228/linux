@@ -3,6 +3,10 @@
 #include <linux/mm.h>
 #include <linux/io.h>
 
+#ifdef CONFIG_RTK_TRACER
+#include <linux/rtk_trace.h>
+#endif
+
 void __iomem *__ioremap_prot(phys_addr_t phys_addr, size_t size,
 			     pgprot_t pgprot)
 {
@@ -13,12 +17,22 @@ void __iomem *__ioremap_prot(phys_addr_t phys_addr, size_t size,
 		return NULL;
 
 	/* Don't allow RAM to be mapped. */
+#ifndef CONFIG_RTK_MEM_REMAP
 	if (WARN_ON(pfn_is_map_memory(__phys_to_pfn(phys_addr))))
 		return NULL;
+#endif
 
 	return generic_ioremap_prot(phys_addr, size, pgprot);
 }
 EXPORT_SYMBOL(__ioremap_prot);
+
+#ifdef CONFIG_RTK_TRACER
+bool iounmap_allowed(void *addr)
+{
+	remove_vmap_info(addr, 1);
+	return true;
+}
+#endif
 
 /*
  * Must be called after early_fixmap_init

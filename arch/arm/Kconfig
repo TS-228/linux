@@ -446,6 +446,7 @@ source "arch/arm/mach-davinci/Kconfig"
 
 source "arch/arm/mach-digicolor/Kconfig"
 
+
 source "arch/arm/mach-dove/Kconfig"
 
 source "arch/arm/mach-ep93xx/Kconfig"
@@ -508,6 +509,16 @@ source "arch/arm/mach-rda/Kconfig"
 
 source "arch/arm/mach-realtek/Kconfig"
 
+source "arch/arm/mach-rtd119x/Kconfig"
+
+source "arch/arm/mach-rtd129x/Kconfig"
+
+source "arch/arm/mach-rtd139x/Kconfig"
+
+source "arch/arm/mach-rtd16xx/Kconfig"
+
+source "arch/arm/mach-rtd13xx/Kconfig"
+
 source "arch/arm/mach-rpc/Kconfig"
 
 source "arch/arm/mach-rockchip/Kconfig"
@@ -543,6 +554,12 @@ source "arch/arm/mach-versatile/Kconfig"
 source "arch/arm/mach-vt8500/Kconfig"
 
 source "arch/arm/mach-zynq/Kconfig"
+
+config RTK_PLATFORM
+	def_bool n
+
+config RTK_PLATFORM_PSCI
+	def_bool n
 
 # ARMv7-M architecture
 config ARCH_LPC18XX
@@ -960,6 +977,13 @@ config ARM_ERRATA_814220
 endmenu
 
 menu "Kernel Features"
+
+config ARM_NORMAL_WORLD_OS
+        bool "Enable TrustZone"
+        default n
+        help
+		Enable TrustZone configuration
+
 
 config HAVE_SMP
 	bool

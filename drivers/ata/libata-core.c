@@ -62,6 +62,10 @@
 #include <trace/events/libata.h>
 
 #include "libata.h"
+#ifdef CONFIG_AHCI_RTK
+extern void rtk_sata_phy_poweron(struct ata_link *link);
+#endif
+
 #include "libata-transport.h"
 
 const struct ata_port_operations ata_base_port_ops = {
@@ -5441,6 +5445,9 @@ void ata_dev_init(struct ata_device *dev)
 	link->sata_spd_limit = link->hw_sata_spd_limit;
 	link->sata_spd = 0;
 
+#if defined(CONFIG_AHCI_RTK)
+	sata_set_spd(link);
+#endif
 	/* High bits of dev->flags are used to record warm plug
 	 * requests which occur asynchronously.  Synchronize using
 	 * host lock.
@@ -6188,6 +6195,9 @@ static void ata_port_detach(struct ata_port *ap)
 	if (ap->pmp_link) {
 		int i;
 		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
+#if defined(CONFIG_AHCI_RTK)
+	sata_set_spd(link);
+#endif
 			ata_tlink_delete(&ap->pmp_link[i]);
 	}
 	/* remove the associated SCSI host */
