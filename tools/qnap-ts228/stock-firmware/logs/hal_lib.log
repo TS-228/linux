@@ -1,0 +1,1200 @@
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_get_vpd_model_filename(2921):BP BOM code is illegal.
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_get_vpd_model_filename(2930):BP PCB code is illegal.
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_get_vpd_model_filename(2942):MB_product_code = QX421
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_get_vpd_model_filename(2943):BP_product_code = 
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_get_vpd_model_filename(2944):MB_pcb = 12
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_get_vpd_model_filename(2945):BP_pcb = -1
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_get_vpd_model_filename(2946):MB_bom = 0
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_get_vpd_model_filename(2947):BP_bom = -1
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_setup_model_conf(13283):Get model config file = /etc/model_QX421_12.conf
+2026-08-11 13:29:37 [  209 hal_app        ] se_sys_mcu_spec_change(19499): ARM_AL Model.
+2026-08-11 13:29:37 [  209 hal_app        ] search_and_set_newname(793):config(0),domain = 0,bus = B-1:18016000.gmac,switch port = -1,port = 0
+2026-08-11 13:29:37 [  209 hal_app        ] show(1177):Show NET_CB structure:
+2026-08-11 13:29:37 [  209 hal_app        ] name = eth0,dev_bus = B-1:18016000.gmac,pci_switch_port = -1,port = 0,pci_bridge_port=-1,new_name = eth0
+2026-08-11 13:29:37 [  209 hal_app        ] net_dev_assign_newname(1090):Don't need to change net device name
+2026-08-11 13:29:37 [  209 hal_app        ] pd_sys_check_sata_speed(10601):Disk 1:B-1:xhci-hcd.2.auto
+2026-08-11 13:29:37 [  209 hal_app        ] pd_sys_check_sata_speed(10602):Bridge bus = 
+2026-08-11 13:29:37 [  209 hal_app        ] pd_sys_check_sata_speed(10603):force sata reset = 
+2026-08-11 13:29:37 [  209 hal_app        ] pd_sys_check_sata_speed(10601):Disk 2:B-1:xhci-hcd.2.auto
+2026-08-11 13:29:37 [  209 hal_app        ] pd_sys_check_sata_speed(10602):Bridge bus = 
+2026-08-11 13:29:37 [  209 hal_app        ] pd_sys_check_sata_speed(10603):force sata reset = 
+2026-08-11 13:29:40 [  229 hal_app        ] se_sys_get_pcie_link_state(11565):System Error
+2026-08-11 13:29:40 [  253 storage_util   ] pic_sys_get_mac(1048): Run when pic_thead not exist.
+2026-08-11 13:29:40 [  253 storage_util   ] parse_sata_serial_no(1449): buf = "WD-WCC4J1ZHDJHN"
+2026-08-11 13:29:40 [  253 storage_util   ] Disk_Is_SelfTest_Blacklisted got called, ret = 0, /etc/smart_selftest_blacklist/wdc, WDC, WD10EFRX-68FYTN0
+2026-08-11 13:29:40 [  253 storage_util   ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 13:29:40 [  253 storage_util   ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 13:29:40 [  253 storage_util   ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 13:29:40 [  253 storage_util   ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 13:29:40 [  253 storage_util   ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:40 [  253 storage_util   ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 13:29:40 [  253 storage_util   ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 13:29:40 [  253 storage_util   ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 13:29:40 [  253 storage_util   ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 13:29:40 [  253 storage_util   ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 13:29:40 [  253 storage_util   ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 13:29:40 [  253 storage_util   ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 100,worst = 91, thresh = 0,raw = 43
+2026-08-11 13:29:40 [  253 storage_util   ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:40 [  253 storage_util   ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:40 [  253 storage_util   ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 13:29:40 [  253 storage_util   ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 13:29:40 [  253 storage_util   ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:40 [  253 storage_util   ] parse_sata_capacity(1734):Physical sector = 8 * Logical sector.
+2026-08-11 13:29:40 [  253 storage_util   ] parse_sata_capacity(1747): capacity=1953525168, sector=512
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_ll_ata_pt(3033)    ATA pass through (16) cdb: 
+2026-08-11 13:29:40 [  253 storage_util   ] 85 
+2026-08-11 13:29:40 [  253 storage_util   ] 08 
+2026-08-11 13:29:40 [  253 storage_util   ] 0e 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] 01 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] 11 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] 2f 
+2026-08-11 13:29:40 [  253 storage_util   ] 00 
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Command failed and ICRC error bit set in Error register: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for data FIS: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host data FIS: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for non-data FIS: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host non-data FIS: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Device-to-host non-data FIS retries: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Transition from drive PHYRDY to drive PHYRDYn: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Signature device-to-host register FISes due to COMRESET: 1
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): CRC errors within host-to-device FIS: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS, CRC: 0
+2026-08-11 13:29:40 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS, CRC: 0
+2026-08-11 13:29:40 [  253 storage_util   ] get_usb_expander_conn_speed(1113): pd_sys_id = sg0, speed = 0x33
+2026-08-11 13:29:40 [  253 storage_util   ] parse_sata_serial_no(1449): buf = "WD-WCC4J1ZHDJHN"
+2026-08-11 13:29:40 [  253 storage_util   ] Disk_Is_SelfTest_Blacklisted got called, ret = 0, /etc/smart_selftest_blacklist/wdc, WDC, WD10EFRX-68FYTN0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 13:29:41 [  253 storage_util   ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 13:29:41 [  253 storage_util   ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 13:29:41 [  253 storage_util   ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 13:29:41 [  253 storage_util   ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 13:29:41 [  253 storage_util   ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 13:29:41 [  253 storage_util   ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 100,worst = 91, thresh = 0,raw = 43
+2026-08-11 13:29:41 [  253 storage_util   ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 13:29:41 [  253 storage_util   ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] parse_sata_capacity(1734):Physical sector = 8 * Logical sector.
+2026-08-11 13:29:41 [  253 storage_util   ] parse_sata_capacity(1747): capacity=1953525168, sector=512
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_ll_ata_pt(3033)    ATA pass through (16) cdb: 
+2026-08-11 13:29:41 [  253 storage_util   ] 85 
+2026-08-11 13:29:41 [  253 storage_util   ] 08 
+2026-08-11 13:29:41 [  253 storage_util   ] 0e 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 01 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 11 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 2f 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Command failed and ICRC error bit set in Error register: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for non-data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host non-data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Device-to-host non-data FIS retries: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Transition from drive PHYRDY to drive PHYRDYn: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Signature device-to-host register FISes due to COMRESET: 1
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): CRC errors within host-to-device FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS, CRC: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS, CRC: 0
+2026-08-11 13:29:41 [  253 storage_util   ] get_usb_expander_conn_speed(1113): pd_sys_id = sg0, speed = 0x33
+2026-08-11 13:29:41 [  253 storage_util   ] Disk_Is_WWN_Blacklisted : /etc/wwn_blacklist/WDC does not exist.
+2026-08-11 13:29:41 [  253 storage_util   ] Disk_Is_WWN_Blacklisted : Use /etc/wwn_blacklist/wdc
+2026-08-11 13:29:41 [  253 storage_util   ] Disk_Is_WWN_Blacklisted got called, ret = 0
+2026-08-11 13:29:41 [  253 storage_util   ] PD_Get_WWN_By_Dev_No(2984): WWN is valid for drive no 800
+2026-08-11 13:29:41 [  253 storage_util   ] parse_sata_serial_no(1449): buf = "WD-WCC4J2LN92D2"
+2026-08-11 13:29:41 [  253 storage_util   ] Disk_Is_SelfTest_Blacklisted got called, ret = 0, /etc/smart_selftest_blacklist/wdc, WDC, WD10EFRX-68FYTN0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 13:29:41 [  253 storage_util   ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 13:29:41 [  253 storage_util   ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 13:29:41 [  253 storage_util   ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 13:29:41 [  253 storage_util   ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 13:29:41 [  253 storage_util   ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 13:29:41 [  253 storage_util   ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 102,worst = 92, thresh = 0,raw = 41
+2026-08-11 13:29:41 [  253 storage_util   ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] parse_sata_capacity(1734):Physical sector = 8 * Logical sector.
+2026-08-11 13:29:41 [  253 storage_util   ] parse_sata_capacity(1747): capacity=1953525168, sector=512
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_ll_ata_pt(3033)    ATA pass through (16) cdb: 
+2026-08-11 13:29:41 [  253 storage_util   ] 85 
+2026-08-11 13:29:41 [  253 storage_util   ] 08 
+2026-08-11 13:29:41 [  253 storage_util   ] 0e 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 01 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 11 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 2f 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Command failed and ICRC error bit set in Error register: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for non-data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host non-data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Device-to-host non-data FIS retries: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Transition from drive PHYRDY to drive PHYRDYn: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Signature device-to-host register FISes due to COMRESET: 1
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): CRC errors within host-to-device FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS, CRC: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS, CRC: 0
+2026-08-11 13:29:41 [  253 storage_util   ] get_usb_expander_conn_speed(1113): pd_sys_id = sg1, speed = 0x33
+2026-08-11 13:29:41 [  253 storage_util   ] parse_sata_serial_no(1449): buf = "WD-WCC4J2LN92D2"
+2026-08-11 13:29:41 [  253 storage_util   ] Disk_Is_SelfTest_Blacklisted got called, ret = 0, /etc/smart_selftest_blacklist/wdc, WDC, WD10EFRX-68FYTN0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 13:29:41 [  253 storage_util   ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 13:29:41 [  253 storage_util   ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 13:29:41 [  253 storage_util   ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 13:29:41 [  253 storage_util   ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 13:29:41 [  253 storage_util   ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 13:29:41 [  253 storage_util   ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 102,worst = 92, thresh = 0,raw = 41
+2026-08-11 13:29:41 [  253 storage_util   ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 13:29:41 [  253 storage_util   ] parse_sata_capacity(1734):Physical sector = 8 * Logical sector.
+2026-08-11 13:29:41 [  253 storage_util   ] parse_sata_capacity(1747): capacity=1953525168, sector=512
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_ll_ata_pt(3033)    ATA pass through (16) cdb: 
+2026-08-11 13:29:41 [  253 storage_util   ] 85 
+2026-08-11 13:29:41 [  253 storage_util   ] 08 
+2026-08-11 13:29:41 [  253 storage_util   ] 0e 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 01 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 11 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] 2f 
+2026-08-11 13:29:41 [  253 storage_util   ] 00 
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Command failed and ICRC error bit set in Error register: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for non-data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host non-data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Device-to-host non-data FIS retries: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Transition from drive PHYRDY to drive PHYRDYn: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Signature device-to-host register FISes due to COMRESET: 1
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): CRC errors within host-to-device FIS: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS, CRC: 0
+2026-08-11 13:29:41 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS, CRC: 0
+2026-08-11 13:29:41 [  253 storage_util   ] get_usb_expander_conn_speed(1113): pd_sys_id = sg1, speed = 0x33
+2026-08-11 13:29:41 [  253 storage_util   ] Disk_Is_WWN_Blacklisted : /etc/wwn_blacklist/WDC does not exist.
+2026-08-11 13:29:41 [  253 storage_util   ] Disk_Is_WWN_Blacklisted : Use /etc/wwn_blacklist/wdc
+2026-08-11 13:29:41 [  253 storage_util   ] Disk_Is_WWN_Blacklisted got called, ret = 0
+2026-08-11 13:29:41 [  253 storage_util   ] PD_Get_WWN_By_Dev_No(2984): WWN is valid for drive no 810
+2026-08-11 01:29:44 [  253 storage_util   ] SE_Import_Enc_Map: is called.
+2026-08-11 01:29:44 [  253 storage_util   ] SE_Import_Enc_Map: write enc_bitmap = 0x700000001.
+2026-08-11 01:29:44 [  253 storage_util   ] se_remove_conf_file: can't remove file /etc/enclosure_0.conf!
+2026-08-11 01:29:44 [  253 storage_util   ] se_remove_conf_file: can't remove file /etc/enclosure_32.conf!
+2026-08-11 01:29:44 [  253 storage_util   ] se_remove_conf_file: can't remove file /etc/enclosure_33.conf!
+2026-08-11 01:29:44 [  253 storage_util   ] se_remove_conf_file: can't remove file /etc/enclosure_34.conf!
+2026-08-11 01:29:44 [  253 storage_util   ] usb_expander_enumerate(6280):Usb Port 1->B-1:xhci-hcd.2.auto:1
+2026-08-11 01:29:44 [  253 storage_util   ] usb_expander_enumerate(6280):Usb Port 2->B-1:18013000.ehci:1
+2026-08-11 01:29:44 [  253 storage_util   ] tr_expander_enumerate(6384):Usb Port 1->B-1:xhci-hcd.2.auto:1
+2026-08-11 01:29:44 [  253 storage_util   ] tr_expander_enumerate(6384):Usb Port 2->B-1:18013000.ehci:1
+2026-08-11 01:29:44 [  253 storage_util   ] se_sys_enumerate:enc_sys_id[0] = root
+2026-08-11 01:29:44 [  253 storage_util   ] se_sys_enumerate:enc_sys_id[1] = root_boot
+2026-08-11 01:29:44 [  253 storage_util   ] se_sys_enumerate:enc_sys_id[2] = root_usb
+2026-08-11 01:29:44 [  253 storage_util   ] se_sys_enumerate:enc_sys_id[3] = root_mmc
+2026-08-11 01:29:44 [  253 storage_util   ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 01:29:44 [  458 storage_util   ] pic_sys_start_monitor(1231):pic_id = root,key = 0x110e0e13, msgid = 0x0
+2026-08-11 01:29:44 [  458 root           ] pic_sys_start_monitor(1242):Monitor pic_id = root PIC start
+2026-08-11 01:29:44 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf2.
+2026-08-11 01:29:45 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xa1.
+2026-08-11 01:29:45 [  253 storage_util   ] se_lookup_id_in_persistent_mapping: Enclosure UID:root is found in persistent mapping file, last allocated enc_id = 0.
+2026-08-11 01:29:45 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3574):path=/sys/bus/platform/devices/xhci-hcd.2.auto/.
+2026-08-11 01:29:45 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3699):target_search_dir = /sys/bus/platform/devices/xhci-hcd.2.auto/./usb4/4-1/4-1.2/4-1.2:1.0/host2/target2:0:0/2:0:0:0, sg_dev_type = 0
+2026-08-11 01:29:45 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3718):sysid = sg0
+2026-08-11 01:29:45 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3574):path=/sys/bus/platform/devices/xhci-hcd.2.auto/.
+2026-08-11 01:29:45 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3699):target_search_dir = /sys/bus/platform/devices/xhci-hcd.2.auto/./usb4/4-1/4-1.4/4-1.4:1.0/host3/target3:0:0/3:0:0:0, sg_dev_type = 0
+2026-08-11 01:29:45 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3718):sysid = sg1
+2026-08-11 01:29:45 [  253 storage_util   ] pd_sys_enumerate(10570):enc_sys_id = root,pd_sys_id = sg0 attach, run udev cmd = /sbin/udevadm control --env=sg0=root
+2026-08-11 01:29:45 [  253 storage_util   ] pd_sys_enumerate(10570):enc_sys_id = root,pd_sys_id = sg1 attach, run udev cmd = /sbin/udevadm control --env=sg1=root
+2026-08-11 01:29:45 [  253 storage_util   ] parse_sata_serial_no(1449): buf = "WD-WCC4J1ZHDJHN"
+2026-08-11 01:29:45 [  253 storage_util   ] Disk_Is_SelfTest_Blacklisted got called, ret = 0, /etc/smart_selftest_blacklist/wdc, WDC, WD10EFRX-68FYTN0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 01:29:46 [  253 storage_util   ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 01:29:46 [  253 storage_util   ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 01:29:46 [  253 storage_util   ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 01:29:46 [  253 storage_util   ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 01:29:46 [  253 storage_util   ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 01:29:46 [  253 storage_util   ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 100,worst = 91, thresh = 0,raw = 43
+2026-08-11 01:29:46 [  253 storage_util   ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 01:29:46 [  253 storage_util   ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] parse_sata_capacity(1734):Physical sector = 8 * Logical sector.
+2026-08-11 01:29:46 [  253 storage_util   ] parse_sata_capacity(1747): capacity=1953525168, sector=512
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_ll_ata_pt(3033)    ATA pass through (16) cdb: 
+2026-08-11 01:29:46 [  253 storage_util   ] 85 
+2026-08-11 01:29:46 [  253 storage_util   ] 08 
+2026-08-11 01:29:46 [  253 storage_util   ] 0e 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 01 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 11 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 2f 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Command failed and ICRC error bit set in Error register: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for non-data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host non-data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Device-to-host non-data FIS retries: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Transition from drive PHYRDY to drive PHYRDYn: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Signature device-to-host register FISes due to COMRESET: 1
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): CRC errors within host-to-device FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS, CRC: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS, CRC: 0
+2026-08-11 01:29:46 [  253 storage_util   ] get_usb_expander_conn_speed(1113): pd_sys_id = sg0, speed = 0x33
+2026-08-11 01:29:46 [  253 storage_util   ] Disk_Is_WWN_Blacklisted : /etc/wwn_blacklist/WDC does not exist.
+2026-08-11 01:29:46 [  253 storage_util   ] Disk_Is_WWN_Blacklisted : Use /etc/wwn_blacklist/wdc
+2026-08-11 01:29:46 [  253 storage_util   ] Disk_Is_WWN_Blacklisted got called, ret = 0
+2026-08-11 01:29:46 [  253 storage_util   ] pd_write_conf(466): WWN is valid for drive enc_id = 0, port_id = 1
+2026-08-11 01:29:46 [  253 storage_util   ] parse_sata_serial_no(1449): buf = "WD-WCC4J2LN92D2"
+2026-08-11 01:29:46 [  253 storage_util   ] Disk_Is_SelfTest_Blacklisted got called, ret = 0, /etc/smart_selftest_blacklist/wdc, WDC, WD10EFRX-68FYTN0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 01:29:46 [  253 storage_util   ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 01:29:46 [  253 storage_util   ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 01:29:46 [  253 storage_util   ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 01:29:46 [  253 storage_util   ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 01:29:46 [  253 storage_util   ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 01:29:46 [  253 storage_util   ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 102,worst = 92, thresh = 0,raw = 41
+2026-08-11 01:29:46 [  253 storage_util   ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 01:29:46 [  253 storage_util   ] parse_sata_capacity(1734):Physical sector = 8 * Logical sector.
+2026-08-11 01:29:46 [  253 storage_util   ] parse_sata_capacity(1747): capacity=1953525168, sector=512
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_ll_ata_pt(3033)    ATA pass through (16) cdb: 
+2026-08-11 01:29:46 [  253 storage_util   ] 85 
+2026-08-11 01:29:46 [  253 storage_util   ] 08 
+2026-08-11 01:29:46 [  253 storage_util   ] 0e 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 01 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 11 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] 2f 
+2026-08-11 01:29:46 [  253 storage_util   ] 00 
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Command failed and ICRC error bit set in Error register: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for non-data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for device-to-host non-data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Device-to-host non-data FIS retries: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Transition from drive PHYRDY to drive PHYRDYn: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): Signature device-to-host register FISes due to COMRESET: 1
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): CRC errors within host-to-device FIS: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device data FIS, CRC: 0
+2026-08-11 01:29:46 [  253 storage_util   ] scsi_sys_sg_sat_phy_event(5832): R_ERR(p) response for host-to-device non-data FIS, CRC: 0
+2026-08-11 01:29:46 [  253 storage_util   ] get_usb_expander_conn_speed(1113): pd_sys_id = sg1, speed = 0x33
+2026-08-11 01:29:46 [  253 storage_util   ] Disk_Is_WWN_Blacklisted : /etc/wwn_blacklist/WDC does not exist.
+2026-08-11 01:29:46 [  253 storage_util   ] Disk_Is_WWN_Blacklisted : Use /etc/wwn_blacklist/wdc
+2026-08-11 01:29:46 [  253 storage_util   ] Disk_Is_WWN_Blacklisted got called, ret = 0
+2026-08-11 01:29:46 [  253 storage_util   ] pd_write_conf(466): WWN is valid for drive enc_id = 0, port_id = 2
+2026-08-11 01:29:46 [  253 storage_util   ] se_lookup_id_in_persistent_mapping: Enclosure UID:root_boot is found in persistent mapping file, last allocated enc_id = 32.
+2026-08-11 01:29:46 [  253 storage_util   ] pd_sys_enumerate(10570):enc_sys_id = root_boot,pd_sys_id = emmc_1 attach, run udev cmd = /sbin/udevadm control --env=emmc_1=root_boot
+2026-08-11 01:29:46 [  253 storage_util   ] se_lookup_id_in_persistent_mapping: Enclosure UID:root_usb is found in persistent mapping file, last allocated enc_id = 33.
+2026-08-11 01:29:46 [  253 storage_util   ] enumerate_pd_in_root_enclosure(4512):Usb Port 1:B-1:xhci-hcd.2.auto:1
+2026-08-11 01:29:46 [  253 storage_util   ] enumerate_pd_in_root_enclosure(4513):dev_bridge_bus = 
+2026-08-11 01:29:46 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3574):path=/sys/bus/platform/devices/xhci-hcd.2.auto/.
+2026-08-11 01:29:46 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3699):target_search_dir = /sys/bus/platform/devices/xhci-hcd.2.auto/./usb4/4-1/4-1.1/4-1.1:1.0/host1/target1:0:0/1:0:0:0, sg_dev_type = 0
+2026-08-11 01:29:46 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3718):sysid = sg2
+2026-08-11 01:29:46 [  253 storage_util   ] enumerate_pd_in_root_enclosure(4512):Usb Port 2:B-1:18013000.ehci:1
+2026-08-11 01:29:46 [  253 storage_util   ] enumerate_pd_in_root_enclosure(4513):dev_bridge_bus = 
+2026-08-11 01:29:46 [  253 storage_util   ] lookup_disk_in_root_usb_hub(3574):path=/sys/bus/platform/devices/18013000.ehci/.
+2026-08-11 01:29:46 [  253 storage_util   ] pd_sys_enumerate(10570):enc_sys_id = root_usb,pd_sys_id = sg2 attach, run udev cmd = /sbin/udevadm control --env=sg2=root_usb
+2026-08-11 01:29:46 [  253 storage_util   ] get_usb_disk_vendor(778) called, pd_ctrl_name = /dev/sg2
+2026-08-11 01:29:46 [  253 storage_util   ] get_usb_disk_vendor(799) called, pd_ctrl_name = /dev/sg2, dest = USB
+2026-08-11 01:29:46 [  253 storage_util   ] get_usb_disk_model(811) called, pd_ctrl_name = /dev/sg2
+2026-08-11 01:29:46 [  253 storage_util   ] get_usb_disk_model(832) called, pd_ctrl_name = /dev/sg2, dest = SanDisk 3.2Gen1
+2026-08-11 01:29:46 [  253 storage_util   ] get_usb_disk_serial(843) called, pd_sys_name = /dev/sg2
+2026-08-11 01:29:46 [  253 storage_util   ] get_usb_disk_serial(852) called, pd_sys_name = /dev/sg2, dest = 01016442b6ec8dad7fb7c8222a88893d
+2026-08-11 01:29:46 [  253 storage_util   ] get_usb_disk_capacity(910): capacity=240353280, sector=512
+2026-08-11 01:29:46 [  253 storage_util   ] getinfo_pd_in_root_enclosure(5463): pd_sys_id = sg2 is removable disk
+2026-08-11 01:29:46 [  253 storage_util   ] set_usb_disk_polling_time(945): send command = /bin/echo 2000 > /sys/block/sdc/events_poll_msecs
+2026-08-11 01:29:46 [  253 storage_util   ] pd_sys_check_rw_access(10742):sg2 R/W access:OK
+2026-08-11 01:29:46 [  253 storage_util   ] se_lookup_id_in_persistent_mapping: Enclosure UID:root_mmc is found in persistent mapping file, last allocated enc_id = 34.
+2026-08-11 01:29:46 [  253 storage_util   ] SE_Scan: can't remove backup file /etc/enclosure_iscsi.bak!
+2026-08-11 12:29:47 [  583 hal_daemon     ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:47 [  583 hal_daemon     ] pd_sys_is_attached_behind_SAS(14234):Not existed, path /sys/class/sas_host/host2, bus 2
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 100,worst = 91, thresh = 0,raw = 43
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-1, enc_sys_id root, port sg0
+2026-08-11 12:29:47 [  583 hal_daemon     ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:47 [  583 hal_daemon     ] pd_sys_is_attached_behind_SAS(14234):Not existed, path /sys/class/sas_host/host3, bus 3
+2026-08-11 12:29:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 102,worst = 92, thresh = 0,raw = 41
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-2, enc_sys_id root, port sg1
+2026-08-11 12:29:47 [  583 hal_daemon     ] se_sys_get_LCM_devname(13059): enc_sys_id = root_usb not implement.
+2026-08-11 12:29:47 [  583 hal_daemon     ] pd_sys_is_attached_behind_SAS(14234):Not existed, path /sys/class/sas_host/host1, bus 1
+2026-08-11 12:29:47 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:29:47 [  583 hal_daemon     ] se_sys_set_sas_exp_phy_err_handling_of_ports(8837): Invalid argument enc_sys_id = root_mmc
+2026-08-11 12:29:47 [  583 hal_daemon     ] se_sys_set_sas_exp_phy_err_handling_of_ports(8837): Invalid argument enc_sys_id = root_usb
+2026-08-11 12:29:47 [  583 hal_daemon     ] se_sys_set_sas_exp_phy_err_handling_of_ports(8837): Invalid argument enc_sys_id = root_boot
+2026-08-11 12:29:47 [  583 hal_daemon     ] se_sys_set_sas_exp_phy_err_handling_of_ports(8837): Invalid argument enc_sys_id = root
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 102,worst = 92, thresh = 0,raw = 41
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-2, enc_sys_id root, port sg1
+2026-08-11 12:29:47 [  583 hal_daemon     ] GPIO_Set_NAS_Status_LED: event = 0x1000,status = 0, value = 0x0, formatting_count = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] GPIO_Set_NAS_Status_LED: event = 0x2000,status = 0, value = 0x0, formatting_count = 0
+2026-08-11 12:29:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:29:47 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 100,worst = 91, thresh = 0,raw = 43
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 12:29:47 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:47 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-1, enc_sys_id root, port sg0
+2026-08-11 12:29:48 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 102,worst = 92, thresh = 0,raw = 41
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-2, enc_sys_id root, port sg1
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 100,worst = 91, thresh = 0,raw = 43
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 12:29:48 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:29:48 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-1, enc_sys_id root, port sg0
+2026-08-11 12:29:48 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x31.
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:48 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:49 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x60.
+2026-08-11 12:29:50 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x59.
+2026-08-11 12:29:51 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x56.
+2026-08-11 12:29:52 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x59.
+2026-08-11 12:29:53 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:53 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:53 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:53 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:29:53 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_33.conf!
+2026-08-11 12:29:53 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_33.conf!
+2026-08-11 12:29:53 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_33.conf!
+2026-08-11 12:29:53 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x56.
+2026-08-11 12:29:54 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_33.conf!
+2026-08-11 12:29:55 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:29:55 [  667 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_33.conf!
+2026-08-11 12:29:55 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:29:59 [ 1347 hal_app        ] ec_sys_set_pcie_smbus_enable(2018): enable=1, PCIE_SMBUS_ENABLE_FUNC=""
+2026-08-11 12:30:00 [ 1347 hal_app        ] ec_sys_set_pcie_smbus_enable(2036): Re-scan mustang card. (func=0x00:0x1c)
+2026-08-11 12:30:01 [ 1384 hal_app        ] GPIO_Set_NAS_Status_LED: event = 0x0,status = 1, value = 0x0, formatting_count = 0
+2026-08-11 12:30:01 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x59.
+2026-08-11 12:30:02 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x56.
+2026-08-11 12:30:04 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:30:04 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:30:11 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:30:11 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:30:18 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:30:18 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:30:25 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:30:25 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:30:32 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:30:32 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:30:39 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:30:39 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:30:39 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:30:39 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:30:40 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xa1.
+2026-08-11 12:30:46 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:30:46 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:30:53 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:30:53 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:30:56 [ 2777 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:31:02 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:31:02 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:31:11 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:31:11 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:31:20 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:31:20 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:31:29 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:31:29 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:31:38 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:31:38 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:31:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:31:48 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:31:54 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:31:54 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:32:01 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:32:01 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:32:08 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:32:08 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:32:15 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:32:15 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:32:19 [ 4431 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:32:22 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:32:22 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:32:25 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:32:26 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:32:29 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:32:29 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:32:31 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:32:31 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:32:33 [ 5149 hal_app        ] se_sys_get_pcie_link_state(11565):System Error
+2026-08-11 12:32:34 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xa1.
+2026-08-11 12:32:35 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xa1.
+2026-08-11 12:32:36 [ 5233 hal_app        ] Net_NIC_Get_QM2_Conf(519): SYSTEM ERROR.
+2026-08-11 12:32:37 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:32:37 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:32:44 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:32:44 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:32:51 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:32:51 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:32:58 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:32:58 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:33:00 [ 6941 user_cmd       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:33:03 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:33:04 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:33:05 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:33:05 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:33:05 [ 7247 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:33:10 [ 7800 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:33:11 [ 7995 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:33:12 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:33:12 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:33:12 [ 8182 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:33:14 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:33:15 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:33:19 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:33:19 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:33:26 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:33:26 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:33:33 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:33:33 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:33:40 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:33:40 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:33:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:33:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:33:54 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:33:54 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:34:01 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:34:01 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:34:07 [ 9349 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:34:08 [ 9383 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:34:08 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:34:08 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:34:15 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:34:15 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:34:22 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:34:22 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:34:29 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:34:29 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:34:36 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:34:36 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:34:43 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:34:43 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:34:46 [  583 hal_daemon     ] GPIO_Set_NAS_Status_LED: event = 0x1000,status = 0, value = 0x0, formatting_count = 0
+2026-08-11 12:34:46 [  583 hal_daemon     ] GPIO_Set_NAS_Status_LED: event = 0x2000,status = 0, value = 0x0, formatting_count = 0
+2026-08-11 12:34:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x59.
+2026-08-11 12:34:47 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 102,worst = 92, thresh = 0,raw = 41
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-2, enc_sys_id root, port sg1
+2026-08-11 12:34:47 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 100,worst = 91, thresh = 0,raw = 43
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 12:34:47 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:47 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-1, enc_sys_id root, port sg0
+2026-08-11 12:34:48 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 102,worst = 92, thresh = 0,raw = 41
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-2, enc_sys_id root, port sg1
+2026-08-11 12:34:48 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x56.
+2026-08-11 12:34:48 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 100,worst = 91, thresh = 0,raw = 43
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 12:34:48 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:34:48 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-1, enc_sys_id root, port sg0
+2026-08-11 12:34:49 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x59.
+2026-08-11 12:34:50 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x56.
+2026-08-11 12:34:51 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:34:52 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:34:58 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:34:58 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:35:05 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:35:05 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:35:12 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:35:12 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:35:19 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:35:19 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:35:20 [11180 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:35:26 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:35:27 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:35:30 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:35:30 [ 2308 bcclient       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:35:33 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:35:34 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:35:40 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:35:40 [12557 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:35:41 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:35:47 [12674 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:35:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:35:48 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:35:54 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:35:55 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:36:00 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xa1.
+2026-08-11 12:36:00 [12862 hal_app        ] SE_Set_Buzzer: got called with(0).
+2026-08-11 12:36:00 [12873 user_cmd       ] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:01 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x164.
+2026-08-11 12:36:03 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:36:04 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:36:05 [13437 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:36:05 [13437 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:36:05 [13437 storage_util   ] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_33.conf!
+2026-08-11 12:36:08 [13740 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:10 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:36:10 [13989 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:11 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:36:13 [14249 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:16 [14430 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:17 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:36:17 [14509 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:18 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:36:18 [14573 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:19 [14663 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:24 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:36:25 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:36:31 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:36:32 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:36:38 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:36:39 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:36:45 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:36:46 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:36:52 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:36:53 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:36:53 [16293 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:54 [16331 get_display_nam] se_sys_get_model_prefix_name(11847): Not implement
+2026-08-11 12:36:59 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:37:00 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:37:06 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:37:07 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:37:13 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:37:14 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:37:20 [16904 hal_app        ] se_sys_get_pcie_link_state(11565):System Error
+2026-08-11 12:37:20 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:37:21 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:37:27 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:37:28 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:37:34 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:37:35 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:37:39 [17522 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:37:39 [17562 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:37:40 [17444 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:40 [17444 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:40 [17444 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:40 [17444 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:41 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:37:42 [17767 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:37:42 [17661 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:42 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:37:42 [17661 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:42 [17661 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:42 [17661 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:48 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:37:49 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:37:51 [18044 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:37:51 [17945 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:51 [17945 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:51 [17945 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:51 [17945 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:52 [18116 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:37:52 [18087 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:52 [18087 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:52 [18087 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:52 [18087 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:37:52 [18141 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:37:53 [18148 sysRequest.cgi ] se_sys_get_power_recovery_mode(10716): Get PWR field fail
+2026-08-11 12:37:55 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:37:56 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:38:02 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:38:03 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:38:09 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:38:10 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:38:16 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:38:17 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:38:23 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:38:24 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:38:30 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:38:31 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:38:37 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:38:38 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:38:44 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:38:45 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:38:54 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:38:55 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:38:57 [19081 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:39:03 [19205 hal_app        ] root_get_fan_operate_pwm(2042): hm_type = 4 not implement.
+2026-08-11 12:39:03 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:39:04 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:39:04 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x34.
+2026-08-11 12:39:08 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x30.
+2026-08-11 12:39:09 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x34.
+2026-08-11 12:39:10 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:39:11 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:39:14 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x34.
+2026-08-11 12:39:17 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:39:17 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:39:18 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x30.
+2026-08-11 12:39:19 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x34.
+2026-08-11 12:39:24 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:39:24 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:39:25 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x34.
+2026-08-11 12:39:30 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x31.
+2026-08-11 12:39:31 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x34.
+2026-08-11 12:39:33 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:39:33 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:39:37 [19720 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:39:37 [19614 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:37 [19614 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:37 [19614 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:38 [19614 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:38 [19722 manaRequest.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:38 [19722 manaRequest.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:38 [19722 manaRequest.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_33.conf!
+2026-08-11 12:39:38 [19869 sysRequest.cgi ] se_sys_get_power_recovery_mode(10716): Get PWR field fail
+2026-08-11 12:39:40 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:39:40 [19905 manaRequest.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:40 [19905 manaRequest.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:40 [19905 manaRequest.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_33.conf!
+2026-08-11 12:39:40 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:39:42 [20107 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:39:42 [20090 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:42 [20090 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:42 [20090 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:43 [20090 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:39:47 [  583 hal_daemon     ] GPIO_Set_NAS_Status_LED: event = 0x1000,status = 0, value = 0x0, formatting_count = 0
+2026-08-11 12:39:47 [  583 hal_daemon     ] GPIO_Set_NAS_Status_LED: event = 0x2000,status = 0, value = 0x0, formatting_count = 0
+2026-08-11 12:39:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:39:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:39:48 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x59.
+2026-08-11 12:39:49 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 101,worst = 92, thresh = 0,raw = 42
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-2, enc_sys_id root, port sg1
+2026-08-11 12:39:49 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:39:49 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x56.
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 99,worst = 91, thresh = 0,raw = 44
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-1, enc_sys_id root, port sg0
+2026-08-11 12:39:49 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 101,worst = 92, thresh = 0,raw = 42
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:49 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-2, enc_sys_id root, port sg1
+2026-08-11 12:39:50 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 99,worst = 91, thresh = 0,raw = 44
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 12:39:50 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:39:50 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-1, enc_sys_id root, port sg0
+2026-08-11 12:39:50 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x59.
+2026-08-11 12:39:51 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x56.
+2026-08-11 12:39:54 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:39:54 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:40:01 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:40:01 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:40:07 [20443 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:40:08 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:40:08 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:40:15 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:40:15 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:40:22 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:40:22 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:40:29 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:40:29 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:40:36 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:40:36 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:40:43 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:40:43 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:40:50 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:40:50 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:40:57 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:40:57 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:41:04 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:41:04 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:41:11 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:41:11 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:41:14 [21119 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:41:18 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:41:18 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:41:25 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:41:25 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:41:32 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:41:32 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:41:39 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:41:39 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:41:46 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:41:46 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:41:53 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:41:53 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:42:00 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:42:00 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:42:07 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:42:07 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:42:14 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:42:14 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:42:20 [21872 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:42:21 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:42:21 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:42:28 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:42:28 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:42:35 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:42:35 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:42:42 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:42:43 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:42:49 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:42:50 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:42:56 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:42:57 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:43:03 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:43:04 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:43:10 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:43:11 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:43:17 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:43:18 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:43:24 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:43:25 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:43:28 [22573 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:43:31 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:43:32 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:43:38 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:43:39 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:43:45 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:43:46 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:43:52 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:43:53 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:43:59 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:44:00 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:44:06 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:44:07 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:44:13 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:44:14 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:44:20 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:44:21 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:44:27 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:44:28 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:44:34 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:44:35 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:44:38 [23291 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:44:41 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:44:42 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:44:42 [23358 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:44:43 [23340 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:44:43 [23340 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:44:43 [23340 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:44:43 [23340 disk_manage.cgi] PD_Get_Sys_Name: Retrieve pd_sys_name value from /etc/enclosure_0.conf!
+2026-08-11 12:44:47 [  583 hal_daemon     ] GPIO_Set_NAS_Status_LED: event = 0x1000,status = 0, value = 0x0, formatting_count = 0
+2026-08-11 12:44:47 [  583 hal_daemon     ] GPIO_Set_NAS_Status_LED: event = 0x2000,status = 0, value = 0x0, formatting_count = 0
+2026-08-11 12:44:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x59.
+2026-08-11 12:44:48 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x56.
+2026-08-11 12:44:49 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x59.
+2026-08-11 12:44:49 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 101,worst = 92, thresh = 0,raw = 42
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:49 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-2, enc_sys_id root, port sg1
+2026-08-11 12:44:50 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:44:50 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0x56.
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 99,worst = 91, thresh = 0,raw = 44
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-1, enc_sys_id root, port sg0
+2026-08-11 12:44:50 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 181,worst = 132, thresh = 21,raw = 1950
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2395
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39161
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 53
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 47
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19398
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 101,worst = 92, thresh = 0,raw = 42
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-2, enc_sys_id root, port sg1
+2026-08-11 12:44:50 [  583 hal_daemon     ] PD_SMART_Get_Current_Notify_Event: smart_infoP is NULL!
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 1, name = Raw_Read_Error_Rate, status_flag = 0x2f, value = 200,worst = 200, thresh = 51,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 3, name = Spin_Up_Time, status_flag = 0x27, value = 178,worst = 128, thresh = 21,raw = 2058
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 4, name = Start_Stop_Count, status_flag = 0x32, value = 98,worst = 98, thresh = 0,raw = 2617
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 5, name = Retired_Block_Count, status_flag = 0x33, value = 200,worst = 200, thresh = 140,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 7, name = Seek_Error_Rate, status_flag = 0x2e, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 9, name = Power-On_Hours, status_flag = 0x32, value = 47,worst = 47, thresh = 0,raw = 39217
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 10, name = Spin_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 11, name = Calibration_Retry_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 12, name = Power_Cycle_Count, status_flag = 0x32, value = 100,worst = 100, thresh = 0,raw = 269
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 192, name = Power-Off_Retract_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 263
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 193, name = Load_Cycle_Count, status_flag = 0x32, value = 194,worst = 194, thresh = 0,raw = 19558
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 194, name = Temperature_Celsius, status_flag = 0x22, value = 99,worst = 91, thresh = 0,raw = 44
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 196, name = Reallocated_Event_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 197, name = Current_Pending_Sector, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 198, name = Uncorrectable_Sector_Count, status_flag = 0x30, value = 100,worst = 253, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 199, name = SATA_R-Error_Count, status_flag = 0x32, value = 200,worst = 200, thresh = 0,raw = 3
+2026-08-11 12:44:50 [  583 hal_daemon     ] id = 200, name = Multi_Zone_Error_Rate, status_flag = 0x8, value = 200,worst = 200, thresh = 0,raw = 0
+2026-08-11 12:44:50 [  583 hal_daemon     ] PD_SMART_Get_ATA_Info(3947): 0-1, enc_sys_id root, port sg0
+2026-08-11 12:44:51 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:44:52 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:44:58 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:44:59 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:45:05 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:45:06 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:45:12 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:45:13 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:45:19 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:45:20 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:45:26 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:45:27 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:45:33 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:45:34 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:45:40 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:45:41 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:45:45 [23979 hal_app        ] se_sys_get_bios_version(14711):dmidecode is no supported
+2026-08-11 12:45:47 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:45:48 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:45:54 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:45:55 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:46:01 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:46:02 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:46:08 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:46:09 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:46:15 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:46:16 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:46:22 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:46:23 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:46:29 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:46:30 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.
+2026-08-11 12:46:36 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf7.
+2026-08-11 12:46:37 [  458 root           ] pic_handle_cmd(569):pic_id = root, Server receive command = 0xf8.

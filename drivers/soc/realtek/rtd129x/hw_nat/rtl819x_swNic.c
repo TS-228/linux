@@ -98,12 +98,6 @@ static netdev_tx_t rtl8169_start_xmit(struct sk_buff *skb,
 /* #include "m24kctrl.h" //added for romperf testing */
 #if defined(CONFIG_RTD_1295_HWNAT)
 /* #define RTL_DEBUG       1 */
-#ifdef RTL_DEBUG
-#define DBG(fmt, ...) printk(KERN_ERR "%s:%d: " fmt "\n", \
-			__func__, __LINE__, ## __VA_ARGS__)
-#else
-#define DBG(fmt, ...)
-#endif
 #endif /* defined(CONFIG_RTD_1295_HWNAT) */
 
 #if defined(CONFIG_RTL_PROC_DEBUG) || defined(CONFIG_RTL_DEBUG_TOOL)
@@ -527,7 +521,7 @@ int32 New_swNic_init(uint32 userNeedRxPkthdrRingCnt[NEW_NIC_MAX_RX_DESC_RING],
 #endif /* !defined(CONFIG_RTD_1295_HWNAT) */
 	}
 
-	DBG(" New_txDescRingPhyAddr[0] = 0x%lx\n New_txDescRingPhyAddr[1] = 0x%lx\n"
+	pr_debug("rtk-hwnat: " " New_txDescRingPhyAddr[0] = 0x%lx\n New_txDescRingPhyAddr[1] = 0x%lx\n"
 		" New_txDescRingPhyAddr[2] = 0x%lx\n New_txDescRingPhyAddr[3] = 0x%lx\n",
 		(uintptr_t) New_txDescRingPhyAddr[0],
 		(uintptr_t) New_txDescRingPhyAddr[1],
@@ -557,7 +551,7 @@ int32 New_swNic_init(uint32 userNeedRxPkthdrRingCnt[NEW_NIC_MAX_RX_DESC_RING],
 					skbp->data, size_of_cluster,
 					DMA_FROM_DEVICE);
 				if (unlikely(dma_mapping_error(&rtl819x_pdev->dev, mapping))) {
-					DBG("Failed to map RX DMA memory!");
+					pr_debug("rtk-hwnat: " "Failed to map RX DMA memory!");
 					dev_kfree_skb_any(skbp);
 					return -1;
 				}
@@ -607,7 +601,7 @@ int32 New_swNic_init(uint32 userNeedRxPkthdrRingCnt[NEW_NIC_MAX_RX_DESC_RING],
 #endif /* !defined(CONFIG_RTD_1295_HWNAT) */
 	}
 
-	DBG(" New_rxDescRingPhyAddr[0] = 0x%lx\n New_rxDescRingPhyAddr[1] = 0x%lx\n"
+	pr_debug("rtk-hwnat: " " New_rxDescRingPhyAddr[0] = 0x%lx\n New_rxDescRingPhyAddr[1] = 0x%lx\n"
 		" New_rxDescRingPhyAddr[2] = 0x%lx\n New_rxDescRingPhyAddr[3] = 0x%lx\n"
 		" New_rxDescRingPhyAddr[4] = 0x%lx\n New_rxDescRingPhyAddr[5] = 0x%lx\n",
 		(uintptr_t) New_rxDescRingPhyAddr[0],
@@ -939,7 +933,7 @@ get_next:
 				goto get_next;
 			}
 		}
-		DBG("rx desc = &New_rxDescRing[ring_idx %d][rx_idx %d], "
+		pr_debug("rtk-hwnat: " "rx desc = &New_rxDescRing[ring_idx %d][rx_idx %d], "
 			"addr 0x%x, opts1 0x%x, opts2 0x%x, opts3 0x%x, opts4 0x%x, opts5 0x%x",
 			ring_idx, rx_idx, desc->mdata, desc->opts1.dw,
 			desc->opts2.dw, desc->opts3.dw, desc->opts4.dw,
@@ -981,7 +975,7 @@ get_next:
 				size_of_cluster, DMA_FROM_DEVICE);
 			if (unlikely(dma_mapping_error(&rtl819x_pdev->dev,
 						mapping))) {
-				DBG("Failed to map RX DMA memory!");
+				pr_debug("rtk-hwnat: " "Failed to map RX DMA memory!");
 				dev_kfree_skb_any(skbp);
 				return RTL_NICRX_NULL;
 			}
@@ -1012,10 +1006,10 @@ get_next:
 			 * the mdata of second/third/... pkthdr will be updated to 4-byte alignment by hardware.
 			 */
 #if defined(CONFIG_RTD_1295_HWNAT)
-			DBG("info vid %d, pid %d, rxPri %d, len %d\n", info->vid, info->pid, info->rxPri, info->len);
-			DBG("rx_skb[ring_idx %d][rx_idx %d] = 0x%lx, data = 0x%lx, len = %d", ring_idx, rx_idx, (uintptr_t) r_skb, (uintptr_t) r_skb->data, desc->rx_len);
+			pr_debug("rtk-hwnat: " "info vid %d, pid %d, rxPri %d, len %d\n", info->vid, info->pid, info->rxPri, info->len);
+			pr_debug("rtk-hwnat: " "rx_skb[ring_idx %d][rx_idx %d] = 0x%lx, data = 0x%lx, len = %d", ring_idx, rx_idx, (uintptr_t) r_skb, (uintptr_t) r_skb->data, desc->rx_len);
 			//rtl_dump_data(r_skb->data, 64);
-			//DBG("rx_skb[ring_idx][rx_idx].dma_addr 0x%lx, desc->addr 0x%lx", (uintptr_t) rx_skb[ring_idx][rx_idx].dma_addr, (uintptr_t) desc->mdata);
+			//pr_debug("rtk-hwnat: " "rx_skb[ring_idx][rx_idx].dma_addr 0x%lx, desc->addr 0x%lx", (uintptr_t) rx_skb[ring_idx][rx_idx].dma_addr, (uintptr_t) desc->mdata);
 
 			/* unmap received skb from DMA */
 			dma_unmap_single(&rtl819x_pdev->dev,
@@ -1427,7 +1421,7 @@ int32 _New_swNic_send(void *skb, void *output, uint32 len,
 	struct tx_desc *txd;
 	uint32 next_index;
 
-	DBG("skb 0x%p, len %d\n", skb, len);
+	pr_debug("rtk-hwnat: " "skb 0x%p, len %d\n", skb, len);
 /* startCP3Ctrl(PERF_EVENT_CYCLE); //added for romperf testing */
 	tx_idx = New_currTxPkthdrDescIndex[nicTx->txIdx];
 
@@ -1436,7 +1430,7 @@ int32 _New_swNic_send(void *skb, void *output, uint32 len,
 	if (next_index == New_txPktDoneDescIndex[nicTx->txIdx]) {
 		/* TX ring full */
 /* stopCP3Ctrl(1, 0);      //added for romperf testing */
-		DBG("check\n");
+		pr_debug("rtk-hwnat: " "check\n");
 		return (FAILED);
 	}
 #ifdef _LOCAL_TX_DESC
@@ -1527,7 +1521,7 @@ int32 _New_swNic_send(void *skb, void *output, uint32 len,
 	fill_txd_misc(txd, nicTx, (struct sk_buff *)skb);
 #endif
 
-	DBG("txd dp 0x%x, mlen %d, dvlanid %d, hwlkup %d, bridge %d, extspa %d\n",
+	pr_debug("rtk-hwnat: " "txd dp 0x%x, mlen %d, dvlanid %d, hwlkup %d, bridge %d, extspa %d\n",
 		txd->tx_dp, txd->tx_mlen, txd->tx_dvlanid, txd->tx_hwlkup,
 		txd->tx_bridge, txd->tx_extspa);
 	//rtl_dump_data(((struct sk_buff *)skb)->data, 64);
@@ -1549,7 +1543,7 @@ int32 _New_swNic_send(void *skb, void *output, uint32 len,
 #endif
 #if defined(CONFIG_RTD_1295_HWNAT)
 	wmb();
-	DBG("ready\n");
+	pr_debug("rtk-hwnat: " "ready\n");
 #endif /* defined(CONFIG_RTD_1295_HWNAT) */
 
 	txd->tx_own = 1;	/* set     own     bit     after all done. */
@@ -1609,7 +1603,7 @@ int32 _New_swNic_send_tso_sg(struct sk_buff *skb, void *output, uint32 len,
 	uint8 proto_type = 0;
 	bool cur_pi = 0, cur_vi = 0;
 
-	DBG("%s:%d: skb 0x%p, len %d\n", __func__, __LINE__, skb, len);
+	pr_debug("rtk-hwnat: " "%s:%d: skb 0x%p, len %d\n", __func__, __LINE__, skb, len);
 	first_len = skb->len - skb->data_len;
 /* L3_hdr_len = find_L3L4_hdr_len(skb, &L4_hdr_len); */
 

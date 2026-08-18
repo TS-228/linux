@@ -3,6 +3,10 @@
 # Makefile for USB Host Controller Drivers
 #
 
+include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
+CFLAGS_ehci-rtk.o += $(rtk_vendor-ccflags)
+CFLAGS_rtk-usb-manager.o += $(rtk_vendor-ccflags)
+
 # tell define_trace.h where to find the xhci trace header
 CFLAGS_xhci-trace.o := -I$(src)
 

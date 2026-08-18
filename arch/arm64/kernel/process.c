@@ -58,7 +58,6 @@
 #include <asm/system_misc.h>
 
 #ifdef CONFIG_RTK_TRACER
-#include <linux/rtk_trace.h>
 #endif
 
 #if defined(CONFIG_STACKPROTECTOR) && !defined(CONFIG_STACKPROTECTOR_PER_TASK)
@@ -590,10 +589,6 @@ struct task_struct *__switch_to(struct task_struct *prev,
 	entry_task_switch(next);
 	ssbs_thread_switch(next);
 	cntkctl_thread_switch(prev, next);
-#ifdef CONFIG_RTK_TRACER
-	uncached_logk_pc(LOGK_CTXID, (void *)sched_clock(),
-			 (void *)(uint64_t)task_pid_nr(next));
-#endif
 	ptrauth_thread_switch_user(next);
 	permission_overlay_switch(next);
 

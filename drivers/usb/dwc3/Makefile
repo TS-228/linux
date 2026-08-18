@@ -2,6 +2,11 @@
 # define_trace.h needs to know how to find our header
 CFLAGS_trace.o				:= -I$(src)
 
+include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
+CFLAGS_core.o += $(rtk_vendor-ccflags)
+CFLAGS_dwc3-rtk.o += $(rtk_vendor-ccflags)
+CFLAGS_dwc3-rtk-type_c.o += $(rtk_vendor-ccflags)
+
 obj-$(CONFIG_USB_DWC3)			+= dwc3.o
 
 dwc3-y					:= core.o

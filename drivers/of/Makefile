@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
+include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
+CFLAGS_of_reserved_mem.o += $(rtk_vendor-ccflags)
+
 obj-y = base.o cpu.o device.o module.o platform.o property.o
 obj-$(CONFIG_OF_KOBJ) += kobj.o
 obj-$(CONFIG_OF_DYNAMIC) += dynamic.o

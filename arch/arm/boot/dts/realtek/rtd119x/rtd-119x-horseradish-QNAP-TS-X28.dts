@@ -4,6 +4,7 @@
 
 /dts-v1/;
 
+#include <dt-bindings/input/input.h>
 #include "../../../../mach-rtd119x/include/mach/memory.h"
 
 /memreserve/ 0x00000000				SYS_BOOTCODE_MEMSIZE;				/* ROM code */
@@ -20,6 +21,7 @@
 
 	aliases {
 		serial0 = &uart0;
+		serial1 = &uart1;
 	};
 
 	chosen {
@@ -27,6 +29,10 @@
 		 * Provide earlycon + extras only. Do not repeat console=ttyS0 here:
 		 * U-Boot already passes console=, and CONFIG_CMDLINE_EXTEND would
 		 * otherwise register the console twice (doubled printk output).
+		 *
+		 * USB rescue: PARTUUID=f04240a9-02 (GPT on sdc). eMMC is mmcblk1
+		 * (MBR); native eMMC root needs the rtkemmc module in initramfs
+		 * and root=/dev/mmcblk1p2 (see linux-3.10 CONFIG_CMDLINE).
 		 */
 		bootargs = "earlycon=uart8250,mmio32,0x18007800 loglevel=4 quiet clk_ignore_unused root=PARTUUID=f04240a9-02 init=/usr/sbin/init rootwait rw";
 		stdout-path = "serial0:115200n8";
@@ -153,6 +159,56 @@
 
 	rtk_iso_gpio: rtk_iso_gpio@18007100 {
 	};
+
+	/*
+	 * Front-panel GPIO from stock model_QX421_12.conf (GPIO:I2x → misc hex pin):
+	 *   USB_COPY_BUTTON = GPIO:I2C:P → misc 44 (0x2c)
+	 *   RESET_BUTTON    = GPIO:I2D:P → misc 45 (0x2d)
+	 *   disk1 ERR_LED   = GPIO:I2E:P → misc 46 (0x2e)
+	 *   disk2 ERR_LED   = GPIO:I2F:P → misc 47 (0x2f)
+	 *
+	 * Realtek gpio cells are <pin dir default>; input <pin 0 1> = active-low.
+	 * Disk bay LEDs are bi-color on one GPIO: stock HAL :P inverts so ERR on
+	 * drives the line low (red); deasserted/high shows green. No PRESENT_LED
+	 * in the model file. Encode as <pin 1 2> (active-low out, idle high).
+	 * Buzzer is on the PIC (opcodes 0x50/0x51), not a SoC GPIO.
+	 */
+	gpio_keys: gpio-keys {
+		compatible = "gpio-keys";
+		autorepeat;
+
+		usb-copy {
+			label = "usb-copy";
+			linux,code = <KEY_COPY>;
+			gpios = <&rtk_misc_gpio 44 0 1>;
+			debounce-interval = <50>;
+		};
+
+		reset {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			gpios = <&rtk_misc_gpio 45 0 1>;
+			debounce-interval = <50>;
+		};
+	};
+
+	gpio_leds: gpio-leds {
+		compatible = "gpio-leds";
+
+		/* on = red (error); off = green (OK). Same physical LED. */
+		disk1_err {
+			label = "red:disk1";
+			gpios = <&rtk_misc_gpio 46 1 2>;
+			default-state = "off";
+		};
+
+		disk2_err {
+			label = "red:disk2";
+			gpios = <&rtk_misc_gpio 47 1 2>;
+			default-state = "off";
+		};
+	};
+
 	nic: gmac@18016000 {
 		rtl-features = <2>;
 //		mac-address = [00 10 20 30 40 50];
@@ -193,6 +249,7 @@
 	crsd@18010400 {
 		gpios = <&rtk_misc_gpio 23 1 1>; 		/*sd power , output, default high  (poweroff) */
 	};
+
 	sb2@1801a000 {
 		status = "okay";
 	};
@@ -206,10 +263,44 @@
         };
 };
 
+&uart1 {
+	status = "okay";
+
+	/* QNAP TS-228 front-panel PIC (fan, temperature) on UART1 */
+	pic {
+		compatible = "qnap,ts228-pic";
+
+		fan_0: fan-0 {
+			cooling-levels = <0 64 128 192 255>;
+			#cooling-cells = <2>;
+		};
+	};
+};
+
+&cpu_thermal {
+	trips {
+		/* Start ramping the system fan before the SoC gets hot. */
+		fan_on: fan-on {
+			temperature = <55000>;
+			hysteresis = <3000>;
+			type = "passive";
+		};
+	};
+	cooling-maps {
+		fan_map0 {
+			trip = <&fan_on>;
+			cooling-device = <&fan_0 0 4>;
+			contribution = <1024>;
+		};
+	};
+};
+
 /*
  * The shared rtd-119x.dtsi leaves i2c_pins_3 unmuxed; the vendor TS-X28 DTB
  * muxes it, which is what puts the RX-8010 on the wire. The whole list has to
  * be restated because a DT property is replaced wholesale, not merged.
+ *
+ * Fan is controlled by the QNAP MCU on UART1, not the SoC PWM block.
  */
 &pinctrl {
 	pinctrl-0 = <&ir_rx_pins>, <&ir_tx_pins>,

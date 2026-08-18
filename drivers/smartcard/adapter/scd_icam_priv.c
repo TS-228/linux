@@ -99,7 +99,7 @@ int icam_scd_set_state(
     switch(fsm)
     {
     case IFD_FSM_DISABLE:
-        SC_INFO("SC%d - FSM = DISABLE\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = DISABLE\n", id);
         icam_scd_set_vcc(p_this, 0);
         icam_scd_set_vcc_level(p_this, SC_VCC_3V);
         icam_scd_set_clock(p_this, LOWEST_CLOCK);
@@ -112,7 +112,7 @@ int icam_scd_set_state(
         break;
 
     case IFD_FSM_DEACTIVATE:
-        SC_INFO("SC%d - FSM = IDEL\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = IDEL\n", id);
         icam_scd_set_vcc(p_this, 0);
         p_this->atr.length = 0;
         kfifo_reset(&p_this->rx_fifo);
@@ -126,7 +126,7 @@ int icam_scd_set_state(
 
         if (!icam_scd_card_detect(p_this))
         {
-            SC_WARNING("SC%d - RESET icam scd failed, no ICC exist\n", id);
+            pr_warn("rtk-scd: " "SC%d - RESET icam scd failed, no ICC exist\n", id);
             icam_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
             return SC_ERR_NO_ICC;
         }
@@ -144,12 +144,12 @@ int icam_scd_set_state(
         SET_ICAM_UART_INT(p_this, GET_ICAM_UART_INT(p_this) | ICAM_UART_RESET_INT);       // clear interrupts
         SET_ICAM_UART_CTRL_STAT(p_this, p_this->uart_ctrl | ICAM_UART_CTRL_RESET_MASK);
         p_this->atr_timeout = jiffies + HZ;
-        SC_INFO("SC%d - FSM = RESET & ATR\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = RESET & ATR\n", id);
         break;
 
     case IFD_FSM_ACTIVE:
 
-        SC_INFO("SC%d - FSM = ACTIVATE\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = ACTIVATE\n", id);
         SET_ICAM_UART_INT(p_this, ICAM_UART_INT_RX | ICAM_UART_RX_OVERFLOW | ICAM_UART_RX_PARITY_ERR |
                                   ICAM_UART_INT_DETECT);
         break;
@@ -190,7 +190,7 @@ void icam_scd_work(icam_scd* p_this)
     if (status & ICAM_UART_STATUS_RX_READY)
     {
         val = GET_ICAM_UART_DATA(p_this);
-        //SC_INFO("SC%d - Read %02x!!\n", p_this->id, val);
+        //pr_info("rtk-scd: " "SC%d - Read %02x!!\n", p_this->id, val);
 
         //printk(KERN_DEBUG "%02x\n", val);
 
@@ -214,30 +214,30 @@ void icam_scd_work(icam_scd* p_this)
                 switch(p_this->atr.data[0])
                 {
                 case 0x3B:
-                    //SC_INFO("SC%d - Direct Convention (%02x)\n", p_this->id, p_this->atr.data[0]);
+                    //pr_info("rtk-scd: " "SC%d - Direct Convention (%02x)\n", p_this->id, p_this->atr.data[0]);
                     p_this->atr.length++;
                     break;
 
                 case 0x3F:
                     p_this->atr.data[0] = 0x3F;
-                    //SC_INFO("SC%d - Inverse Convention (%02x)\n", p_this->id, p_this->atr.data[0]);
+                    //pr_info("rtk-scd: " "SC%d - Inverse Convention (%02x)\n", p_this->id, p_this->atr.data[0]);
                     p_this->atr.length++;
                     break;
 
                 default:
-                    //SC_WARNING("SC%d - unknown TS (%02x)\n", p_this->id, p_this->atr.data[0]);
+                    //pr_warn("rtk-scd: " "SC%d - unknown TS (%02x)\n", p_this->id, p_this->atr.data[0]);
                     break;
                 }
             }
             else
                 p_this->atr.length++;
 
-            SC_INT_DBG("p_this->atr.length=%d\n", p_this->atr.length);
+            pr_debug("rtk-scd: " "p_this->atr.length=%d\n", p_this->atr.length);
 
             // check atr
             if (is_atr_complete(&p_this->atr))
             {
-                SC_INFO("SC%d - Got ATR Completed\n", p_this->id);
+                pr_info("rtk-scd: " "SC%d - Got ATR Completed\n", p_this->id);
 
                 if (decompress_atr(&p_this->atr, &p_this->atr_info)<0)
                     goto err_atr_failed;
@@ -251,7 +251,7 @@ void icam_scd_work(icam_scd* p_this)
 
             if (kfifo_in_locked(&p_this->rx_fifo, &val, 1, &p_this->rx_fifo_lock)<1)
             {
-                SC_WARNING("icam_scd_fsm_active : fifo over flow... flush data...\n");
+                pr_warn("rtk-scd: " "icam_scd_fsm_active : fifo over flow... flush data...\n");
                 kfifo_reset(&p_this->rx_fifo);
             }
             break;
@@ -265,12 +265,12 @@ void icam_scd_work(icam_scd* p_this)
     {
         if (icam_scd_card_detect(p_this))
         {
-            SC_INFO("SC%d - ICC detected!!\n", p_this->id);
+            pr_info("rtk-scd: " "SC%d - ICC detected!!\n", p_this->id);
         }
         else
         {
             icam_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
-            SC_INFO("SC%d - ICC removed!!\n", p_this->id);
+            pr_info("rtk-scd: " "SC%d - ICC removed!!\n", p_this->id);
         }
 
         p_this->card_status_change = 1;
@@ -279,17 +279,17 @@ void icam_scd_work(icam_scd* p_this)
 
     if (status & ICAM_UART_RX_OVERFLOW)
     {
-        SC_INFO("SC%d - Rx Overflow!!\n", p_this->id);
+        pr_info("rtk-scd: " "SC%d - Rx Overflow!!\n", p_this->id);
     }
 
     if (status & ICAM_UART_TX_PARITY_ERR)
     {
-        SC_INFO("SC%d - Tx Parity Error!!\n", p_this->id);
+        pr_info("rtk-scd: " "SC%d - Tx Parity Error!!\n", p_this->id);
     }
 
     if (status & ICAM_UART_RX_PARITY_ERR)
     {
-        SC_INFO("SC%d - Rx Parity Error!!\n", p_this->id);
+        pr_info("rtk-scd: " "SC%d - Rx Parity Error!!\n", p_this->id);
     }
 
     return;
@@ -299,28 +299,28 @@ err_atr_failed:
 
     if (time_after(jiffies, p_this->atr_timeout))
     {
-        SC_WARNING("SC%d - RESET ICC failed, timeout\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, timeout\n", p_this->id);
     }
 
     if (p_this->atr.length <0)
     {
-        SC_WARNING("SC%d - RESET ICC failed, wait ATR failed\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, wait ATR failed\n", p_this->id);
     }
     else if (p_this->atr.length >= MAX_ATR_SIZE)
     {
-        SC_WARNING("SC%d - RESET ICC failed, atr length %d more then %d\n", p_this->id, p_this->atr.length, MAX_ATR_SIZE);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, atr length %d more then %d\n", p_this->id, p_this->atr.length, MAX_ATR_SIZE);
     }
     else if (!is_atr_complete(&p_this->atr))
     {
-        SC_WARNING("SC%d - RESET ICC failed, incomplete atr\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, incomplete atr\n", p_this->id);
     }
     else if (decompress_atr(&p_this->atr, &p_this->atr_info)<0)
     {
-        SC_WARNING("SC%d - RESET ICC failed, decompress atr failed\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, decompress atr failed\n", p_this->id);
     }
     else
     {
-        SC_WARNING("SC%d - RESET ICC failed, parse protocol faield\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, parse protocol faield\n", p_this->id);
     }
 
     icam_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
@@ -437,7 +437,7 @@ int icam_scd_set_vcc(icam_scd* p_this, unsigned char on)
         p_this->uart_ctrl |=  (ICAM_UART_CTRL_VCC_OFF | p_this->vcc_sel);
     }
 
-    SC_INFO("icam_scd_set_vcc=%d, uart_ctrl=%lx\n", on, p_this->uart_ctrl);
+    pr_info("rtk-scd: " "icam_scd_set_vcc=%d, uart_ctrl=%lx\n", on, p_this->uart_ctrl);
     SET_ICAM_UART_CTRL_STAT(p_this, p_this->uart_ctrl);
 
     return 0;
@@ -495,24 +495,24 @@ int icam_scd_set_convention(icam_scd* p_this, SC_CONV convention)
     switch (convention)
     {
     case SC_INVERSE_CONV:
-        SC_INFO("Set Convention = Inverse\n");
+        pr_info("rtk-scd: " "Set Convention = Inverse\n");
         p_this->uart_ctrl &= ~ICAM_UART_CTRL_CONV_MASK;
         p_this->uart_ctrl |=  ICAM_UART_CTRL_INVERSE_CONV;
         break;
 
     case SC_AUTO_CONV:
     case SC_DIRECT_CONV:
-        SC_INFO("Set Convention = Direct\n");
+        pr_info("rtk-scd: " "Set Convention = Direct\n");
         p_this->uart_ctrl &= ~ICAM_UART_CTRL_CONV_MASK;
         p_this->uart_ctrl |=  ICAM_UART_CTRL_DIRECT_CONV;
         break;
 
     default:
-        SC_WARNING("unkonwn convention %d\n", convention);
+        pr_warn("rtk-scd: " "unkonwn convention %d\n", convention);
         return -1;
     }
 
-    SC_INFO("icam_scd_set_convention=%d, uart_ctrl=%lx\n", convention, p_this->uart_ctrl);
+    pr_info("rtk-scd: " "icam_scd_set_convention=%d, uart_ctrl=%lx\n", convention, p_this->uart_ctrl);
 
     SET_ICAM_UART_CTRL_STAT(p_this, p_this->uart_ctrl);
     return 0;
@@ -563,7 +563,7 @@ int icam_scd_set_clock(icam_scd* p_this, unsigned long clk)
         SET_NDS_SC_CKSEL(p_this, NDS_SC_CKSEL_DIV_6);     // divided by 6
         break;
     default:
-        SC_WARNING("unsupportted clock frequency - %lu\n", clk);
+        pr_warn("rtk-scd: " "unsupportted clock frequency - %lu\n", clk);
         return -1;
     }
 
@@ -593,7 +593,7 @@ int icam_scd_get_clock(icam_scd* p_this, unsigned long* p_clock)
     case NDS_SC_CKSEL_DIV_6: *p_clock = NDS_CLOCK_SOURCE / 6; break;
     case NDS_SC_CKSEL_DIV_8: *p_clock = NDS_CLOCK_SOURCE / 8; break;
     default:
-        SC_WARNING("Get clock freq failed, unknown clock divisor - %d\n", GET_NDS_SC_CKSEL(p_this));
+        pr_warn("rtk-scd: " "Get clock freq failed, unknown clock divisor - %d\n", GET_NDS_SC_CKSEL(p_this));
         return -1;
     }
 
@@ -623,7 +623,7 @@ int icam_scd_set_etu(icam_scd* p_this, unsigned long etu)
 
     if (div <2 || div > 0xFFFF)
     {
-        SC_WARNING("Set etu failed, invalid divider - %lu\n", div);
+        pr_warn("rtk-scd: " "Set etu failed, invalid divider - %lu\n", div);
         return -1;
     }
 
@@ -668,7 +668,7 @@ int icam_scd_set_guard_interval(icam_scd* p_this, unsigned long guard_interval)
 {
     if (guard_interval > 0xFF)
     {
-        SC_WARNING("Set etu failed, invald guard interval - %lu\n", guard_interval);
+        pr_warn("rtk-scd: " "Set etu failed, invald guard interval - %lu\n", guard_interval);
         return -1;
     }
 
@@ -715,7 +715,7 @@ int icam_scd_set_flow_control(icam_scd* p_this, unsigned char on)
     else
         p_this->uart_ctrl &=~ICAM_UART_CTRL_MANUAL_FLOW_CTRL_ON;
 
-    SC_INFO("icam_scd_set_flow_control=%d, uart_ctrl=%lx\n", on, p_this->uart_ctrl);
+    pr_info("rtk-scd: " "icam_scd_set_flow_control=%d, uart_ctrl=%lx\n", on, p_this->uart_ctrl);
 
     SET_ICAM_UART_CTRL_STAT(p_this, p_this->uart_ctrl);
     return 0;
@@ -746,7 +746,7 @@ int icam_scd_set_uart_command(icam_scd* p_this, unsigned long io_mask)
 
         if (io_mask & SC_IO_CTRL_C7_ON)
         {
-            SC_WARNING("Set UART command failed, C7 can not be programed both as IO and GPIO\n");
+            pr_warn("rtk-scd: " "Set UART command failed, C7 can not be programed both as IO and GPIO\n");
             return -1;
         }
 
@@ -763,7 +763,7 @@ int icam_scd_set_uart_command(icam_scd* p_this, unsigned long io_mask)
 
         if (io_mask & SC_IO_CTRL_C4_ON)
         {
-            SC_WARNING("Set UART command failed, C4 can not be programed both as IO and GPIO\n");
+            pr_warn("rtk-scd: " "Set UART command failed, C4 can not be programed both as IO and GPIO\n");
             return -1;
         }
 
@@ -775,13 +775,13 @@ int icam_scd_set_uart_command(icam_scd* p_this, unsigned long io_mask)
 
         if (io_mask & SC_IO_CTRL_C8_ON)
         {
-            SC_WARNING("Set UART command failed, C8 can not be programed both as IO and GPIO\n");
+            pr_warn("rtk-scd: " "Set UART command failed, C8 can not be programed both as IO and GPIO\n");
             return -1;
         }
         break;
 
     default:
-        SC_WARNING("Set UART command failed, unknown io mode - %08lx\n", io_mode);
+        pr_warn("rtk-scd: " "Set UART command failed, unknown io mode - %08lx\n", io_mode);
         return -1;
     }
 
@@ -829,7 +829,7 @@ int icam_scd_get_uart_command(icam_scd* p_this, unsigned long* p_io_mask)
         break;
 
     default:
-        SC_WARNING("Get UART command failed, unknown io mode - %08lx\n", uart_com & ICAM_UART_COM_MODE_MASK);
+        pr_warn("rtk-scd: " "Get UART command failed, unknown io mode - %08lx\n", uart_com & ICAM_UART_COM_MODE_MASK);
         return -1;
     }
 
@@ -852,33 +852,33 @@ int icam_scd_activate(icam_scd* p_this)
     switch(p_this->fsm)
     {
     case IFD_FSM_DISABLE:
-        SC_WARNING("activate ICC failed, please enable IFD first\n");
+        pr_warn("rtk-scd: " "activate ICC failed, please enable IFD first\n");
         return SC_ERR_IFD_DISABLED;
 
     case IFD_FSM_DEACTIVATE:
 
         if (icam_scd_reset(p_this)==0)
         {
-            SC_INFO("activate ICC success\n");
+            pr_info("rtk-scd: " "activate ICC success\n");
             return SC_SUCCESS;
         }
         else
         {
-            SC_WARNING("activate ICC failed\n");
+            pr_warn("rtk-scd: " "activate ICC failed\n");
             return SC_ERR_NO_ICC;
         }
         break;
 
     case IFD_FSM_RESET:
-        SC_INFO("ICC has is reseting\n");
+        pr_info("rtk-scd: " "ICC has is reseting\n");
         return SC_SUCCESS;
 
     case IFD_FSM_ACTIVE:
-        SC_INFO("ICC has been activated already\n");
+        pr_info("rtk-scd: " "ICC has been activated already\n");
         return SC_SUCCESS;
 
     default:
-        SC_WARNING("activate ICC failed, unknown state\n");
+        pr_warn("rtk-scd: " "activate ICC failed, unknown state\n");
         return SC_FAIL;
     }
 }
@@ -930,12 +930,12 @@ int icam_scd_reset(icam_scd* p_this)
 
     if (p_this->fsm!=IFD_FSM_ACTIVE)
     {
-        SC_WARNING("SC%d - Reset ICC failed\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - Reset ICC failed\n", p_this->id);
         icam_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
         return SC_ERR_ATR_TIMEOUT;
     }
 
-    SC_INFO("SC%d - Reset ICC Complete, atr_len=%d\n", p_this->id, p_this->atr.length);
+    pr_info("rtk-scd: " "SC%d - Reset ICC Complete, atr_len=%d\n", p_this->id, p_this->atr.length);
     return SC_SUCCESS;
 }
 
@@ -1051,7 +1051,7 @@ int icam_scd_xmit(icam_scd* p_this, unsigned char* p_data, unsigned int len)
 
         if (GET_ICAM_UART_INT(p_this) & ICAM_UART_TX_PARITY_ERR)
         {
-            SC_WARNING("SC%d - Tx Parity Error!!\n", p_this->id);
+            pr_warn("rtk-scd: " "SC%d - Tx Parity Error!!\n", p_this->id);
         }
 
         if (status & ICAM_UART_STATUS_TX_READY)
@@ -1116,7 +1116,7 @@ icam_scd* icam_scd_open()
 
         if (kfifo_alloc(&p_this->rx_fifo, 1024, GFP_KERNEL)<0)
         {
-            SC_WARNING("scd : open %s scd(%d) failed, create rx fifo failed\n", IFD_MODOLE, p_this->id);
+            pr_warn("rtk-scd: " "scd : open %s scd(%d) failed, create rx fifo failed\n", IFD_MODOLE, p_this->id);
             kfree(p_this);
             return NULL;
         }
@@ -1141,11 +1141,11 @@ icam_scd* icam_scd_open()
 
         // Set All Register to the initial value
         // Set Interrupt or IRQ
-        SC_INFO("Request IRQ #%d\n", ICAM_IRQ);
+        pr_info("rtk-scd: " "Request IRQ #%d\n", ICAM_IRQ);
 
         if (request_irq(ICAM_IRQ, icam_scd_isr, SA_SHIRQ, "ICAM SCD", (void *) p_this) < 0)
         {
-            SC_WARNING("scd : open %s scd failed, unable to request irq#%d\n", IFD_MODOLE, ICAM_IRQ);
+            pr_warn("rtk-scd: " "scd : open %s scd failed, unable to request irq#%d\n", IFD_MODOLE, ICAM_IRQ);
             kfree(p_this);
             return NULL;
         }
@@ -1153,7 +1153,7 @@ icam_scd* icam_scd_open()
         icam_scd_set_state(p_this, IFD_FSM_DISABLE);
     }
     else
-        SC_WARNING("scd : open icam scd failed, out of memory\n");
+        pr_warn("rtk-scd: " "scd : open icam scd failed, out of memory\n");
 
     return p_this;
 }

@@ -10,7 +10,6 @@
 #define __RTKEMMC_H
 
 #include "reg_mmc_rtd13xx.h"
-#include "mmc_debug.h"
 
 #define EMMC_MAX_SCRIPT_BLK   128
 

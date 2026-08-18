@@ -18,13 +18,6 @@
 #include "hdmirx_reg.h"
 #include "hdcp2p2_dev.h"
 
-#define HDMI_INTERNAL_DEBUG 0
-
-#if HDMI_INTERNAL_DEBUG
-#define HDMI_PRINTF(format, ...)	pr_info("[HDMI RX DBG]" format, ## __VA_ARGS__)
-#else
-#define HDMI_PRINTF(format, ...)	do {} while(0)
-#endif
 
 #ifndef UINT8
 	typedef int INT32;
@@ -401,7 +394,6 @@ typedef struct {
 
 } HDMI_TIMING_T;
 
-
 /* share with VO DMA */
 typedef struct {
 	HDMI_TIMING_T *ptx_timing;
@@ -434,7 +426,6 @@ typedef struct {
 	HDMI_3D_OPMODE_T opmode;
 	HDMI_CAPTURE_BUFFER_T cap_total_buffer;
 } HDMI_3DDMA_CTRL_T;
-
 
 typedef struct {
 	unsigned int Info;  /* [0:1] Color Space */
@@ -590,7 +581,6 @@ void Hdmi_Get3DGenTiming(HDMI_TIMING_T *tx_timing, HDMI_TIMING_T *gen_timing);
 void Hdmi_HdcpInit(void);
 unsigned char Is_HdmiRx_hdcp1x_enabled(void);
 
-
 /*=================== hdmiHdmi ===================*/
 unsigned char drvif_Hdmi_AVI_VIC(void);
 #if HDMI2p0
@@ -598,6 +588,5 @@ void drvif_Hdmi2p0_Scdc_Reset(void);
 void drvif_Hdmi2p0_Error_Count(void);
 void TMDS_6G_Recovery(void);
 #endif
-
 
 #endif /* __HDMI_INTERNAL_H_ */

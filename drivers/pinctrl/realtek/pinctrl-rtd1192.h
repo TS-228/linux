@@ -18,14 +18,6 @@
 #define P_SB2_BASE	0
 #define P_ISO_BASE	115
 
-
-//#define RTK_DEBUG
-#ifdef RTK_DEBUG
-#define RTK_debug(fmt, ...) printk(fmt, ##__VA_ARGS__)
-#else
-#define RTK_debug(fmt, ...) do {} while(0)
-#endif
-
 /**********************************************************************************
 * sb2_muxpad0
 **********************************************************************************/
@@ -46,7 +38,6 @@
 #define RTK_PINCTRL_PIN_SB2_nf_dd_6					PINCTRL_PIN(P_SB2_BASE + 15,  	"nf_dd_6")
 #define RTK_PINCTRL_PIN_SB2_nf_dd_7					PINCTRL_PIN(P_SB2_BASE + 16,  	"nf_dd_7")
 
-
 /**********************************************************************************
 * sb2_muxpad1
 **********************************************************************************/
@@ -66,7 +57,6 @@
 #define RTK_PINCTRL_PIN_SB2_mmc_data_2 				PINCTRL_PIN(P_SB2_BASE + 26,  	"mmc_data_2")
 #define RTK_PINCTRL_PIN_SB2_mmc_data_3 				PINCTRL_PIN(P_SB2_BASE + 27,  	"mmc_data_3")
 
-
 /**********************************************************************************
 * sb2_muxpad2
 **********************************************************************************/
@@ -80,7 +70,6 @@
 #define RTK_PINCTRL_PIN_SB2_tp1_valid 				PINCTRL_PIN(P_SB2_BASE + 42,  	"tp1_valid")
 #define RTK_PINCTRL_PIN_SB2_tp1_clk 				PINCTRL_PIN(P_SB2_BASE + 41,  	"tp1_clk")
 //Rvd:24~31
-
 
 /**********************************************************************************
 * sb2_muxpad3
@@ -102,7 +91,6 @@
 #define RTK_PINCTRL_PIN_SB2_sensor_cko_1			PINCTRL_PIN(P_SB2_BASE + 56,  	"sensor_cko_1")
 #define RTK_PINCTRL_PIN_SB2_sensor_cko_0			PINCTRL_PIN(P_SB2_BASE + 55,  	"sensor_cko_0")
 
-
 /**********************************************************************************
 * sb2_muxpad4
 **********************************************************************************/
@@ -117,7 +105,6 @@
 #define RTK_PINCTRL_PIN_SB2_gpio_8					PINCTRL_PIN(P_SB2_BASE + 8,  	"gpio_8")
 //Rvd:22~31
 
-
 /**********************************************************************************
 * sb2_muxpad5
 **********************************************************************************/
@@ -128,7 +115,6 @@
 #define RTK_PINCTRL_PIN_SB2_ur1_loc					PINCTRL_PIN(P_SB2_BASE + 109,  	"ur1_loc")
 //Rvd:8~31
 
-
 /**********************************************************************************
 * sb2_muxpad6
 **********************************************************************************/
@@ -137,8 +123,6 @@
 #define RTK_PINCTRL_PIN_SB2_sdio_data_6				PINCTRL_PIN(P_SB2_BASE + 113,  	"sdio_data_6")
 #define RTK_PINCTRL_PIN_SB2_sdio_data_7				PINCTRL_PIN(P_SB2_BASE + 114,  	"sdio_data_7")
 //Rvd:8~31
-
-
 
 /**********************************************************************************
 * iso_muxpad0
@@ -160,7 +144,6 @@
 #define RTK_PINCTRL_PIN_PISO_etn_led_link 			PINCTRL_PIN(P_ISO_BASE + 17,  	"etn_led_link")
 #define RTK_PINCTRL_PIN_PISO_etn_led_rxtx 			PINCTRL_PIN(P_ISO_BASE + 18,  	"etn_led_rxtx")
 
-
 /**********************************************************************************
 * iso_muxpad1
 **********************************************************************************/
@@ -175,7 +158,6 @@
 //Rvd:26~27
 #define RTK_PINCTRL_PIN_PISO_ejtag_avcpu_loc		PINCTRL_PIN(P_ISO_BASE + 42,	"ejtag_avcpu_loc")
 #define RTK_PINCTRL_PIN_PISO_ai_loc					PINCTRL_PIN(P_ISO_BASE + 43,	"ai_loc")
-
 
 /**********************************************************************************
 * iso_muxpad2
@@ -196,7 +178,6 @@
 #define RTK_PINCTRL_PIN_PISO_rgmii_mdc				PINCTRL_PIN(P_ISO_BASE + 38,	"rgmii_mdc")
 //Rvd:28~31
 
-
 /**********************************************************************************
 * iso_muxpad3
 **********************************************************************************/
@@ -206,7 +187,6 @@
 #define RTK_PINCTRL_PIN_PISO_iso_gpio_24 				PINCTRL_PIN(P_ISO_BASE + 24,	"iso_gpio_24")
 #define RTK_PINCTRL_PIN_PISO_iso_gpio_25 				PINCTRL_PIN(P_ISO_BASE + 25,	"iso_gpio_25")
 //Rvd:10~31
-
 
 #define RTK_PINCTRL_PIN_SB2_gpio_60					PINCTRL_PIN(P_SB2_BASE + 60, 	"gpio_60")
 #define RTK_PINCTRL_PIN_SB2_gpio_61 				PINCTRL_PIN(P_SB2_BASE + 61,	"gpio_61")
@@ -254,7 +234,6 @@
 
 #define RTK_PINCTRL_PIN_PISO_iso_gpio_0					PINCTRL_PIN(P_ISO_BASE + 0, 	"iso_gpio0")
 #define RTK_PINCTRL_PIN_PISO_iso_gpio_1					PINCTRL_PIN(P_ISO_BASE + 1, 	"iso_gpio1")
-
 
 struct rtk119x_pin_regmap{
 	u16 pmux_regoff;
@@ -461,9 +440,6 @@ static const struct rtk119x_pin_regmap pin_regmap[] = {
 #define MUX_REG_BITNUM_MASK			0x0000ff00
 #define MUX_REG_BITNUM_MASK_OFF		8
 #define MUX_REG_BITOFF_MASK			0x000000ff
-
-
-
 
 /*
 #define MUX_PINS_BITS		4

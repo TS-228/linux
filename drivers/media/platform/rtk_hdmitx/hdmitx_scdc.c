@@ -42,15 +42,15 @@ int hdmitx_write_scdc_port(unsigned char offset, unsigned char value)
 
 	p_adap = i2c_get_adapter(bus_id);
 	if (p_adap == NULL) {
-		HDMI_ERROR("[%s] get i2c adapter %d failed\n", __func__, bus_id);
+		pr_err("rtk-hdmitx: " "[%s] get i2c adapter %d failed\n", __func__, bus_id);
 		goto scdc_write_fal;
 	}
 
 	if (i2c_transfer(p_adap, &msgs, 1) != 1) {
-		HDMI_ERROR("Write SCDC port fail, offset(0x%02x) value(0x%02x)", offset, value);
+		pr_err("rtk-hdmitx: " "Write SCDC port fail, offset(0x%02x) value(0x%02x)", offset, value);
 		goto scdc_write_fal;
 	} else {
-		HDMI_DEBUG("Write SCDC port, offset(0x%02x) value(0x%02x)", offset, value);
+		pr_debug("rtk-hdmitx: " "Write SCDC port, offset(0x%02x) value(0x%02x)", offset, value);
 	}
 
 	return SCDC_I2C_OK;
@@ -80,16 +80,16 @@ int hdmitx_read_scdc_port(unsigned char offset, unsigned char *buf, unsigned cha
 
 	p_adap = i2c_get_adapter(bus_id);
 	if (p_adap == NULL) {
-		HDMI_ERROR("[%s] get i2c adapter %d failed\n", __func__, bus_id);
+		pr_err("rtk-hdmitx: " "[%s] get i2c adapter %d failed\n", __func__, bus_id);
 		goto scdc_read_fail;
 	}
 
 	if (i2c_transfer(p_adap, &msgs[0], 2) != 2) {
-		HDMI_ERROR("Read SCDC port fail, offset(0x%02x) len(%u)",
+		pr_err("rtk-hdmitx: " "Read SCDC port fail, offset(0x%02x) len(%u)",
 			offset, len);
 		goto scdc_read_fail;
 	} else {
-		HDMI_DEBUG("Read SCDC port, offset(0x%02x) len(%u)",
+		pr_debug("rtk-hdmitx: " "Read SCDC port, offset(0x%02x) len(%u)",
 			offset, len);
 	}
 
@@ -187,7 +187,7 @@ unsigned char hdmitx_send_scdc_TmdsConfig(unsigned int standard,
 				(standard == VO_STANDARD_HDTV_2160P_60_3D) ||
 				(standard == VO_STANDARD_HDTV_4096_2160P_50_3D) ||
 				(standard == VO_STANDARD_HDTV_4096_2160P_60_3D))
-				HDMI_ERROR("4KP50/60 NOT support 3D Frame packing");
+				pr_err("rtk-hdmitx: " "4KP50/60 NOT support 3D Frame packing");
 
 			format_3D = 1;
 			config_data = 0x3;
@@ -201,7 +201,7 @@ unsigned char hdmitx_send_scdc_TmdsConfig(unsigned int standard,
 			break;
 		default:
 			config_data = 0x0;
-			HDMI_ERROR("Unknow 3D format");
+			pr_err("rtk-hdmitx: " "Unknow 3D format");
 		} /* end of switch (format_3D) */
 		break;
 	/* No Scramble, 1/10 data rate */
@@ -211,23 +211,23 @@ unsigned char hdmitx_send_scdc_TmdsConfig(unsigned int standard,
 
 	if (hdmitx_edid_info.scdc_capable&SCDC_PRESENT) {
 		hdmitx_write_scdc_port(SCDCS_TMDS_Config, config_data);
-		HDMI_INFO("Send SCDC TMDS_Config(0x%02x), deep_color(%u) 3D(%u)",
+		pr_info("rtk-hdmitx: " "Send SCDC TMDS_Config(0x%02x), deep_color(%u) 3D(%u)",
 			config_data, deep_color, format_3D);
 	} else if (config_data != 0) {
-		HDMI_ERROR("Sink not support SCDC_PRESENT, but need scramble");
+		pr_err("rtk-hdmitx: " "Sink not support SCDC_PRESENT, but need scramble");
 		ret_val = hdmitx_write_scdc_port(SCDCS_TMDS_Config, config_data);
 		if (ret_val == SCDC_I2C_OK)
 			hdmitx_edid_info.scdc_capable |= SCDC_PRESENT;
-		HDMI_INFO("Send SCDC TMDS_Config(0x%02x), deep_color(%u) 3D(%u)",
+		pr_info("rtk-hdmitx: " "Send SCDC TMDS_Config(0x%02x), deep_color(%u) 3D(%u)",
 			config_data, deep_color, format_3D);
 	} else if ((standard >= VO_STANDARD_HDTV_2160P_60_420) &&
 		(standard <= VO_STANDARD_HDTV_4096_2160P_50_420)) {
 		/* 4K YUV420 */
-		HDMI_ERROR("Sink not support SCDC_PRESENT, but YUV420 format should need");
+		pr_err("rtk-hdmitx: " "Sink not support SCDC_PRESENT, but YUV420 format should need");
 		ret_val = hdmitx_write_scdc_port(SCDCS_TMDS_Config, config_data);
 		if (ret_val == SCDC_I2C_OK)
 			hdmitx_edid_info.scdc_capable |= SCDC_PRESENT;
-		HDMI_INFO("Send SCDC TMDS_Config(0x%02x), deep_color(%u) 3D(%u)",
+		pr_info("rtk-hdmitx: " "Send SCDC TMDS_Config(0x%02x), deep_color(%u) 3D(%u)",
 			config_data, deep_color, format_3D);
 	}
 
@@ -243,12 +243,12 @@ void hdmitx_scdc_work_func(struct work_struct *work)
 	if (hdmitx_read_scdc_port(SCDCS_Update_0, update_flags, 2))
 		return;
 
-	HDMI_DEBUG("SCDC: Update(0x%02x)", update_flags[0]);
+	pr_debug("rtk-hdmitx: " "SCDC: Update(0x%02x)", update_flags[0]);
 
 	/* Status_Update */
 	if (update_flags[0]&0x1) {
 		hdmitx_read_scdc_port(SCDCS_Status_Flag_0, status_flags, 2);
-		HDMI_DEBUG("SCDC: Status(0x%02x)", status_flags[0]);
+		pr_debug("rtk-hdmitx: " "SCDC: Status(0x%02x)", status_flags[0]);
 	}
 
 	/* CED_Update */
@@ -261,9 +261,9 @@ void hdmitx_scdc_work_func(struct work_struct *work)
 		sum = (0x100-(sum&0xFF))&0xFF;
 
 		if (sum != err_det[6])
-			HDMI_ERROR("Wrong CED checksum");
+			pr_err("rtk-hdmitx: " "Wrong CED checksum");
 		else
-			HDMI_DEBUG("SCDC: CED checksum ok");
+			pr_debug("rtk-hdmitx: " "SCDC: CED checksum ok");
 	}
 
 	/* Write clear */
@@ -273,7 +273,7 @@ void hdmitx_scdc_work_func(struct work_struct *work)
 
 static irqreturn_t hdmitx_scdc_isr(int irq, void *dev_id)
 {
-	HDMI_DEBUG("Get SCDC read request");
+	pr_debug("rtk-hdmitx: " "Get SCDC read request");
 	schedule_work(&tx_scdc.rr_work);
 	return IRQ_HANDLED;
 }
@@ -283,10 +283,10 @@ void enable_hdmitx_scdcrr(unsigned char enable)
 	if (!tx_scdc.enable_rr)
 		return;
 
-	HDMI_INFO("%s SCDC read request", enable?"Enable":"Disable");
+	pr_info("rtk-hdmitx: " "%s SCDC read request", enable?"Enable":"Disable");
 
 	if ((!tx_scdc.i2c1_req_reg) || (!tx_scdc.dev_nd)) {
-		HDMI_ERROR("[%s] No control reg or no device node\n", __func__);
+		pr_err("rtk-hdmitx: " "[%s] No control reg or no device node\n", __func__);
 		return;
 	}
 
@@ -302,14 +302,14 @@ void register_hdmitx_scdcrr(struct device_node *dev)
 {
 	int ret_value;
 
-	HDMI_INFO("[%s]", __func__);
+	pr_info("rtk-hdmitx: " "[%s]", __func__);
 
 	memset(&tx_scdc, 0x0, sizeof(tx_scdc));
 
 	tx_scdc.i2c1_req_reg = of_iomap(dev, 1);
 
 	if (tx_scdc.i2c1_req_reg == NULL) {
-		HDMI_ERROR("[%s] Unable to map I2C1_REQ registers\n", __func__);
+		pr_err("rtk-hdmitx: " "[%s] Unable to map I2C1_REQ registers\n", __func__);
 		return;
 	}
 
@@ -319,7 +319,7 @@ void register_hdmitx_scdcrr(struct device_node *dev)
 	/* Get SCDC read request device node */
 	tx_scdc.dev_nd = of_get_child_by_name(dev, "scdc_rr");
 	if (!tx_scdc.dev_nd) {
-		HDMI_ERROR("[%s] Get SCDC read request node fail!\n", __func__);
+		pr_err("rtk-hdmitx: " "[%s] Get SCDC read request node fail!\n", __func__);
 		return;
 	}
 
@@ -329,7 +329,7 @@ void register_hdmitx_scdcrr(struct device_node *dev)
 		tx_scdc.enable_rr = 0;
 
 	if (!tx_scdc.enable_rr) {
-		HDMI_INFO("Skip SCDC RR init");
+		pr_info("rtk-hdmitx: " "Skip SCDC RR init");
 		return;
 	}
 
@@ -341,7 +341,7 @@ void register_hdmitx_scdcrr(struct device_node *dev)
 	ret_value = request_irq(tx_scdc.i2c1_irq, hdmitx_scdc_isr,
 		IRQF_SHARED, "hdmitx_scdc", tx_scdc.dev_nd);
 	if (ret_value)
-		HDMI_ERROR("[%s] Request irq fail\n", __func__);
+		pr_err("rtk-hdmitx: " "[%s] Request irq fail\n", __func__);
 
 }
 
@@ -366,6 +366,6 @@ void hdmitx_scdcrr_resume(void)
 	ret_value = request_irq(tx_scdc.i2c1_irq, hdmitx_scdc_isr,
 		IRQF_SHARED, "hdmitx_scdc", tx_scdc.dev_nd);
 	if (ret_value)
-		HDMI_ERROR("[%s] Request irq fail\n", __func__);
+		pr_err("rtk-hdmitx: " "[%s] Request irq fail\n", __func__);
 
 }

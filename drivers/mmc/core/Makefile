@@ -3,6 +3,10 @@
 # Makefile for the kernel mmc core.
 #
 
+include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
+CFLAGS_mmc.o += $(rtk_vendor-ccflags)
+CFLAGS_sd.o += $(rtk_vendor-ccflags)
+
 obj-$(CONFIG_MMC)		+= mmc_core.o
 mmc_core-y			:= core.o bus.o host.o \
 				   mmc.o mmc_ops.o sd.o sd_ops.o \

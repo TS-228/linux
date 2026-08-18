@@ -115,6 +115,8 @@ unsigned int realtek_rev(void)
 {
     return (system_rev>>16);
 }
+EXPORT_SYMBOL(realtek_rev);
+EXPORT_SYMBOL(realtek_cpu_id);
 
 DT_MACHINE_START(RTD119X_DT, "phoenix")
 	.init_machine		= rtk119x_dt_init,

@@ -21,7 +21,6 @@ typedef struct
     unsigned char TCK;
 }scd_atr_info;
 
-
 #define get_ta1(p_atr_info)        (p_atr_info->T1[0])
 #define get_tb1(p_atr_info)        (p_atr_info->T1[1])
 #define get_tc1(p_atr_info)        (p_atr_info->T1[2])
@@ -71,9 +70,7 @@ typedef struct
     unsigned char data[MAX_ATR_SIZE];
 }scd_atr;
 
-
 #define ATR_COMPLETE        0x80
-
 
 typedef enum {
     VALID_ATR,
@@ -81,11 +78,8 @@ typedef enum {
     INCOMPLETE_ATR,
 }atr_status;
 
-
 extern int  is_atr_complete(scd_atr* p_atr);
 extern int  decompress_atr(scd_atr* p_atr, scd_atr_info* p_info);
 extern void init_atr(scd_atr* p_atr);
-
-#define SC_ATR_DBG          printk
 
 #endif  //__SCD_ATR_H__

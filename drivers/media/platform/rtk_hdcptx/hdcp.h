@@ -12,7 +12,6 @@
 #ifndef _HDCP_H_
 #define _HDCP_H_
 
-
 /********************************/
 /* Structures related to ioctl  */
 /********************************/
@@ -68,7 +67,6 @@ struct hdcp_ksvlist_info {
 	uint32_t device_count;
 	uint8_t Bksv[HDCP_Aksv_SIZE];
 };
-
 
 struct H2_RepeaterAuthSendRxIdList_PayLoad {
 	unsigned char Rxinfo[2];
@@ -126,7 +124,6 @@ enum {
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/fs.h>
-
 
 enum hdcp_repeater {
 	HDCP_RECEIVER = 0,
@@ -301,7 +298,6 @@ extern struct hdcp_ksvlist_info ksvlist_info;
 #define WR_REG_32(base, offset, val)    writel(val, (volatile unsigned int*)(base + offset))
 #define RD_REG_32(base, offset)         readl((volatile unsigned int*)(base + offset))
 
-
 #undef FLD_MASK
 #define FLD_MASK(start, end)    (((1 << (start - end + 1)) - 1) << (end))
 #undef FLD_VAL
@@ -316,17 +312,11 @@ extern struct hdcp_ksvlist_info ksvlist_info;
 #define RD_FIELD_32(base, offset, start, end) \
 	((RD_REG_32(base, offset) & FLD_MASK(start, end)) >> (end))
 
-
 #define __RTK_HDCP_GENERIC_DEBUG__  0
 
 #if __RTK_HDCP_GENERIC_DEBUG__
-#define HDCP_DEBUG(format, ...) printk("HDCP_DEBUG: " format "\n", ## __VA_ARGS__)
 #else
-#define HDCP_DEBUG(format, ...)
 #endif
-
-#define HDCP_ERROR(format, ...) printk(KERN_ERR "HDCP_ERROR: " format "\n", ## __VA_ARGS__)
-#define HDCP_INFO(format, ...) printk(KERN_WARNING "HDCP_INFO: " format "\n", ## __VA_ARGS__)
 
 /***************************/
 /* Function prototypes     */

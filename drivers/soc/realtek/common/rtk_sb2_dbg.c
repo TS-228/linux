@@ -27,10 +27,6 @@
 #include "include/rtk_sb2.h"
 
 #define DRIVER_NAME "RTK_SB2_DBG"
-#define sb2_info(fmt, ...)  pr_info("[%s] " fmt, DRIVER_NAME, ##__VA_ARGS__)
-#define sb2_err(fmt, ...)   pr_err("[%s] " fmt, DRIVER_NAME, ##__VA_ARGS__)
-#define sb2_err_hl(fmt, ...)   pr_err("\033[0;31m[%s] " fmt "\033[m\n", DRIVER_NAME, ##__VA_ARGS__)
-#define sb2_dbg(fmt, ...)   pr_debug("[%s] " fmt, DRIVER_NAME, ##__VA_ARGS__)
 
 static struct sb2_data *sb2_data;
 static ATOMIC_NOTIFIER_HEAD(sb2_dbg_notifier);
@@ -81,10 +77,10 @@ static int sb2_dbg_default_inv_callback(struct notifier_block *nb, unsigned long
 {
 	struct sb2_inv_event_data *d = data;
 
-	sb2_err("sb2 get int 0x%08x from SB2_INV_INTSTAT\n", d->raw_ints);
-	sb2_err_hl("Invalid access issued by %s", inv_cpu_str[d->inv_cpu]);
-	sb2_err_hl("Invalid address is 0x%x", d->addr);
-	sb2_err("Timeout threshold(0x%08x)\n", d->timeout_th);
+	pr_err("rtk-sb2: " "sb2 get int 0x%08x from SB2_INV_INTSTAT\n", d->raw_ints);
+	pr_err("rtk-sb2: " "Invalid access issued by %s", inv_cpu_str[d->inv_cpu]);
+	pr_err("rtk-sb2: " "Invalid address is 0x%x", d->addr);
+	pr_err("rtk-sb2: " "Timeout threshold(0x%08x)\n", d->timeout_th);
 	return NOTIFY_OK;
 }
 
@@ -96,7 +92,7 @@ static int sb2_dbg_default_dbg_callback(struct notifier_block *nb, unsigned long
 {
 	struct sb2_dbg_event_data *d = data;
 
-	sb2_err("sb2 get int 0x%08x from SB2_DBG_INT\n", d->raw_ints);
+	pr_err("rtk-sb2: " "sb2 get int 0x%08x from SB2_DBG_INT\n", d->raw_ints);
 	return NOTIFY_OK;
 }
 
@@ -143,7 +139,7 @@ static int sb2_dbg_set_mem_monitor(int i, u32 start, u32 end, u32 flags)
 	/* disable this set first */
 	sb2_dbg_disable_mem_monitor(i);
 
-	sb2_info("%s: dbg%d addr %08x-%08x flag %08x\n", __func__,
+	pr_info("rtk-sb2: " "%s: dbg%d addr %08x-%08x flag %08x\n", __func__,
 		i, start, end, flags);
 	sb2_write(sb2_data, SB2_DBG_START_REG0 + i * 4, start);
 	sb2_write(sb2_data, SB2_DBG_END_REG0 + i * 4, end);
@@ -270,7 +266,7 @@ static int sb2_dbg_probe(struct platform_device *pdev)
 	struct device_node *np = dev->of_node;
 	int ret;
 
-	sb2_info("%s\n", __func__);
+	pr_info("rtk-sb2: " "%s\n", __func__);
 
 	data = devm_kzalloc(dev, sizeof(*data), GFP_KERNEL);
 	if (!data)
@@ -278,25 +274,25 @@ static int sb2_dbg_probe(struct platform_device *pdev)
 
 	data->irq = irq_of_parse_and_map(np, 0);
 	if (!data->irq) {
-		sb2_err("failed to parse irq\n");
+		pr_err("rtk-sb2: " "failed to parse irq\n");
 		return -ENXIO;
 	}
 
 	ret = devm_request_irq(dev, data->irq, sb2_dbg_int_handler, IRQF_SHARED, "sb2_dbg", pdev);
 	if (ret) {
-		sb2_err("request_irq() returns %d\n", ret);
+		pr_err("rtk-sb2: " "request_irq() returns %d\n", ret);
 		return -ENXIO;
 	}
 
 	ret = of_sb2_data_init(np, data, 0);
 	if (ret) {
-		sb2_err("of_sb2_data_init() returns %d\n", ret);
+		pr_err("rtk-sb2: " "of_sb2_data_init() returns %d\n", ret);
 		return ret;
 	}
 	sb2_data = data;
 
-	sb2_info("info 0x%x\n", sb2_read(data, SB2_CHIP_INFO));
-	sb2_info("use smc %x\n", SB2_USE_SMCCALL);
+	pr_info("rtk-sb2: " "info 0x%x\n", sb2_read(data, SB2_CHIP_INFO));
+	pr_info("rtk-sb2: " "use smc %x\n", SB2_USE_SMCCALL);
 
 	sb2_dbg_add_default_handlers();
 
@@ -310,7 +306,7 @@ static void sb2_dbg_remove(struct platform_device *pdev)
 {
 	struct sb2_data *data = platform_get_drvdata(pdev);
 
-	sb2_info("%s\n", __func__);
+	pr_info("rtk-sb2: " "%s\n", __func__);
 	sb2_disable_interrupt(data);
 	sb2_data_fini(data);
 	sb2_data = NULL;
@@ -321,9 +317,9 @@ static int sb2_dbg_suspend(struct device *dev)
 {
 	struct sb2_data *data = dev_get_drvdata(dev);
 
-	sb2_info("Enter %s\n", __func__);
+	pr_info("rtk-sb2: " "Enter %s\n", __func__);
 	sb2_disable_interrupt(data);
-	sb2_info("Exit %s\n", __func__);
+	pr_info("rtk-sb2: " "Exit %s\n", __func__);
 	return 0;
 }
 
@@ -331,9 +327,9 @@ static int sb2_dbg_resume(struct device *dev)
 {
 	struct sb2_data *data = dev_get_drvdata(dev);
 
-	sb2_info("Enter %s\n", __func__);
+	pr_info("rtk-sb2: " "Enter %s\n", __func__);
 	sb2_enable_interrupt(data);
-	sb2_info("Exit %s\n", __func__);
+	pr_info("rtk-sb2: " "Exit %s\n", __func__);
 	return 0;
 }
 
@@ -397,7 +393,7 @@ struct notifier_block sb2_dbg_acpu_monitor_nb = {
 
 static int __init sb2_dbg_init_acpu_monitor(void)
 {
-	sb2_info("memory monitor 0x98013b00 - 0x98013c00\n");
+	pr_info("rtk-sb2: " "memory monitor 0x98013b00 - 0x98013c00\n");
 	sb2_dbg_acpu_monitor(4, 0x98013b00, 0x98013c00,
 		SB2_DBG_MONITOR_DATA | SB2_DBG_MONITOR_INST,
 		SB2_DBG_MONITOR_READ | SB2_DBG_MONITOR_WRITE);

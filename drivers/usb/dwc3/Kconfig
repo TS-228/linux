@@ -55,8 +55,8 @@ comment "Platform Glue Driver Support"
 config USB_DWC3_RTK
 	tristate "Realtek DWC3 Platform Driver"
 	default USB_DWC3
-	select RTK_USB2PHY
-	select RTK_USB3PHY
+	select PHY_RTK_RTD_USB2PHY
+	select PHY_RTK_RTD_USB3PHY
 	select USB_RTK_CTRL_MANAGER
 	help
 	  RTK SoCs with DesignWare Core USB3 IP inside,

@@ -34,12 +34,6 @@
 
 #include "sdhci-pltfm.h"
 #include "sdhci-rtk.h"
-//#define RTK_DEBUG
-#ifdef RTK_DEBUG
-#define RTK_debug(fmt, ...) printk(fmt, ##__VA_ARGS__)
-#else
-#define RTK_debug(fmt, ...)
-#endif
 
 #define DRIVER_NAME    "rtk-sdio"
 #define BANNER    "Realtek SDIO Host Driver"
@@ -694,14 +688,14 @@ static u8 rtk_sdhci_search_final_phase(u32 phase_map)
             final_path_idx = i;
         }
 
-        //rtk_sdmmc_debug("%s path[%d].start = %d\n", __func__, i, path[i].start);
-        //rtk_sdmmc_debug("%s path[%d].end = %d\n", __func__, i, path[i].end);
-        //rtk_sdmmc_debug("%s path[%d].len = %d\n", __func__, i, path[i].len);
-        //rtk_sdmmc_debug("%s path[%d].mid = %d\n", __func__, i, path[i].mid);
+        //pr_debug("rtk-sdmmc: " "%s path[%d].start = %d\n", __func__, i, path[i].start);
+        //pr_debug("rtk-sdmmc: " "%s path[%d].end = %d\n", __func__, i, path[i].end);
+        //pr_debug("rtk-sdmmc: " "%s path[%d].len = %d\n", __func__, i, path[i].len);
+        //pr_debug("rtk-sdmmc: " "%s path[%d].mid = %d\n", __func__, i, path[i].mid);
     }
 
 finish:
-    //rtk_sdmmc_debug("%s Final chosen phase: %d\n", __func__, final_phase);
+    //pr_debug("rtk-sdmmc: " "%s Final chosen phase: %d\n", __func__, final_phase);
     return final_phase;
 }
 
@@ -727,7 +721,7 @@ static int rtk_sdhci_tuning_rx(struct sdhci_host *host)
 
     phase_map = 0xFFFFFFFF;
     for(i = 0 ; i < TUNING_CNT ; i++){
-        //rtk_sdmmc_debug("%s RX raw_phase_map[%d] = 0x%08x\n", __func__, i, raw_phase_map[i]);
+        //pr_debug("rtk-sdmmc: " "%s RX raw_phase_map[%d] = 0x%08x\n", __func__, i, raw_phase_map[i]);
         phase_map &= raw_phase_map[i];
     }
     printk(KERN_ERR "%s RX phase_map = 0x%08x\n", __func__, phase_map);
@@ -777,7 +771,7 @@ static int rtk_sdhci_tuning_tx(struct sdhci_host *host)
 
     phase_map = 0xFFFFFFFF;
     for(i = 0 ; i < TUNING_CNT ; i++){
-        //rtk_sdmmc_debug("%s RX raw_phase_map[%d] = 0x%08x\n", __func__, i, raw_phase_map[i]);
+        //pr_debug("rtk-sdmmc: " "%s RX raw_phase_map[%d] = 0x%08x\n", __func__, i, raw_phase_map[i]);
         phase_map &= raw_phase_map[i];
     }
     printk(KERN_ERR "%s TX phase_map = 0x%08x\n", __func__, phase_map);

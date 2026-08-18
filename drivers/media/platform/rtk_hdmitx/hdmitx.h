@@ -19,17 +19,8 @@
 
 #include "hdmitx_rpc.h"
 
-#define __RTK_HDMI_GENERIC_DEBUG__  0
 #define HDMI_RX_SENSE_SUPPORT 0
 
-#if __RTK_HDMI_GENERIC_DEBUG__
-#define HDMI_DEBUG(format, ...) printk("[HDMITx_DBG] " format "\n", ## __VA_ARGS__)
-#else
-#define HDMI_DEBUG(format, ...)
-#endif
-
-#define HDMI_ERROR(format, ...) printk(KERN_ERR "[HDMITx_ERR] " format "\n", ## __VA_ARGS__)
-#define HDMI_INFO(format, ...) printk(KERN_WARNING "[HDMITx] " format "\n", ## __VA_ARGS__)
 
 #define wr_reg(x, y)                    writel(y, (volatile unsigned int*)(x))
 #define rd_reg(x)                       readl((volatile unsigned int*)(x))
@@ -50,12 +41,10 @@
 #define CLEARBITS(base, offset, Mask) WR_REG_32(base, offset, ((RD_REG_32(base, offset) & ~(Mask))))
 #define MASK_REG_32(base, offset, andMask, orMask) WR_REG_32(base, offset, ((RD_REG_32(base, offset) & (andMask)) | (orMask)))
 
-
 #define MAX_ELD_BYTES	128
 
 #define MAX_3D_VIC	16
 #define MAX_SPEC_3D	18
-
 
 enum HDMI_MODE {
 	HDMI_MODE_UNDEF = 0,
@@ -358,7 +347,6 @@ typedef struct {
 	unsigned char *edid_ptr;
 } asoc_hdmi_t;
 
-
 struct hdmitx_switch_data {
 	int	state;
 #if HDMI_RX_SENSE_SUPPORT
@@ -387,7 +375,6 @@ struct ext_edid {
 #define HDMI_GET_OUTPUT_FORMAT			_IOWR(HDMI_IOCTL_MAGIC, 18, struct hdmi_format_setting)
 #define HDMI_SET_VO_INTERFACE_TYPE		_IOW(HDMI_IOCTL_MAGIC, 19, int)
 #define HDMI_GET_CONFIG_TV_SYSTEM		_IOR(HDMI_IOCTL_MAGIC, 20, struct VIDEO_RPC_VOUT_CONFIG_TV_SYSTEM)
-
 
 /* HDMI ioctl */
 enum {
@@ -449,7 +436,6 @@ int tv_system_to_hdmi_format(struct VIDEO_RPC_VOUT_CONFIG_TV_SYSTEM *tv_system,
 int set_hdmitx_format(struct hdmi_format_setting *format);
 int get_hdmitx_format(struct hdmi_format_setting *format);
 void set_vo_interface_type(int type);
-
 
 #ifndef CONFIG_RTK_HDCP_1x
 void register_config_tv_system_sysfs(struct device *dev);

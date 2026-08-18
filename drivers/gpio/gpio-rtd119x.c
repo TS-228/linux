@@ -90,7 +90,7 @@ static void __inline iowrite_reg_bit(volatile void *reg, unsigned char bit, unsi
 
 int gpio_chk_irq_enable(struct rtk119x_gpio_controller *p_rtk_gpio_ctl, unsigned int irq)
 {
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 	return ioread_reg_bit(((volatile void *)(p_rtk_gpio_ctl->reg_ie) + GPIO_REG_OFST(irq)), GPIO_REG_BIT(irq));
 }
@@ -98,7 +98,7 @@ int gpio_chk_irq_enable(struct rtk119x_gpio_controller *p_rtk_gpio_ctl, unsigned
 static void gpio_irq_disable(struct irq_data *d)
 {
 	struct rtk119x_gpio_controller *p_rtk_gpio_ctl = (struct rtk119x_gpio_controller *)(d->chip_data);
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 	iowrite_reg_bit(((volatile void *)p_rtk_gpio_ctl->reg_ie + GPIO_REG_OFST(d->hwirq)), GPIO_REG_BIT(d->hwirq), 0);
 }
@@ -108,20 +108,19 @@ static void gpio_irq_enable(struct irq_data *d)
 	struct rtk119x_gpio_controller *p_rtk_gpio_ctl = (struct rtk119x_gpio_controller *)(d->chip_data);
     unsigned long irq_flag;
     unsigned int gpio_int_flag;
-    RTK_debug("[%s]  %s  line: %d  irq=%d ,hwirq=%ld  ,of_node->name=%s \n", __FILE__, __FUNCTION__, __LINE__, d->irq, d->hwirq,
-            d->domain->of_node->name);
+    pr_debug("rtk-gpio: " "%s: irq=%d hwirq=%ld\n", __func__, d->irq, d->hwirq);
 
     spin_lock_irqsave(&p_rtk_gpio_ctl->lock, irq_flag);
     //Clear assert/de-assert interrupt flag
     gpio_int_flag = 0x1 << GPIO_INT_REG_BIT(d->hwirq);
     if(ioread32(p_rtk_gpio_ctl->regs_umsk_isr_gpa+GPIO_INT_REG_OFST(d->hwirq))&gpio_int_flag)
     {
-        RTK_debug("[%s]  %s  line: %d, Wrte Reg(0x%08x) Val(0x%08x)\n",__FILE__, __FUNCTION__, __LINE__,p_rtk_gpio_ctl->regs_umsk_isr_gpa+GPIO_INT_REG_OFST(d->hwirq),gpio_int_flag);
+        pr_debug("rtk-gpio: " "[%s]  %s  line: %d, Wrte Reg(0x%08x) Val(0x%08x)\n",__FILE__, __FUNCTION__, __LINE__,p_rtk_gpio_ctl->regs_umsk_isr_gpa+GPIO_INT_REG_OFST(d->hwirq),gpio_int_flag);
         iowrite32(gpio_int_flag,p_rtk_gpio_ctl->regs_umsk_isr_gpa+GPIO_INT_REG_OFST(d->hwirq));
     }
     if(ioread32(p_rtk_gpio_ctl->regs_umsk_isr_gpda+GPIO_INT_REG_OFST(d->hwirq))&gpio_int_flag)
     {
-        RTK_debug("[%s]  %s  line: %d, Wrte Reg(0x%08x) Val(0x%08x)\n",__FILE__, __FUNCTION__, __LINE__,p_rtk_gpio_ctl->regs_umsk_isr_gpda+GPIO_INT_REG_OFST(d->hwirq),gpio_int_flag);
+        pr_debug("rtk-gpio: " "[%s]  %s  line: %d, Wrte Reg(0x%08x) Val(0x%08x)\n",__FILE__, __FUNCTION__, __LINE__,p_rtk_gpio_ctl->regs_umsk_isr_gpda+GPIO_INT_REG_OFST(d->hwirq),gpio_int_flag);
         iowrite32(gpio_int_flag,p_rtk_gpio_ctl->regs_umsk_isr_gpda+GPIO_INT_REG_OFST(d->hwirq));
     }
 
@@ -129,7 +128,7 @@ static void gpio_irq_enable(struct irq_data *d)
     iowrite_reg_bit(((volatile void *)p_rtk_gpio_ctl->reg_ie + GPIO_REG_OFST(d->hwirq)), GPIO_REG_BIT(d->hwirq), 1);
     spin_unlock_irqrestore(&p_rtk_gpio_ctl->lock, irq_flag);
 
-	RTK_debug("[%s]  %s  line: %d  reg_ie[%x]= %x \n", __FILE__, __FUNCTION__, __LINE__,
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d  reg_ie[%x]= %x \n", __FILE__, __FUNCTION__, __LINE__,
 			  (unsigned int)(p_rtk_gpio_ctl->reg_ie + GPIO_REG_OFST(d->hwirq)),
 			  ioread32(p_rtk_gpio_ctl->reg_ie + GPIO_REG_OFST(d->hwirq)));
 }
@@ -137,32 +136,32 @@ static void gpio_irq_enable(struct irq_data *d)
 static int gpio_irq_type(struct irq_data *d, unsigned trigger)
 {
 	struct rtk119x_gpio_controller *p_rtk_gpio_ctl = (struct rtk119x_gpio_controller *)(d->chip_data);
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 	switch(trigger)
 	{
 		case IRQ_TYPE_EDGE_RISING://	1
-		RTK_debug("[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
+		pr_debug("rtk-gpio: " "[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
 		iowrite_reg_bit(((volatile void *)p_rtk_gpio_ctl->reg_dp + GPIO_REG_OFST(d->hwirq)), GPIO_REG_BIT(d->hwirq), 1);
 		clear_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag + GPIO_REG_OFST(d->hwirq));
 		set_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_assert_enable_flag + GPIO_REG_OFST(d->hwirq));
 		break;
 
 		case IRQ_TYPE_EDGE_FALLING://	2
-		RTK_debug("[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
+		pr_debug("rtk-gpio: " "[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
 		iowrite_reg_bit(((volatile void *)p_rtk_gpio_ctl->reg_dp + GPIO_REG_OFST(d->hwirq)), GPIO_REG_BIT(d->hwirq), 1);
 		set_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag + GPIO_REG_OFST(d->hwirq));
 		clear_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_assert_enable_flag + GPIO_REG_OFST(d->hwirq));
 		break;
 
 		case IRQ_TYPE_LEVEL_HIGH://	4
-		RTK_debug("[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
+		pr_debug("rtk-gpio: " "[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
 		iowrite_reg_bit(((volatile void *)p_rtk_gpio_ctl->reg_dp + GPIO_REG_OFST(d->hwirq)), GPIO_REG_BIT(d->hwirq), 1);
 		clear_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag + GPIO_REG_OFST(d->hwirq));
 		set_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_assert_enable_flag + GPIO_REG_OFST(d->hwirq));
 		break;
 
 		case IRQ_TYPE_LEVEL_LOW://	8
-		RTK_debug("[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
+		pr_debug("rtk-gpio: " "[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
 		iowrite_reg_bit(((volatile void *)p_rtk_gpio_ctl->reg_dp + GPIO_REG_OFST(d->hwirq)), GPIO_REG_BIT(d->hwirq), 0);
 		clear_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag + GPIO_REG_OFST(d->hwirq));
 		set_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_assert_enable_flag + GPIO_REG_OFST(d->hwirq));
@@ -171,7 +170,7 @@ static int gpio_irq_type(struct irq_data *d, unsigned trigger)
 		case IRQ_TYPE_EDGE_BOTH://	(IRQ_TYPE_EDGE_FALLING | IRQ_TYPE_EDGE_RISING)
 		case IRQ_TYPE_NONE:	//		0
 		default:
-		RTK_debug("[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
+		pr_debug("rtk-gpio: " "[%s]%sline: %d \n",__FILE__,__FUNCTION__,__LINE__);
 		iowrite_reg_bit(((volatile void *)p_rtk_gpio_ctl->reg_dp + GPIO_REG_OFST(d->hwirq)), GPIO_REG_BIT(d->hwirq), 1);
 		set_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag + GPIO_REG_OFST(d->hwirq));
 		set_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_assert_enable_flag + GPIO_REG_OFST(d->hwirq));
@@ -195,7 +194,7 @@ static void gpio_irq_handler(struct irq_desc *desc)
 	unsigned int hw_irq=12345678, linux_irq;
 	unsigned int irq_had_fired = 0 ;
 
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 #if 0
 //gpio test start
@@ -210,7 +209,7 @@ static void gpio_irq_handler(struct irq_desc *desc)
 
 	/*get interrupt status */
 	event = ioread32(p_rtk_gpio_ctl->reg_isr) & (p_rtk_gpio_ctl->gpio_isr_deassert_offset | p_rtk_gpio_ctl->gpio_isr_assert_offset);
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 	if (event == 0)
 		return;
 
@@ -219,7 +218,7 @@ static void gpio_irq_handler(struct irq_desc *desc)
 	{
 		gpioNr = 0;
 		reg_ofst = 0;
-		RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+		pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 		while (gpioNr < (p_rtk_gpio_ctl->chip.ngpio))	//less than MISC gpio number(60) or ISO gpio number(20)
 		{
 			status = ioread32(p_rtk_gpio_ctl->regs_umsk_isr_gpda + reg_ofst) >> 1;	//get regs_umsk_isr_gpda0 or regs_umsk_isr_gpda1
@@ -239,8 +238,8 @@ static void gpio_irq_handler(struct irq_desc *desc)
 					linux_irq = irq_find_mapping(p_rtk_gpio_ctl->irq_mux_domain, hw_irq);
 					if (linux_irq)
 					{
-						RTK_debug("[%s]%s  line: %d \n",__FILE__,__FUNCTION__,__LINE__);
-						RTK_debug("hw_irq = %d,  deassertflg[%x] = %x \n",hw_irq,((unsigned int)((p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag) + GPIO_REG_OFST(hw_irq))), (*((p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag) + GPIO_REG_OFST(hw_irq))));
+						pr_debug("rtk-gpio: " "[%s]%s  line: %d \n",__FILE__,__FUNCTION__,__LINE__);
+						pr_debug("rtk-gpio: " "hw_irq = %d,  deassertflg[%x] = %x \n",hw_irq,((unsigned int)((p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag) + GPIO_REG_OFST(hw_irq))), (*((p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag) + GPIO_REG_OFST(hw_irq))));
 						if ( (1<<GPIO_REG_BIT(hw_irq)) & (*((p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag) + GPIO_REG_OFST(hw_irq)))  )
 						{
 							generic_handle_irq(linux_irq);
@@ -254,22 +253,22 @@ static void gpio_irq_handler(struct irq_desc *desc)
 				}
 				i++;
 				status >>= 1;
-				RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+				pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 			}
 
 			gpioNr += 31;
 			reg_ofst += 4;
-			RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+			pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 		}
 	}
 
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 	/*handle gpio assert */
 	if (event & (p_rtk_gpio_ctl->gpio_isr_assert_offset))
 	{
 		gpioNr = 0;
 		reg_ofst = 0;
-		RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+		pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 		while (gpioNr < (p_rtk_gpio_ctl->chip.ngpio))
 		{
 			status = ioread32(p_rtk_gpio_ctl->regs_umsk_isr_gpa + reg_ofst) >> 1;
@@ -290,11 +289,11 @@ static void gpio_irq_handler(struct irq_desc *desc)
 					linux_irq = irq_find_mapping(p_rtk_gpio_ctl->irq_mux_domain, hw_irq);
 					if (linux_irq)
 					{
-						RTK_debug("[%s]%s  line: %d \n",__FILE__,__FUNCTION__,__LINE__);
-						RTK_debug("hw_irq = %d,  assertflg[%x] = %x \n",hw_irq,((unsigned int)((p_rtk_gpio_ctl->gpio_isr_assert_enable_flag) + GPIO_REG_OFST(hw_irq))), (*((p_rtk_gpio_ctl->gpio_isr_assert_enable_flag) + GPIO_REG_OFST(hw_irq))));
+						pr_debug("rtk-gpio: " "[%s]%s  line: %d \n",__FILE__,__FUNCTION__,__LINE__);
+						pr_debug("rtk-gpio: " "hw_irq = %d,  assertflg[%x] = %x \n",hw_irq,((unsigned int)((p_rtk_gpio_ctl->gpio_isr_assert_enable_flag) + GPIO_REG_OFST(hw_irq))), (*((p_rtk_gpio_ctl->gpio_isr_assert_enable_flag) + GPIO_REG_OFST(hw_irq))));
 						if ( (1<<GPIO_REG_BIT(hw_irq)) & (*((p_rtk_gpio_ctl->gpio_isr_assert_enable_flag) + GPIO_REG_OFST(hw_irq)))  )
 						{
-							RTK_debug("[%s]%s  line: %d \n",__FILE__,__FUNCTION__,__LINE__);
+							pr_debug("rtk-gpio: " "[%s]%s  line: %d \n",__FILE__,__FUNCTION__,__LINE__);
 							generic_handle_irq(linux_irq);
 							irq_had_fired++;
 						}
@@ -306,19 +305,19 @@ static void gpio_irq_handler(struct irq_desc *desc)
 				}
 				i++;
 				status >>= 1;
-				RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+				pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 			}
 			gpioNr += 31;
 			reg_ofst += 4;
-			RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+			pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 		}
 	}
 
 
-	RTK_debug("[%s]%s  line: %d  irq_had_fired = %d\n",__FILE__,__FUNCTION__,__LINE__,irq_had_fired);
+	pr_debug("rtk-gpio: " "[%s]%s  line: %d  irq_had_fired = %d\n",__FILE__,__FUNCTION__,__LINE__,irq_had_fired);
 	iowrite32(event, p_rtk_gpio_ctl->reg_isr);
 	if(!irq_had_fired)
-		RTK_debug("%s gpio irq (hwirq=%d) has triggered but no dispatch to user handler (12345678 mean something Wrong) .\n", __func__, hw_irq);
+		pr_debug("rtk-gpio: " "%s gpio irq (hwirq=%d) has triggered but no dispatch to user handler (12345678 mean something Wrong) .\n", __func__, hw_irq);
 	return ;
 
 }
@@ -328,7 +327,7 @@ __maybe_unused static int mux_irq_domain_xlate(struct irq_domain *d,
 											   const u32 * intspec, unsigned int intsize,
 											   unsigned long *out_hwirq, unsigned int *out_type)
 {
-	RTK_debug("[%s]  %s  line: %d device_node.name = %s \n", __FILE__, __FUNCTION__, __LINE__, controller->name);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d device_node.name = %s \n", __FILE__, __FUNCTION__, __LINE__, controller->name);
 
 	if (/*d->of_node*/to_of_node(d->fwnode) != controller)
 		return -EINVAL;
@@ -338,21 +337,21 @@ __maybe_unused static int mux_irq_domain_xlate(struct irq_domain *d,
 
 	*out_hwirq = intspec[0];
 	*out_type = 0;
-	RTK_debug("[%s]  %s  line: %d out_hwirq = %ld \n", __FILE__, __FUNCTION__, __LINE__, *out_hwirq);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d out_hwirq = %ld \n", __FILE__, __FUNCTION__, __LINE__, *out_hwirq);
 	return 0;
 }
 
 static int mux_irq_domain_map(struct irq_domain *d, unsigned int irq, irq_hw_number_t hw)
 {
 	struct rtk119x_gpio_controller *p_rtk_gpio_ctl = d->host_data;
-	RTK_debug("[%s]  %s  line: %d   irq=%d , irq_hw_number=%d\n", __FILE__, __FUNCTION__, __LINE__, irq, (unsigned int)hw);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d   irq=%d , irq_hw_number=%d\n", __FILE__, __FUNCTION__, __LINE__, irq, (unsigned int)hw);
 
 	if (!p_rtk_gpio_ctl)
 	{
-		RTK_debug("[%s]  %s  line: %d  p_rtk_gpio_ctl is NULL\n", __FILE__, __FUNCTION__, __LINE__);
+		pr_debug("rtk-gpio: " "[%s]  %s  line: %d  p_rtk_gpio_ctl is NULL\n", __FILE__, __FUNCTION__, __LINE__);
 		return -EINVAL;
 	}
-	RTK_debug("[%s]  %s  line: %d  p_rtk_gpio_ctl =%x bank_assert_irq =%d ,reg_ie= %x \n", __FILE__, __FUNCTION__, __LINE__,
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d  p_rtk_gpio_ctl =%x bank_assert_irq =%d ,reg_ie= %x \n", __FILE__, __FUNCTION__, __LINE__,
 			  (unsigned int)p_rtk_gpio_ctl, (unsigned int)p_rtk_gpio_ctl->bank_assert_irq, (unsigned int)p_rtk_gpio_ctl->reg_ie);
 
 	irq_set_chip(irq, &p_rtk_gpio_ctl->gp_irq_chip);
@@ -374,7 +373,7 @@ int rtk119x_gpio_irq_setup(struct device_node *node, struct rtk119x_gpio_control
 {
 	int bank_deassert_irq, bank_assert_irq;
 
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 	p_rtk_gpio_ctl->gp_irq_chip.name = node->name;
 	p_rtk_gpio_ctl->gp_irq_chip.irq_enable = gpio_irq_enable;
@@ -398,8 +397,8 @@ int rtk119x_gpio_irq_setup(struct device_node *node, struct rtk119x_gpio_control
 
 	p_rtk_gpio_ctl->bank_assert_irq = bank_assert_irq;
 	p_rtk_gpio_ctl->bank_deassert_irq = bank_deassert_irq;
-	RTK_debug("[%s] %s  %d bank_assert_irq=%d \n", __FILE__, __FUNCTION__, __LINE__, p_rtk_gpio_ctl->bank_assert_irq);
-	RTK_debug("[%s] %s  %d bank_deassert_irq=%d \n", __FILE__, __FUNCTION__, __LINE__, p_rtk_gpio_ctl->bank_deassert_irq);
+	pr_debug("rtk-gpio: " "[%s] %s  %d bank_assert_irq=%d \n", __FILE__, __FUNCTION__, __LINE__, p_rtk_gpio_ctl->bank_assert_irq);
+	pr_debug("rtk-gpio: " "[%s] %s  %d bank_deassert_irq=%d \n", __FILE__, __FUNCTION__, __LINE__, p_rtk_gpio_ctl->bank_deassert_irq);
 
 	p_rtk_gpio_ctl->irq_mux_domain = irq_domain_add_simple(node, p_rtk_gpio_ctl->chip.ngpio,
 														   p_rtk_gpio_ctl->linux_irq_base, &mux_irq_domain_ops, p_rtk_gpio_ctl);
@@ -422,7 +421,7 @@ static inline int __rtk119x_direction(struct gpio_chip *chip, unsigned offset, b
 	unsigned long flags;
 	u32 temp;
 	u32 mask = 1 << (offset % 32);
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 	spin_lock_irqsave(&p_rtk_gpio_ctl->lock, flags);
 	temp = __raw_readl((p_rtk_gpio_ctl->reg_dir) + gpio_reg_offset);
@@ -435,7 +434,7 @@ static inline int __rtk119x_direction(struct gpio_chip *chip, unsigned offset, b
 		temp &= ~mask;
 	}
 	__raw_writel(temp, (p_rtk_gpio_ctl->reg_dir) + gpio_reg_offset);
-	RTK_debug("[%s]  %s  line: %d  offset = %d  addr = 0x%08x  temp = 0x%08x \n", __FILE__, __FUNCTION__, __LINE__, offset,
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d  offset = %d  addr = 0x%08x  temp = 0x%08x \n", __FILE__, __FUNCTION__, __LINE__, offset,
 			  (unsigned int)((p_rtk_gpio_ctl->reg_dir) + gpio_reg_offset), temp);
 	spin_unlock_irqrestore(&p_rtk_gpio_ctl->lock, flags);
 
@@ -445,7 +444,7 @@ static inline int __rtk119x_direction(struct gpio_chip *chip, unsigned offset, b
 static int rtk119x_gpio_get(struct gpio_chip *chip, unsigned offset)
 {
 	struct rtk119x_gpio_controller *p_rtk_gpio_ctl = chip2controller(chip);
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 	return ioread_reg_bit(((volatile void *)p_rtk_gpio_ctl->reg_dati + GPIO_REG_OFST(offset)), GPIO_REG_BIT(offset));
 
@@ -454,7 +453,7 @@ static int rtk119x_gpio_get(struct gpio_chip *chip, unsigned offset)
 static void rtk119x_gpio_set(struct gpio_chip *chip, unsigned offset, int value)
 {
 	struct rtk119x_gpio_controller *p_rtk_gpio_ctl = chip2controller(chip);
-	RTK_debug("[%s]  %s  line: %d  offset = %d  addr = %x  value = %d \n", __FILE__, __FUNCTION__, __LINE__, offset,
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d  offset = %d  addr = %x  value = %d \n", __FILE__, __FUNCTION__, __LINE__, offset,
 			  (unsigned int)((volatile void *)p_rtk_gpio_ctl->reg_dato + GPIO_REG_OFST(offset)), value);
 
 	if (value)
@@ -465,14 +464,14 @@ static void rtk119x_gpio_set(struct gpio_chip *chip, unsigned offset, int value)
 
 static int rtk119x_direction_in(struct gpio_chip *chip, unsigned offset)
 {
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 	return __rtk119x_direction(chip, offset, GP_DIRIN);
 }
 
 static int rtk119x_direction_out(struct gpio_chip *chip, unsigned offset, int value)
 {
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 	rtk119x_gpio_set(chip, offset, value);
 	return __rtk119x_direction(chip, offset, GP_DIROUT);
@@ -489,7 +488,7 @@ static int rtk119x_gpio_setdeb(struct gpio_chip *chip, unsigned offset, unsigned
 
 	debounce = pinconf_to_config_argument(config);
 
-	RTK_debug("[%s]  %s  line: %d debounce = %d \n", __FILE__, __FUNCTION__, __LINE__, debounce);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d debounce = %d \n", __FILE__, __FUNCTION__, __LINE__, debounce);
 
 	if(debounce>=30*1000){//30ms
 		debounce = RTK119X_GPIO_DEBOUNCE_30ms;
@@ -507,13 +506,13 @@ static int rtk119x_gpio_setdeb(struct gpio_chip *chip, unsigned offset, unsigned
 
 	if (strcmp("rtk_misc_gpio", chip->label) == 0)
 	{
-		RTK_debug("[%s]  %s  line: %d debounce = %d  for rtk_misc_gpio \n", __FILE__, __FUNCTION__, __LINE__, debounce);
+		pr_debug("rtk-gpio: " "[%s]  %s  line: %d debounce = %d  for rtk_misc_gpio \n", __FILE__, __FUNCTION__, __LINE__, debounce);
 		iowrite32((0x8 | debounce) << ((offset >> 4) * 4), ((volatile void *)p_rtk_gpio_ctl->reg_deb));
 		return 0;
 	}
 	else if (strcmp("rtk_iso_gpio", chip->label) == 0)
 	{
-		RTK_debug("[%s]  %s  line: %d debounce = %d  for rtk_iso_gpio \n", __FILE__, __FUNCTION__, __LINE__, debounce);
+		pr_debug("rtk-gpio: " "[%s]  %s  line: %d debounce = %d  for rtk_iso_gpio \n", __FILE__, __FUNCTION__, __LINE__, debounce);
 		iowrite32((0x8 | debounce), ((volatile void *)p_rtk_gpio_ctl->reg_deb));
 		return 0;
 	}
@@ -523,14 +522,14 @@ static int rtk119x_gpio_setdeb(struct gpio_chip *chip, unsigned offset, unsigned
 
 static int rtk119x_gpio_request(struct gpio_chip *chip, unsigned offset)
 {
-    RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
     return pinctrl_gpio_request(chip, offset);
 }
 
 static void rtk119x_gpio_free(struct gpio_chip *chip, unsigned offset)
 {
-    RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
     pinctrl_gpio_free(chip, offset);
 }
@@ -539,10 +538,10 @@ static int rtk119x_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
 {
 	struct rtk119x_gpio_controller *p_rtk_gpio_ctl = chip2controller(chip);
 	unsigned int linux_irq = 0;
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 	linux_irq = irq_create_mapping(p_rtk_gpio_ctl->irq_mux_domain, offset);
-	RTK_debug("[%s]  %s  line: %d linux_irq = %d \n", __FILE__, __FUNCTION__, __LINE__, linux_irq);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d linux_irq = %d \n", __FILE__, __FUNCTION__, __LINE__, linux_irq);
 //  linux_irq = irq_find_mapping(p_rtk_gpio_ctl->irq_mux_domain, offset);
 	if (!linux_irq)
 	{
@@ -555,10 +554,10 @@ static int rtk119x_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
 static int rtk119x_gpio_xlate(struct gpio_chip *gc, const struct of_phandle_args *gpiospec, u32 * flags)
 {
 	unsigned int pin;
-	RTK_debug("[%s]  %s  line: %d base = %d \n", __FILE__, __FUNCTION__, __LINE__, gc->base);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d base = %d \n", __FILE__, __FUNCTION__, __LINE__, gc->base);
 
-//  RTK_debug("[%s]  %s  line: %d args[0]=%d  args[1]=%d   args[2]=%d\n",__FILE__,__FUNCTION__,__LINE__,gpiospec->args[0],gpiospec->args[1],gpiospec->args[2]);
-	RTK_debug("[%s]  %s  line: %d args[0]=%d  \n", __FILE__, __FUNCTION__, __LINE__, gpiospec->args[0]);
+//  pr_debug("rtk-gpio: " "[%s]  %s  line: %d args[0]=%d  args[1]=%d   args[2]=%d\n",__FILE__,__FUNCTION__,__LINE__,gpiospec->args[0],gpiospec->args[1],gpiospec->args[2]);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d args[0]=%d  \n", __FILE__, __FUNCTION__, __LINE__, gpiospec->args[0]);
 
 	if (WARN_ON(gc->of_gpio_n_cells < 1))
 		return -EINVAL;
@@ -570,6 +569,22 @@ static int rtk119x_gpio_xlate(struct gpio_chip *gc, const struct of_phandle_args
 		return -EINVAL;
 
 	pin = gpiospec->args[0];
+
+	/*
+	 * Vendor DT cells: <pin dir default>.
+	 * dir: 0=input, 1=output.
+	 * For outputs, default is the initial level (0=low, 1=high), except:
+	 *   default=2 → active-low output, idle/init high (OF_GPIO_ACTIVE_LOW).
+	 * For gpio-keys, encode active-low inputs as <pin 0 1> (idle-high).
+	 */
+	if (flags) {
+		*flags = 0;
+		/* OF_GPIO_ACTIVE_LOW (gpiolib-of) == bit 0 */
+		if (gpiospec->args[1] == GP_DIRIN && gpiospec->args[2] == GP_HIGH)
+			*flags |= 1;
+		if (gpiospec->args[1] == GP_DIROUT && gpiospec->args[2] == 2)
+			*flags |= 1;
+	}
 
 	if (gpiospec->args[1] == GP_DIRIN)	//gpio direction input
 	{
@@ -583,9 +598,10 @@ static int rtk119x_gpio_xlate(struct gpio_chip *gc, const struct of_phandle_args
 			if (rtk119x_direction_out(gc, pin, GP_LOW))
 				printk(KERN_ERR "gpio_xlate: failed to set pin direction out \n");
 		}
-		else if (gpiospec->args[2] == GP_HIGH)
+		else if (gpiospec->args[2] == GP_HIGH || gpiospec->args[2] == 2)
 		{
-			if (rtk119x_direction_out(gc, pin, GP_HIGH))	//gpio direction output high
+			/* 1 = active-high init high; 2 = active-low idle high */
+			if (rtk119x_direction_out(gc, pin, GP_HIGH))
 				printk(KERN_ERR "gpio_xlate: failed to set pin direction out \n");
 		}
 		else
@@ -593,9 +609,6 @@ static int rtk119x_gpio_xlate(struct gpio_chip *gc, const struct of_phandle_args
 			printk(KERN_ERR "gpio_xlate: failed to set pin direction out \n");
 		}
 	}
-
-//  if (rtk119x_gpio_setdeb(gc, pin,gpiospec->args[2]))
-//      printk(KERN_ERR"gpio_xlate: failed to set pin deb\n");
 
 	return gpiospec->args[0];
 }
@@ -610,7 +623,7 @@ void set_default_gpio(struct device_node *node)
         for (n = 0; n < num_gpios; n++)
         {
             int gpio = of_get_named_gpio(node, "gpios", n);
-            RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+            pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
             if (gpio >= 0)
             {
                 if (!gpio_is_valid(gpio))
@@ -646,7 +659,7 @@ static int rtk119x_gpio_probe(struct platform_device *pdev)
 	struct device_node *node = NULL;
 	unsigned int num_gpios, n;
 
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 	node = pdev->dev.of_node;
 	if (!node)
 	{
@@ -654,7 +667,7 @@ static int rtk119x_gpio_probe(struct platform_device *pdev)
 		return -ENODEV;
 	}
 
-	RTK_debug("[%s]  %s  line: %d   node name = [%s] \n", __FILE__, __FUNCTION__, __LINE__, node->name);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d   node name = [%s] \n", __FILE__, __FUNCTION__, __LINE__, node->name);
 
 	p_rtk_gpio_ctl = kzalloc(sizeof(struct rtk119x_gpio_controller), GFP_KERNEL);
 	if (!p_rtk_gpio_ctl)
@@ -688,7 +701,7 @@ static int rtk119x_gpio_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	RTK_debug("[%s]  %s  line: %d   node name = [%s] \n", __FILE__, __FUNCTION__, __LINE__, node->name);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d   node name = [%s] \n", __FILE__, __FUNCTION__, __LINE__, node->name);
 	p_rtk_gpio_ctl->chip.label = node->name;
 	p_rtk_gpio_ctl->chip.request = rtk119x_gpio_request;
 	p_rtk_gpio_ctl->chip.free = rtk119x_gpio_free;
@@ -734,13 +747,13 @@ static int rtk119x_gpio_probe(struct platform_device *pdev)
 	p_rtk_gpio_ctl->reg_dp = (void __iomem *)((unsigned int)gpio_regs_base + p_rtk_gpio_grp->reg_dp_off);
 	p_rtk_gpio_ctl->reg_deb = (void __iomem *)((unsigned int)gpio_regs_base + p_rtk_gpio_grp->reg_deb_off);
 
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 	if (gpiochip_add_data(&p_rtk_gpio_ctl->chip, p_rtk_gpio_ctl))
 	{
 		printk("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 
 	}
-	RTK_debug("[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s]  %s  line: %d \n", __FILE__, __FUNCTION__, __LINE__);
 	rtk119x_gpio_irq_setup(node, p_rtk_gpio_ctl, p_rtk_gpio_grp);
 
 	platform_set_drvdata(pdev,p_rtk_gpio_ctl);

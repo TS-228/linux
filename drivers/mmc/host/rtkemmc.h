@@ -10,7 +10,6 @@
 #define __RTKEMMC_H
 
 #include "reg_mmc.h"
-#include "mmc_debug.h"
 
 #define MAX_DESCRIPTOR_NUM    8
 #define EMMC_MAX_SCRIPT_BLK   8

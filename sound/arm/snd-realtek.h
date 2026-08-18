@@ -40,63 +40,7 @@
 extern struct ion_device *rtk_phoenix_ion_device;
 #endif
 
-#define ALSA_CAPTURE_TODO(format, ...) printk(KERN_ALERT "[ALSA CAPTURE NOT IMPLEMENT !!]\n");
-
-#define ALSA_WARNING(format, ...)    \
-{\
-    printk(KERN_ALERT "[ALSA WARNING] ");\
-    printk(KERN_ALERT format, ##__VA_ARGS__);\
-}
-
-#define ALSA_VitalPrint(format, ...) //printk(KERN_ALERT format, ##__VA_ARGS__);
-#define ALSA_DbgPrint(format, ...) printk(KERN_ALERT format, ##__VA_ARGS__);
-
 // debug
-#ifdef _TRACE_CODE
-#define TRACE_CODE(format, ...)    \
-{\
-    printk(KERN_ALERT format, ##__VA_ARGS__);\
-}
-#else
-#define TRACE_CODE(format, ...)
-#endif
-
-#ifdef _TRACE_RPC
-#define TRACE_RPC() printk(KERN_ALERT "�� alsa %s\n", __FUNCTION__);
-#else
-#define TRACE_RPC()
-#endif
-
-#ifdef _DEBUG_CODE
-#define DEBUG_CODE(format, ...)    \
-{\
-    printk(KERN_ALERT format, ##__VA_ARGS__);\
-}
-#else
-#define DEBUG_CODE(format, ...)
-#endif
-
-#ifdef _SHOW_CONFIG_INFO
-#define SHOW_CONFIG_INFO(format, ...)    \
-{\
-    printk(KERN_ALERT format, ##__VA_ARGS__);\
-}
-#else
-#define SHOW_CONFIG_INFO(format, ...)
-#endif
-
-#define ALSA_PRINT() printk(KERN_ALERT "[���� %s %d]\n", __FUNCTION__, __LINE__);
-
-#define ALSA_SEC_PRINT(sec, format, ...)    \
-{\
-    static long count = 0;\
-    if((jiffies - count) > HZ * sec)\
-    {\
-        count = jiffies;\
-        printk(KERN_ALERT format, ##__VA_ARGS__);\
-    }\
-}
-
 #if _DBG_CHECK_AI_HW_RING_DATA_EN
 #define _DBG_CHECK_AI_HW_RING_DATA_SEC 1
 #define _DBG_CHECK_AI_HW_RING_DATA(data) {\
@@ -206,7 +150,6 @@ enum{
     pRing64->rp = (unsigned long)pRing32->rp; \
     pRing64->cp = (unsigned long)pRing32->cp; \
 }
-
 
 /************************************************************************/
 /* ENUM                                                                     */
@@ -1104,7 +1047,6 @@ typedef struct {
     AUDIO_OUT_SPDIF_CONFIG spdifConfig;
     HRESULT res;
 } AUDIO_CONFIG_DAC_SPDIF_T;
-
 
 typedef struct
 {

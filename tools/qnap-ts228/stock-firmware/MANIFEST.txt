@@ -1,0 +1,11 @@
+pulled: 2026-08-12T01:46:46+02:00
+host: admin@192.168.178.98
+084af5653f893c5be14f7358a272a36d760009608c0922ea29152cab0a15e40f  /home/stephan/qnap-ts-228/linux-stable/tools/qnap-ts228/stock-firmware/configs/enclosure_0.conf
+30262a2dd1d92e8182ae51444a07f9d38bd93d998fe40eaa23526f9f72cdedfb  /home/stephan/qnap-ts-228/linux-stable/tools/qnap-ts228/stock-firmware/configs/hal.conf
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /home/stephan/qnap-ts-228/linux-stable/tools/qnap-ts228/stock-firmware/configs/model.conf.symlink
+e61e42db5e253fe94873630a845d771421e1157310bf9f793a398862cee84c94  /home/stephan/qnap-ts-228/linux-stable/tools/qnap-ts228/stock-firmware/configs/model_QX421_12.conf
+631b25d257c3e09fb55c49cf7c257e812e7956bd3d513d1a96b4057f95300c7d  /home/stephan/qnap-ts-228/linux-stable/tools/qnap-ts228/stock-firmware/capture/hal_strings.txt
+e8a904e489bafb6edffe6427dd7c99e36767327ab1a6b22d7e881aa9f8486633  /home/stephan/qnap-ts-228/linux-stable/tools/qnap-ts228/stock-firmware/capture/summary.txt
+2b8c5ad429e0be9038ab31dd67869ca48625d0e91a5be8fcbd14677320d1fc18  /home/stephan/qnap-ts-228/linux-stable/tools/qnap-ts228/stock-firmware/binaries/hal_app
+1e93e0a8e914633ae33ef4ea87957c3cfa75952d20b36cc8bcfeec5b97dbb984  /home/stephan/qnap-ts-228/linux-stable/tools/qnap-ts228/stock-firmware/binaries/hal_daemon
+148b33f412f8a789f9415d6c13c5f509073d8b7cf927bffde6849d6ea6a5463d  /home/stephan/qnap-ts-228/linux-stable/tools/qnap-ts228/stock-firmware/binaries/libuLinux_hal.so

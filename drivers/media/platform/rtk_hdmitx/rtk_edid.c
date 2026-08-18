@@ -746,7 +746,7 @@ bool rtk_edid_block_valid(u8 *raw_edid, int block)
 	for (i = 0; i < EDID_LENGTH; i++)
 		csum += raw_edid[i];
 	if (csum) {
-		HDMI_ERROR("EDID checksum is invalid, remainder is %d", csum);
+		pr_err("rtk-hdmitx: " "EDID checksum is invalid, remainder is %d", csum);
 
 		/* allow CEA to slide through, switches mangle this */
 		if (raw_edid[0] != 0x02)
@@ -757,12 +757,12 @@ bool rtk_edid_block_valid(u8 *raw_edid, int block)
 	switch (raw_edid[0]) {
 	case 0: /* base */
 		if (edid->version != 1) {
-			HDMI_ERROR("EDID has major version %d, instead of 1", edid->version);
+			pr_err("rtk-hdmitx: " "EDID has major version %d, instead of 1", edid->version);
 			goto bad;
 		}
 
 		if (edid->revision > 4)
-			HDMI_DEBUG("EDID minor > 4, assuming backward compatibility");
+			pr_debug("rtk-hdmitx: " "EDID minor > 4, assuming backward compatibility");
 		break;
 
 	default:
@@ -774,7 +774,7 @@ bool rtk_edid_block_valid(u8 *raw_edid, int block)
 bad:
     hdmitx_set_error_code(HDMI_ERROR_INVALID_EDID);
 	if (raw_edid) {
-		HDMI_ERROR("Raw EDID:");
+		pr_err("rtk-hdmitx: " "Raw EDID:");
 		print_hex_dump(KERN_ERR, " \t", DUMP_PREFIX_NONE, 16, 1, raw_edid, EDID_LENGTH, false);
 	}
 	return 0;
@@ -832,11 +832,11 @@ void print_cea_modes(u64 cea_format, u64 cea_format2, u64 cea_format2_420)
 	int i, freq;
 
 	if (cea_format == 0) {
-		HDMI_INFO("no matching video format found");
+		pr_info("rtk-hdmitx: " "no matching video format found");
 		return;
 	}
 
-	HDMI_INFO(" VIDEO DATA: ");
+	pr_info("rtk-hdmitx: " " VIDEO DATA: ");
 
 	for (i = 0; i < ARRAY_SIZE(edid_cea_modes); i++) {
 
@@ -846,7 +846,7 @@ void print_cea_modes(u64 cea_format, u64 cea_format2, u64 cea_format2_420)
 					freq = ((edid_cea_modes[i].clock*1000)/((edid_cea_modes[i].htotal*edid_cea_modes[i].vtotal)/2));
 				else
 					freq = ((edid_cea_modes[i].clock*1000)/(edid_cea_modes[i].htotal*edid_cea_modes[i].vtotal));
-				HDMI_INFO("[%02d]%-10s @%d Hz", i+1, edid_cea_modes[i].name, freq);
+				pr_info("rtk-hdmitx: " "[%02d]%-10s @%d Hz", i+1, edid_cea_modes[i].name, freq);
 			}
 		} else if (i < 128) {
 			if ((cea_format2 >> (i-64)) & 1ULL) {
@@ -854,7 +854,7 @@ void print_cea_modes(u64 cea_format, u64 cea_format2, u64 cea_format2_420)
 					freq = ((edid_cea_modes[i].clock*1000)/((edid_cea_modes[i].htotal*edid_cea_modes[i].vtotal)/2));
 				else
 					freq = ((edid_cea_modes[i].clock*1000)/(edid_cea_modes[i].htotal*edid_cea_modes[i].vtotal));
-				HDMI_INFO("[%02d]%-10s @%d Hz", i+1, edid_cea_modes[i].name, freq);
+				pr_info("rtk-hdmitx: " "[%02d]%-10s @%d Hz", i+1, edid_cea_modes[i].name, freq);
 			}
 		}
 	}
@@ -866,7 +866,7 @@ void print_cea_modes(u64 cea_format, u64 cea_format2, u64 cea_format2_420)
 					freq = ((edid_cea_modes[i].clock*1000)/((edid_cea_modes[i].htotal*edid_cea_modes[i].vtotal)/2));
 				else
 					freq = ((edid_cea_modes[i].clock*1000)/(edid_cea_modes[i].htotal*edid_cea_modes[i].vtotal));
-				HDMI_INFO("[%02d]%-10s @%d Hz(YCbCr420)", i+1, edid_cea_modes[i].name, freq);
+				pr_info("rtk-hdmitx: " "[%02d]%-10s @%d Hz(YCbCr420)", i+1, edid_cea_modes[i].name, freq);
 			}
 		}
 	}
@@ -1369,7 +1369,7 @@ static void rtk_do_detailed_mode(struct detailed_timing *timing, void *c)
 		if (!newmode) {
 			return;
 		} else {
-			HDMI_DEBUG("[%s] Detailied Timing: Hdisplay(%u), Vdisplay(%u), Clock(%u), vrefresh(%u), flags(0x%x)", __func__,
+			pr_debug("rtk-hdmitx: " "[%s] Detailied Timing: Hdisplay(%u), Vdisplay(%u), Clock(%u), vrefresh(%u), flags(0x%x)", __func__,
 				newmode->hdisplay, newmode->vdisplay, newmode->clock, newmode->vrefresh, newmode->flags);
 
 			for (j = 0; j < ARRAY_SIZE(edid_cea_modes); j++) {
@@ -1378,7 +1378,7 @@ static void rtk_do_detailed_mode(struct detailed_timing *timing, void *c)
 					newmode->clock == edid_cea_modes[j].clock &&
 					newmode->vrefresh == edid_cea_modes[j].vrefresh &&
 				  ((newmode->flags & DRM_MODE_FLAG_INTERLACE) == (edid_cea_modes[j].flags & DRM_MODE_FLAG_INTERLACE))) {
-					HDMI_DEBUG("[%s] vic=%d", __func__, j+1);
+					pr_debug("rtk-hdmitx: " "[%s] vic=%d", __func__, j+1);
 					if (j < 64)
 						closure->cap->vic |= 1ULL << j;
 					else if (j < 128)
@@ -1439,7 +1439,7 @@ int rtk_add_edid_modes(struct edid *edid, struct sink_capabilities_t *sink_cap)
 	 */
 
 	num_modes += rtk_add_detailed_modes(sink_cap, edid, quirks);
-	HDMI_INFO("Detailed Timing Descriptor");
+	pr_info("rtk-hdmitx: " "Detailed Timing Descriptor");
 	print_cea_modes(sink_cap->vic, sink_cap->vic2, sink_cap->vic2_420);
 
 	//num_modes += add_cvt_modes(connector, edid);
@@ -1471,7 +1471,7 @@ static void monitor_name(struct detailed_timing *t, void *data)
 static void parse_hdmi_VideoCapability_db(struct sink_capabilities_t *sink_cap, const u8 *db)
 {
 	sink_cap->vout_edid_data.vcdb = db[2];
-	HDMI_DEBUG("[%s] vcdb(0x%02x)", __func__, sink_cap->vout_edid_data.vcdb);
+	pr_debug("rtk-hdmitx: " "[%s] vcdb(0x%02x)", __func__, sink_cap->vout_edid_data.vcdb);
 }
 
 /**
@@ -1490,7 +1490,7 @@ static void parse_VendorSpecificVideo_db(struct sink_capabilities_t *sink_cap, c
 
 	length = db[0]&0x1F;
 	if (length < 4) {
-		HDMI_ERROR("Wrong length in VENDOR_SPECIFIC_VIDEO_DATA_BLOCK");
+		pr_err("rtk-hdmitx: " "Wrong length in VENDOR_SPECIFIC_VIDEO_DATA_BLOCK");
 		goto exit;
 	}
 
@@ -1499,7 +1499,7 @@ static void parse_VendorSpecificVideo_db(struct sink_capabilities_t *sink_cap, c
 	oui[2] = db[4];
 
 	if (length < 5) {
-		HDMI_ERROR("No additional payload in VENDOR_SPECIFIC_VIDEO_DATA_BLOCK");
+		pr_err("rtk-hdmitx: " "No additional payload in VENDOR_SPECIFIC_VIDEO_DATA_BLOCK");
 		goto exit;
 	}
 
@@ -1508,7 +1508,7 @@ static void parse_VendorSpecificVideo_db(struct sink_capabilities_t *sink_cap, c
 	if ((oui[0] == 0x46) && (oui[1] == 0xD0) && (oui[2] == 0x00)) {
 		/* Get Dolby Vision VSVDB payload */
 		if (length > 25) {
-			HDMI_ERROR("Unknow Dolby Vision version");
+			pr_err("rtk-hdmitx: " "Unknow Dolby Vision version");
 			goto exit;
 		}
 		hdr_data->dolby_len = length-4;
@@ -1517,7 +1517,7 @@ static void parse_VendorSpecificVideo_db(struct sink_capabilities_t *sink_cap, c
 	} else if ((oui[0] == 0x8B) && (oui[1] == 0x84) && (oui[2] == 0x90)) {
 		/* Get HDR10+ */
 		hdr_data->hdr10_plus = db[5];
-		HDMI_INFO("Found HDR10+ in EDID");
+		pr_info("rtk-hdmitx: " "Found HDR10+ in EDID");
 	}
 
 exit:
@@ -1537,7 +1537,7 @@ static void parse_hdmi_colorimetry_db(struct sink_capabilities_t *sink_cap, cons
 	sink_cap->color_space = db[2];
 	sink_cap->vout_edid_data.color_space = db[2];
 	hdmitx_edid_info.colorimetry = db[2];
-	HDMI_DEBUG("[%s] color_space(0x%02x)", __func__, sink_cap->color_space);
+	pr_debug("rtk-hdmitx: " "[%s] color_space(0x%02x)", __func__, sink_cap->color_space);
 }
 
 /**
@@ -1567,7 +1567,7 @@ static void parse_hdmi_hdr_db(struct sink_capabilities_t *sink_cap, const u8 *db
 	if (length >= 6)
 		sink_cap->vout_edid_data.min_luminace = db[6];
 
-	HDMI_DEBUG("[%s] et(0x%02x) db(0x%02x) max_lum(0x%02x) max_frame_avg(0x%02x), min_lum(0x%02x)", __func__,
+	pr_debug("rtk-hdmitx: " "[%s] et(0x%02x) db(0x%02x) max_lum(0x%02x) max_frame_avg(0x%02x), min_lum(0x%02x)", __func__,
 						sink_cap->vout_edid_data.et,
 						sink_cap->vout_edid_data.sm,
 						sink_cap->vout_edid_data.max_luminace,
@@ -1583,7 +1583,7 @@ static void parse_hdmi_ycbcr420_video_db(struct sink_capabilities_t *sink_cap, c
 
 	dbl = cea_db_payload_len(db);
 	do_cea_420modes((u8 *)(db+2), dbl-1, &sink_cap->vic2_420);
-	HDMI_DEBUG("[%s] vic2_420(0x%08x%08x)", __func__,
+	pr_debug("rtk-hdmitx: " "[%s] vic2_420(0x%08x%08x)", __func__,
 		(u32)(sink_cap->vic2_420>>32),
 		(u32)(sink_cap->vic2_420&0xFFFFFFFF));
 }
@@ -1603,7 +1603,7 @@ static void parse_hdmi_ycbcr420_cm_db(struct sink_capabilities_t *sink_cap, cons
 
 	if (map_size == 0) {
 		/* Empty-CapMap, all SVDs support Y420 */
-		HDMI_DEBUG("Y420CMDB does not include Capability Bit Map");
+		pr_debug("rtk-hdmitx: " "Y420CMDB does not include Capability Bit Map");
 		byte_count = 0;
 		while ((svds[byte_count] != 0) && (byte_count < 32)) {
 			vic = svds[byte_count];
@@ -1624,7 +1624,7 @@ static void parse_hdmi_ycbcr420_cm_db(struct sink_capabilities_t *sink_cap, cons
 		bit_map++;/* next bit map */
 	}
 
-	HDMI_DEBUG("[%s] vic2_420(0x%08x%08x)", __func__,
+	pr_debug("rtk-hdmitx: " "[%s] vic2_420(0x%08x%08x)", __func__,
 		(u32)(sink_cap->vic2_420>>32),
 		(u32)(sink_cap->vic2_420&0xFFFFFFFF));
 }
@@ -1640,43 +1640,43 @@ static bool parse_hdmi_extdb(struct sink_capabilities_t *sink_cap, const u8 *db)
 
 	switch (*(db+1)) {
 	case VIDEO_CAPABILITY_DATA_BLOCK:
-		HDMI_DEBUG("[%s] VIDEO_CAPABILITY_DATA_BLOCK (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] VIDEO_CAPABILITY_DATA_BLOCK (%u bytes)", __func__, dbl);
 		parse_hdmi_VideoCapability_db(sink_cap, db);
 		break;
 	case VENDOR_SPECIFIC_VIDEO_DATA_BLOCK:
-		HDMI_DEBUG("[%s] VENDOR_SPECIFIC_VIDEO_DATA_BLOCK (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] VENDOR_SPECIFIC_VIDEO_DATA_BLOCK (%u bytes)", __func__, dbl);
 		parse_VendorSpecificVideo_db(sink_cap, db);
 		break;
 	case VESA_DISPLAY_DEVICE_DATA_BLOCK:
-		HDMI_DEBUG("[%s] VESA_DISPLAY_DEVICE_DATA_BLOCK (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] VESA_DISPLAY_DEVICE_DATA_BLOCK (%u bytes)", __func__, dbl);
 		break;
 	case VESA_VIDEO_TIMING_BLOCK_EXTENSION:
-		HDMI_DEBUG("[%s] VESA_VIDEO_TIMING_BLOCK_EXTENSION (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] VESA_VIDEO_TIMING_BLOCK_EXTENSION (%u bytes)", __func__, dbl);
 		break;
 	case COLORIMETRY_DATA_BLOCK:
-		HDMI_DEBUG("[%s] COLORIMETRY_DATA_BLOCK (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] COLORIMETRY_DATA_BLOCK (%u bytes)", __func__, dbl);
 		parse_hdmi_colorimetry_db(sink_cap, db);
 		break;
 	case HDR_STATIC_METADATA_DATA_BLOCK:
-		HDMI_DEBUG("[%s] HDR_STATIC_METADATA_DATA_BLOCK (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] HDR_STATIC_METADATA_DATA_BLOCK (%u bytes)", __func__, dbl);
 		parse_hdmi_hdr_db(sink_cap, db);
 		break;
 	case YCBCR420_VIDEO_DATA_BLOCK:
-		HDMI_DEBUG("[%s] YCBCR420_VIDEO_DATA_BLOCK (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] YCBCR420_VIDEO_DATA_BLOCK (%u bytes)", __func__, dbl);
 		parse_hdmi_ycbcr420_video_db(sink_cap, db);
 		break;
 	case YCBCR420_CAPABILITY_MAP_DATA_BLOCK:
-		HDMI_DEBUG("[%s] YCBCR420_CAPABILITY_MAP_DATA_BLOCK (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] YCBCR420_CAPABILITY_MAP_DATA_BLOCK (%u bytes)", __func__, dbl);
 		parse_hdmi_ycbcr420_cm_db(sink_cap, db);
 		break;
 	case VENDOR_SPECIFIC_AUDIO_DATA_BLOCK:
-		HDMI_DEBUG("[%s] VENDOR_SPECIFIC_AUDIO_DATA_BLOCK (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] VENDOR_SPECIFIC_AUDIO_DATA_BLOCK (%u bytes)", __func__, dbl);
 		break;
 	case INFOFRAME_DATA_BLOCK:
-		HDMI_DEBUG("[%s] INFOFRAME_DATA_BLOCK (%u bytes)", __func__, dbl);
+		pr_debug("rtk-hdmitx: " "[%s] INFOFRAME_DATA_BLOCK (%u bytes)", __func__, dbl);
 		break;
 	default:
-		HDMI_INFO("[%s] Unknow Extend Tag(%u) (%u bytes)", __func__, *(db+1), dbl);
+		pr_info("rtk-hdmitx: " "[%s] Unknow Extend Tag(%u) (%u bytes)", __func__, *(db+1), dbl);
 		break;
 	} /* end of switch (*(db+1)) */
 
@@ -1750,7 +1750,7 @@ static void parse_hdmi_vsdb(struct sink_capabilities_t *sink_cap, const u8 *db)
 
 		for (i = 1; i <= vic_len; i++) {
 			sink_cap->extended_vic |= (1 << db[8+offset+i]);
-			HDMI_DEBUG("sink_cap-> extended_vic = %x db[8+%d+%d]=%x",
+			pr_debug("rtk-hdmitx: " "sink_cap-> extended_vic = %x db[8+%d+%d]=%x",
 				sink_cap->extended_vic, offset, i, db[8+offset+i]);
 		}
 
@@ -1781,7 +1781,7 @@ static void parse_hdmi_vsdb(struct sink_capabilities_t *sink_cap, const u8 *db)
 				for (i = 0; i < 16 ; i++) {
 					if ((mask >> i) & 1) {
 						sink_cap->_3D_vic[i] = svds[i];
-						HDMI_DEBUG("sink_cap->_3D_vic[%d]=%d", i, sink_cap->_3D_vic[i]);
+						pr_debug("rtk-hdmitx: " "sink_cap->_3D_vic[%d]=%d", i, sink_cap->_3D_vic[i]);
 					}
 				}
 			}
@@ -1791,7 +1791,7 @@ static void parse_hdmi_vsdb(struct sink_capabilities_t *sink_cap, const u8 *db)
 		if (hdmi_3d_len > multi_present*2) {
 
 			specific_3d_len = hdmi_3d_len-multi_present*2;
-			HDMI_DEBUG("specific_3d_len=%u", specific_3d_len);
+			pr_debug("rtk-hdmitx: " "specific_3d_len=%u", specific_3d_len);
 			index = 0;
 			for (i = 0; i < specific_3d_len; i++) {
 
@@ -1799,7 +1799,7 @@ static void parse_hdmi_vsdb(struct sink_capabilities_t *sink_cap, const u8 *db)
 				specific_3d_index = (db[8+offset+i]>>4)&0xF;
 				switch (specific_3d_format) {
 				case 0:/* Frame packing */
-					HDMI_DEBUG("specific_3d[%d]=VIC(%u) Frame packing", i, svds[specific_3d_index]);
+					pr_debug("rtk-hdmitx: " "specific_3d[%d]=VIC(%u) Frame packing", i, svds[specific_3d_index]);
 					if (index < 18) {
 						sink_cap->spec_3d[index].vic = svds[specific_3d_index];
 						sink_cap->spec_3d[index].format = 0;
@@ -1807,7 +1807,7 @@ static void parse_hdmi_vsdb(struct sink_capabilities_t *sink_cap, const u8 *db)
 					}
 					break;
 				case 6:/* Top-and-Bottom */
-					HDMI_DEBUG("specific_3d[%d]=VIC(%u) Top-and-Bottom", i, svds[specific_3d_index]);
+					pr_debug("rtk-hdmitx: " "specific_3d[%d]=VIC(%u) Top-and-Bottom", i, svds[specific_3d_index]);
 					if (index < 18) {
 						sink_cap->spec_3d[index].vic = svds[specific_3d_index];
 						sink_cap->spec_3d[index].format = 6;
@@ -1815,7 +1815,7 @@ static void parse_hdmi_vsdb(struct sink_capabilities_t *sink_cap, const u8 *db)
 					}
 					break;
 				case 8:/* Side-by-Side(Half) */
-					HDMI_DEBUG("specific_3d[%d]=VIC(%u) Side-by-Side", i, svds[specific_3d_index]);
+					pr_debug("rtk-hdmitx: " "specific_3d[%d]=VIC(%u) Side-by-Side", i, svds[specific_3d_index]);
 					if (index < 18) {
 						sink_cap->spec_3d[index].vic = svds[specific_3d_index];
 						sink_cap->spec_3d[index].format = 8;
@@ -1830,10 +1830,10 @@ static void parse_hdmi_vsdb(struct sink_capabilities_t *sink_cap, const u8 *db)
 		} /* end of if (hdmi_3d_len > multi_present*2) */
 	} /* end of if (HDMI_Video_present) */
 
-	HDMI_DEBUG("cec addr:0x%x 0x%x", sink_cap->cec_phy_addr[0], sink_cap->cec_phy_addr[1]);
-	HDMI_DEBUG("HDMI: DVI dual %d, max TMDS clock %d",
+	pr_debug("rtk-hdmitx: " "cec addr:0x%x 0x%x", sink_cap->cec_phy_addr[0], sink_cap->cec_phy_addr[1]);
+	pr_debug("rtk-hdmitx: " "HDMI: DVI dual %d, max TMDS clock %d",
 			sink_cap->dvi_dual, sink_cap->max_tmds_clock);
-	HDMI_DEBUG("latency present %d %d, video latency %d %d, audio latency %d %d",
+	pr_debug("rtk-hdmitx: " "latency present %d %d, video latency %d %d, audio latency %d %d",
 		(int) sink_cap->latency_present[0],
 		(int) sink_cap->latency_present[1],
 		sink_cap->video_latency[0],
@@ -1841,10 +1841,10 @@ static void parse_hdmi_vsdb(struct sink_capabilities_t *sink_cap, const u8 *db)
 		sink_cap->audio_latency[0],
 		sink_cap->audio_latency[1]);
 
-	HDMI_DEBUG("HDMI 3D: HDMI_Video_present 0x%x _3D_present 0x%x ,multi_present 0x%x",
+	pr_debug("rtk-hdmitx: " "HDMI 3D: HDMI_Video_present 0x%x _3D_present 0x%x ,multi_present 0x%x",
 		HDMI_Video_present, sink_cap->_3D_present, multi_present);
-	HDMI_DEBUG("vic_len %d,hdmi_3d_len %d", vic_len, hdmi_3d_len);
-	HDMI_DEBUG("structure_all 0x%x,mask 0x%x", sink_cap->structure_all, mask);
+	pr_debug("rtk-hdmitx: " "vic_len %d,hdmi_3d_len %d", vic_len, hdmi_3d_len);
+	pr_debug("rtk-hdmitx: " "structure_all 0x%x,mask 0x%x", sink_cap->structure_all, mask);
 
 }
 
@@ -1871,7 +1871,7 @@ static void parse_hdmi_audio_db(struct sink_capabilities_t *sink_cap, const u8 *
 
 	len = cea_db_payload_len(db);
 	if ((len%3) != 0) {
-		HDMI_ERROR("Invalid length in audio data block, skip parse");
+		pr_err("rtk-hdmitx: " "Invalid length in audio data block, skip parse");
 		return;
 	}
 
@@ -1941,7 +1941,7 @@ void rtk_edid_to_eld(struct edid *edid, struct sink_capabilities_t *sink_cap)
 
 	cea = rtk_find_cea_extension(edid);
 	if (!cea) {
-		HDMI_ERROR("ELD: no CEA Extension found");
+		pr_err("rtk-hdmitx: " "ELD: no CEA Extension found");
 		return;
 	}
 
@@ -1953,7 +1953,7 @@ void rtk_edid_to_eld(struct edid *edid, struct sink_capabilities_t *sink_cap)
 		eld[20 + mnl] = name[mnl];
 	}
 	eld[4] = (cea[1] << 5) | mnl;
-	HDMI_DEBUG("ELD monitor %s", eld + 20);
+	pr_debug("rtk-hdmitx: " "ELD monitor %s", eld + 20);
 
 	eld[0] = 2 << 3;/* ELD version: 2 */
 
@@ -1989,7 +1989,7 @@ void rtk_edid_to_eld(struct edid *edid, struct sink_capabilities_t *sink_cap)
 			switch (cea_db_tag(db)) {
 			case AUDIO_BLOCK:
 				/* Audio Data Block, contains SADs */
-				HDMI_DEBUG("[%s] AUDIO_BLOCK (%u bytes)", __func__, dbl);
+				pr_debug("rtk-hdmitx: " "[%s] AUDIO_BLOCK (%u bytes)", __func__, dbl);
 				parse_hdmi_audio_db(sink_cap, db);
 
 				sad_count = dbl / 3;
@@ -1997,11 +1997,11 @@ void rtk_edid_to_eld(struct edid *edid, struct sink_capabilities_t *sink_cap)
 					memcpy(eld + 20 + mnl, &db[1], dbl);
 				break;
 			case VIDEO_BLOCK:
-				HDMI_DEBUG("[%s] VIDEO_BLOCK (%u bytes)", __func__, dbl);
+				pr_debug("rtk-hdmitx: " "[%s] VIDEO_BLOCK (%u bytes)", __func__, dbl);
 				break;
 			case SPEAKER_BLOCK:
 				/* Speaker Allocation Data Block */
-				HDMI_DEBUG("[%s] SPEAKER_BLOCK (%u bytes)", __func__, dbl);
+				pr_debug("rtk-hdmitx: " "[%s] SPEAKER_BLOCK (%u bytes)", __func__, dbl);
 				if (dbl >= 1) {
 					eld[7] = db[1];
 					sink_cap->audio_data.SADB_length = dbl;
@@ -2010,7 +2010,7 @@ void rtk_edid_to_eld(struct edid *edid, struct sink_capabilities_t *sink_cap)
 				break;
 			case VENDOR_BLOCK:
 				/* HDMI Vendor-Specific Data Block */
-				HDMI_DEBUG("[%s] VENDOR_BLOCK (%u bytes)", __func__, dbl);
+				pr_debug("rtk-hdmitx: " "[%s] VENDOR_BLOCK (%u bytes)", __func__, dbl);
 				if (cea_db_is_hdmi_vsdb(db))
 					parse_hdmi_vsdb(sink_cap, db);
 
@@ -2018,23 +2018,23 @@ void rtk_edid_to_eld(struct edid *edid, struct sink_capabilities_t *sink_cap)
 					parse_hdmi_forum_vsdb(sink_cap, db);
 				break;
 			case VESA_DISPLAY_TRANSFER_BLOCK:
-				HDMI_DEBUG("[%s] VESA_DISPLAY_TRANSFER_BLOCK (%u bytes)", __func__, dbl);
+				pr_debug("rtk-hdmitx: " "[%s] VESA_DISPLAY_TRANSFER_BLOCK (%u bytes)", __func__, dbl);
 				break;
 			case USE_EXTENDED_TAG:
 				/* HDMI USE_EXTENDED_TAG Block */
 				parse_hdmi_extdb(sink_cap, db);
 				break;
 			default:
-				HDMI_INFO("[%s] Unknow tag(0x%x)", __func__, cea_db_tag(db));
+				pr_info("rtk-hdmitx: " "[%s] Unknow tag(0x%x)", __func__, cea_db_tag(db));
 				break;
 			}
 		} /*end of for_each_cea_db(cea, i, start, end) */
-		HDMI_INFO("HDMI version:%s", (hdmitx_edid_info.hdmi_id == HDMI_2P0_IDENTIFIER)?"2.0":"1.4");
+		pr_info("rtk-hdmitx: " "HDMI version:%s", (hdmitx_edid_info.hdmi_id == HDMI_2P0_IDENTIFIER)?"2.0":"1.4");
 	}
 	eld[5] |= sad_count << 4;
 	eld[2] = (20 + mnl + sad_count * 3 + 3) / 4;
 
-	HDMI_DEBUG("ELD size %d, SAD count %d", (int)eld[2], sad_count);
+	pr_debug("rtk-hdmitx: " "ELD size %d, SAD count %d", (int)eld[2], sad_count);
 }
 
 bool rtk_detect_hdmi_monitor(struct edid *edid)
@@ -2093,7 +2093,7 @@ int rtk_do_probe_ddc_edid(unsigned char *buf, int block, int len)
 
 	p_adap = i2c_get_adapter(bus_id);
 	if (p_adap == NULL) {
-		HDMI_ERROR("hdmi get adapter %d failed", bus_id);
+		pr_err("rtk-hdmitx: " "hdmi get adapter %d failed", bus_id);
 		hdmitx_set_error_code(HDMI_ERROR_I2C_ERROR);
 		return -ENODEV;
 	}
@@ -2105,25 +2105,25 @@ int rtk_do_probe_ddc_edid(unsigned char *buf, int block, int len)
 		/* Slow down I2C speed when retry */
 		switch (i) {
 		case 1:
-			HDMI_INFO("Set I2C 80 kbps");
+			pr_info("rtk-hdmitx: " "Set I2C 80 kbps");
 			msgs[0].flags = I2C_M_LOW_SPEED_80;
 			msgs[1].flags = I2C_M_LOW_SPEED_80;
 			msgs[2].flags = I2C_M_LOW_SPEED_80|I2C_M_RD;
 			break;
 		case 2:
-			HDMI_INFO("Set I2C 66 kbps");
+			pr_info("rtk-hdmitx: " "Set I2C 66 kbps");
 			msgs[0].flags = I2C_M_LOW_SPEED_66;
 			msgs[1].flags = I2C_M_LOW_SPEED_66;
 			msgs[2].flags = I2C_M_LOW_SPEED_66|I2C_M_RD;
 			break;
 		case 3:
-			HDMI_INFO("Set I2C 33 kbps");
+			pr_info("rtk-hdmitx: " "Set I2C 33 kbps");
 			msgs[0].flags = I2C_M_LOW_SPEED_33;
 			msgs[1].flags = I2C_M_LOW_SPEED_33;
 			msgs[2].flags = I2C_M_LOW_SPEED_33|I2C_M_RD;
 			break;
 		case 4:
-			HDMI_INFO("Set I2C 10 kbps");
+			pr_info("rtk-hdmitx: " "Set I2C 10 kbps");
 			msgs[0].flags = I2C_M_LOW_SPEED_10;
 			msgs[1].flags = I2C_M_LOW_SPEED_10;
 			msgs[2].flags = I2C_M_LOW_SPEED_10|I2C_M_RD;
@@ -2141,10 +2141,10 @@ int rtk_do_probe_ddc_edid(unsigned char *buf, int block, int len)
 		if (ret) {
 			msleep(500);
 			hdmitx_set_error_code(HDMI_ERROR_I2C_ERROR);
-			HDMI_ERROR("I2C1 retry %d time(s)", i);
+			pr_err("rtk-hdmitx: " "I2C1 retry %d time(s)", i);
 		} else {
 			hdmitx_set_error_code(HDMI_ERROR_HPD);
-			HDMI_ERROR("stop I2C1 retry %d time(s), pulled out ", i);
+			pr_err("rtk-hdmitx: " "stop I2C1 retry %d time(s), pulled out ", i);
 			break;
 		}
 	} /* end of for(i = 0; i < retry; i++) */
@@ -2220,7 +2220,7 @@ static u8 *rtk_do_get_edid(void)
 
 carp:
 	bad_edid_counter++;
-	HDMI_ERROR("bad_edid_counter=%d ", bad_edid_counter);
+	pr_err("rtk-hdmitx: " "bad_edid_counter=%d ", bad_edid_counter);
 
 out:
 	kfree(block);
@@ -2237,13 +2237,13 @@ struct edid *rtk_get_base_edid(void)
 
 	base_edid = kmalloc(EDID_LENGTH, GFP_KERNEL);
 	if (base_edid == NULL) {
-		HDMI_ERROR("%s kmalloc fail", __func__);
+		pr_err("rtk-hdmitx: " "%s kmalloc fail", __func__);
 		goto out;
 	}
 
 	ret_val = rtk_do_probe_ddc_edid((u8 *)base_edid, 0, EDID_LENGTH);
 	if (ret_val != 0) {
-		HDMI_ERROR("%s fail", __func__);
+		pr_err("rtk-hdmitx: " "%s fail", __func__);
 		kfree(base_edid);
 		base_edid = NULL;
 	}
@@ -2266,7 +2266,7 @@ struct edid *rtk_get_edid(asoc_hdmi_t *hdmi)
 			return NULL;
 		}
 
-		HDMI_ERROR("Get EDID fail, assign default EDID");
+		pr_err("rtk-hdmitx: " "Get EDID fail, assign default EDID");
 		memcpy(block, default_edid, EDID_LENGTH*2);
 		hdmi->edid_ptr = block;
 	}
@@ -2283,10 +2283,10 @@ void hdmi_print_raw_edid(unsigned char *edid)
 	if (edid == NULL)
 		return;
 
-	HDMI_INFO("RAW EDID:");
+	pr_info("rtk-hdmitx: " "RAW EDID:");
 
 	for (i = 0; i < (edid[0x7e]+1)*EDID_LENGTH; i += 16)
-		HDMI_INFO("0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,",
+		pr_info("rtk-hdmitx: " "0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,",
 			edid[i], edid[i+1], edid[i+2], edid[i+3], edid[i+4], edid[i+5], edid[i+6], edid[i+7],
 			edid[i+8], edid[i+9], edid[i+10], edid[i+11], edid[i+12], edid[i+13], edid[i+14], edid[i+15]);
 

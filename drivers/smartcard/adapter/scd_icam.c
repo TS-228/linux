@@ -406,7 +406,7 @@ static scd_driver icam_scd_driver =
  *------------------------------------------------------------------*/
 static int __init icam_scd_module_init(void)
 {
-    SC_INFO("icam scd module init\n");
+    pr_info("rtk-scd: " "icam scd module init\n");
 
     if (register_scd_driver(&icam_scd_driver)!=0)
         return -EFAULT;

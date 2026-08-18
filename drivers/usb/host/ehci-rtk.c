@@ -35,7 +35,7 @@ static const char hcd_name[] = "ehci-rtk";
 
 static struct hc_driver __read_mostly ehci_rtk_hc_driver;
 
-static struct ehci_rtk {
+struct ehci_rtk {
 	struct device *dev;
 	struct usb_phy *phy;
 	struct ehci_hcd *ehci;

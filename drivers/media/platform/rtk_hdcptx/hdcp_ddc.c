@@ -30,10 +30,10 @@ int ddc_write(int len, unsigned char start, unsigned char *buf)
 	int i;
 
 	for (i = 0; i < len+1; i++)
-		HDCP_DEBUG("data[%d]=0x%x\n", i, data[i]);
+		pr_debug("rtk-hdcp: " "data[%d]=0x%x\n", i, data[i]);
 
 	for (i = 0; i < len; i++)
-		HDCP_DEBUG("buf[%d]=0x%x\n", i, buf[i]);
+		pr_debug("rtk-hdcp: " "buf[%d]=0x%x\n", i, buf[i]);
 #endif
 
 	struct i2c_msg msgs[] = {
@@ -47,7 +47,7 @@ int ddc_write(int len, unsigned char start, unsigned char *buf)
 
 	p_adap = i2c_get_adapter(bus_id);
 	if (p_adap == NULL) {
-		HDCP_ERROR("get adapter %d failed\n", bus_id);
+		pr_err("rtk-hdcp: " "get adapter %d failed\n", bus_id);
 		return -ENODEV;
 	}
 
@@ -78,7 +78,7 @@ int ddc_read(int len, unsigned char start, unsigned char *buf)
 
 	p_adap = i2c_get_adapter(bus_id);
 	if (p_adap == NULL) {
-		HDCP_ERROR("hdcp get adapter %d failed\n", bus_id);
+		pr_err("rtk-hdcp: " "hdcp get adapter %d failed\n", bus_id);
 		return -ENODEV;
 	}
 

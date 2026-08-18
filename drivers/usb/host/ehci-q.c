@@ -31,7 +31,7 @@
 extern int RTK_ohci_force_suspend(const char *func);
 
 /* Add Workaround to fixed EHCI/OHCI Wrapper can't work simultaneously */
-int check_and_restore_async_list(struct ehci_hcd *ehci, const char *func, int line)
+static int check_and_restore_async_list(struct ehci_hcd *ehci, const char *func, int line)
 {
 	int retry = 0;
 

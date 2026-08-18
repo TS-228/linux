@@ -45,12 +45,6 @@
 
 #if defined(CONFIG_RTD_1295_HWNAT)
 /* #define RTL_DEBUG       1 */
-#ifdef RTL_DEBUG
-#define DBG(fmt, ...) printk(KERN_ERR "%s:%d: " fmt "\n", \
-						__func__, __LINE__, ## __VA_ARGS__)
-#else
-#define DBG(fmt, ...)
-#endif
 #endif /* defined(CONFIG_RTD_1295_HWNAT) */
 
 #if !defined(CONFIG_RTD_1295_HWNAT)
@@ -378,7 +372,7 @@ __MIPS16 __IRAM_FWD static void release_pkthdr(struct sk_buff *skb, int idx)
 		DMA_FROM_DEVICE);
 	if (unlikely(dma_mapping_error(&rtl819x_pdev->dev, mapping))) {
 		if (net_ratelimit())
-			DBG("Failed to map RX DMA memory!");
+			pr_debug("rtk-hwnat: " "Failed to map RX DMA memory!");
 		/* netif_err(NETDRV_PRIV(skb->dev), drv, skb->dev, "Failed to map RX DMA memory!\n"); */
 		return;
 	}
@@ -1006,7 +1000,7 @@ get_next:
 				skbp->truesize, DMA_FROM_DEVICE);
 			if (unlikely(dma_mapping_error(&rtl819x_pdev->dev,
 						mapping))) {
-				DBG("Failed to map RX DMA memory!");
+				pr_debug("rtk-hwnat: " "Failed to map RX DMA memory!");
 				dev_kfree_skb_any(skbp);
 				return RTL_NICRX_NULL;
 			}
@@ -2448,7 +2442,7 @@ int32 swNic_init(uint32
 					DMA_FROM_DEVICE);
 				if (unlikely(dma_mapping_error(&rtl819x_pdev->dev,
 					mapping))) {
-					DBG("Failed to map RX DMA memory!");
+					pr_debug("rtk-hwnat: " "Failed to map RX DMA memory!");
 					dev_kfree_skb_any(skbp);
 					ret = EPERM;
 					goto out;

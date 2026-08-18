@@ -7,6 +7,7 @@
  *  MMCv4 support Copyright (C) 2006 Philip Langdale, All Rights Reserved.
  */
 
+#include <linux/kconfig.h>
 #include <linux/err.h>
 #include <linux/of.h>
 #include <linux/slab.h>
@@ -28,7 +29,7 @@
 #include "sd_ops.h"
 #include "pwrseq.h"
 
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 #include "../host/reg_mmc.h"
 #endif
 
@@ -259,7 +260,7 @@ static void mmc_select_card_type(struct mmc_card *card)
 	card->mmc_avail_type = avail_type;
 }
 
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 void rtkemmc_select_card_type(struct mmc_card *card)
 {
         mmc_select_card_type(card);
@@ -429,6 +430,7 @@ static int mmc_decode_ext_csd(struct mmc_card *card, u8 *ext_csd)
 
 	card->ext_csd.strobe_support = ext_csd[EXT_CSD_STROBE_SUPPORT];
 	card->ext_csd.raw_card_type = ext_csd[EXT_CSD_CARD_TYPE];
+	mmc_select_card_type(card);
 
 	card->ext_csd.raw_s_a_timeout = ext_csd[EXT_CSD_S_A_TIMEOUT];
 	card->ext_csd.raw_erase_timeout_mult =
@@ -598,7 +600,7 @@ static int mmc_decode_ext_csd(struct mmc_card *card, u8 *ext_csd)
 	card->ext_csd.generic_cmd6_time = DEFAULT_CMD6_TIMEOUT_MS;
 	if (card->ext_csd.rev >= 6) {
 		card->ext_csd.feature_support |= MMC_DISCARD_FEATURE;
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 		card->ext_csd.generic_cmd6_time = 3000;
 #else
 		card->ext_csd.generic_cmd6_time = 10 *
@@ -1057,6 +1059,14 @@ static int mmc_select_bus_width(struct mmc_card *card)
 		bus_width = bus_widths[idx];
 		mmc_set_bus_width(host, bus_width);
 
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_ARCH_RTD119X)
+		/*
+		 * RTD119x eMMC: re-reading EXT_CSD after an 8-bit switch often
+		 * fails; trust the switch and run PHY tuning in mmc_init_card().
+		 */
+		err = bus_width;
+		break;
+#else
 		/*
 		 * If controller can't handle bus width test,
 		 * compare ext_csd previously read in 1 bit mode
@@ -1074,6 +1084,7 @@ static int mmc_select_bus_width(struct mmc_card *card)
 			pr_warn("%s: switch to bus width %d failed\n",
 				mmc_hostname(host), 1 << bus_width);
 		}
+#endif
 	}
 
 	return err;
@@ -1177,7 +1188,7 @@ static int mmc_select_hs400(struct mmc_card *card)
 	int err = 0;
 	u8 val;
 
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 	if(host->doing_retune==1) return 0;
 #endif
 	/*
@@ -1279,7 +1290,7 @@ int mmc_hs400_to_hs200(struct mmc_card *card)
 	int err;
 	u8 val;
 
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 	if(host->doing_retune==1) return 0;
 #endif
 	/* Reduce frequency to HS */
@@ -1459,7 +1470,7 @@ static int mmc_select_hs400es(struct mmc_card *card)
 	if (err)
 		goto out_err;
 
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 	if(host->ops->dqs_tuning)
 		host->ops->dqs_tuning(host);
 #endif
@@ -1562,8 +1573,6 @@ static int mmc_select_timing(struct mmc_card *card)
 	if (!mmc_can_ext_csd(card))
 		goto bus_speed;
 
-	printk(KERN_ERR "card->mmc_avail_type = 0x%08x \n", card->mmc_avail_type);
-
 	if (card->mmc_avail_type & EXT_CSD_CARD_TYPE_HS400ES) {
 		err = mmc_select_hs400es(card);
 		goto out;
@@ -1593,7 +1602,7 @@ bus_speed:
 	return 0;
 }
 
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 int rtkemmc_select_timing(struct mmc_card *card)
 {
    return mmc_select_timing(card);
@@ -1605,7 +1614,7 @@ EXPORT_SYMBOL(rtkemmc_select_timing);
  * Execute tuning sequence to seek the proper bus operating
  * conditions for HS200 and HS400, which sends CMD21 to the device.
  */
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 static int mmc_ddr50_tuning(struct mmc_card *card)
 {
 	card->host->mode = MODE_DDR;
@@ -1627,7 +1636,7 @@ static int mmc_hs200_tuning(struct mmc_card *card)
 
 	return mmc_execute_tuning(card);
 }
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 int rtkemmc_hs200_tuning(struct mmc_card *card)
 {
     return mmc_hs200_tuning(card);
@@ -1806,23 +1815,19 @@ reinit:
 			goto free_card;
 	}
 
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 #ifdef CONFIG_ARCH_RTD119X
-#ifdef CONFIG_MMC_RTK_EMMC
 	err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_HS_TIMING, 1, 0);
-	if(err){
-#ifdef MMC_DBG
-                printk(KERN_ERR "%s:%d ......>\n",__func__,__LINE__);
-#endif
-                goto free_card;
-          }
-        if(card->host->ops->execute_tuning) {
-#ifdef MMC_DBG
-                printk(KERN_ERR "%s:%d ......>\n",__func__,__LINE__);
-#endif
-		card->host->mode = 0;	//MODE_SD20
-		card->host->card = card;// fix null pointer bug of SDR50
-                err = card->host->ops->execute_tuning(card->host, MMC_SEND_TUNING_BLOCK_HS200);
-        }
+	if (err)
+		goto free_card;
+	if (card->host->ops->execute_tuning) {
+		card->host->mode = MODE_SDR;
+		card->host->card = card;
+		err = card->host->ops->execute_tuning(card->host,
+				MMC_SEND_TUNING_BLOCK_HS200);
+		if (err)
+			goto free_card;
+	}
 #endif
 #endif
 
@@ -1844,8 +1849,8 @@ reinit:
 		/* Erase size depends on CSD and Extended CSD */
 		mmc_set_erase_size(card);
 	}
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 #ifndef CONFIG_ARCH_RTD119X
-#ifdef CONFIG_MMC_RTK_EMMC
 	if (!(card->mmc_avail_type & EXT_CSD_CARD_TYPE_HS200)) {
 		err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 		EXT_CSD_HS_TIMING, EXT_CSD_TIMING_HS, 0);
@@ -1865,6 +1870,7 @@ reinit:
 			err = card->host->ops->execute_tuning(card->host, MMC_SEND_TUNING_BLOCK_HS200);
 		}
         }
+#endif
 #ifdef CONFIG_MMC_DEBUG
         printk("%s:%d ......>\n",__func__,__LINE__);
 #endif
@@ -1903,7 +1909,6 @@ reinit:
 		}
 	}
 
-#endif
 #endif
 	mmc_set_wp_grp_size(card);
 	/*
@@ -1972,6 +1977,16 @@ reinit:
 	} else {
 		/* Select the desired bus width optionally */
 		err = mmc_select_bus_width(card);
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_ARCH_RTD119X)
+		if (err > 0 && host->ops->execute_tuning) {
+			host->mode = MODE_SDR;
+			host->card = card;
+			err = host->ops->execute_tuning(host,
+					MMC_SEND_TUNING_BLOCK_HS200);
+			if (err)
+				goto free_card;
+		}
+#endif
 		if (err > 0 && mmc_card_hs(card)) {
 			err = mmc_select_hs_ddr(card);
 			if (err)

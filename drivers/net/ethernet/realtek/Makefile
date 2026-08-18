@@ -3,6 +3,9 @@
 # Makefile for the Realtek network device drivers.
 #
 
+include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
+CFLAGS_r8169soc_rtd119x.o += $(rtk_vendor-ccflags)
+
 obj-$(CONFIG_8139CP) += 8139cp.o
 obj-$(CONFIG_8139TOO) += 8139too.o
 obj-$(CONFIG_ATP) += atp.o

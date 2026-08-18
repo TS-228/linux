@@ -17,13 +17,6 @@
 #define rtd_outl(addr,val)          WRITE_REG_INT32U(addr,val)
 #define _sync(x)
 
-__maybe_unused static int debug    = 1;
-__maybe_unused static int warning  = 1;
-__maybe_unused static int info     = 1;
-#define dprintk(msg...) if (debug)   { printk(KERN_DEBUG    "D/IP_POWER: " msg); }
-#define eprintk(msg...) if (1)       { printk(KERN_ERR      "E/IP_POWER: " msg); }
-#define wprintk(msg...) if (warning) { printk(KERN_WARNING  "W/IP_POWER: " msg); }
-#define iprintk(msg...) if (info)    { printk(KERN_INFO     "I/IP_POWER: " msg); }
 
 typedef enum {
     ip_on = 0,
@@ -46,17 +39,17 @@ int VideoDAC_A_power(ip_state_t state)
 {
     int err = 1;
     if (state == ip_off) {
-        dprintk("VideoDAC_A off\n");
+        pr_debug("rtk-ip-power: " "VideoDAC_A off\n");
         //rtd_clearbits(0x18018200,0x780000);       //A~C
         rtd_clearbits(0x180183a0,0xc0000000);   //current DAC disable
         //rtd_outl(0x180188bc,0x7);             //power down
         err = 0;
     } else if (state == ip_on) {
-        dprintk("VideoDAC_A on\n");
+        pr_debug("rtk-ip-power: " "VideoDAC_A on\n");
         rtd_setbits(0x180183a0,0xc0000000);   //current DAC disable
         err = 0;
     } else {
-        eprintk("[%s] %d\n",__func__,__LINE__);
+        pr_err("rtk-ip-power: " "[%s] %d\n",__func__,__LINE__);
     }
     return err;
 }
@@ -65,18 +58,18 @@ int AudioDAC_power(ip_state_t state)
 {
     int err = 1;
     if (state == ip_off) {
-        dprintk("AudioDAC off\n");
+        pr_debug("rtk-ip-power: " "AudioDAC off\n");
         //Turn off Audio DAC
         rtd_outl(0x18006604,0xaaa00);           //AO DAC power down
         _sync();
         rtd_clearbits(0x18000010,0xe0000);      //Audio DAC (da,mod,codec) clock disable
         err = 0;
     } else if (state == ip_on) {
-        dprintk("AudioDAC on\n");
+        pr_debug("rtk-ip-power: " "AudioDAC on\n");
         rtd_setbits(0x18000010,0xe0000);        //clock enable
         err = 0;
     } else {
-        eprintk("[%s] %d\n",__func__,__LINE__);
+        pr_err("rtk-ip-power: " "[%s] %d\n",__func__,__LINE__);
     }
     return err;
 }
@@ -97,7 +90,7 @@ int AVCPU_power(ip_state_t state)
         WRITE_REG_INT32U(0x18007030,temp);
         err = 0;
     } else {
-        eprintk("[%s] %d\n",__func__,__LINE__);
+        pr_err("rtk-ip-power: " "[%s] %d\n",__func__,__LINE__);
     }
     return err;
 #endif
@@ -106,7 +99,7 @@ int AVCPU_power(ip_state_t state)
 /**********************************************************************/
 void SDIO_power_off(void)
 {
-	dprintk("SDIO off\n");
+	pr_debug("rtk-ip-power: " "SDIO off\n");
 	//Turn off SDIO (clock from USB)
 	rtd_clearbits(0x18000004,0x1000);				//SDIO reset
 	rtd_clearbits(0x1800000c,0x44000000);	//SDIO/SDIO_IP clock disable
@@ -114,7 +107,7 @@ void SDIO_power_off(void)
 
 void GSPI_power_off(void)
 {
-	dprintk("GSPI off\n");
+	pr_debug("rtk-ip-power: " "GSPI off\n");
 	//Turn off GSPI
 	rtd_clearbits(0x18000000,0x8);				//GSPI reset
 	rtd_clearbits(0x1800000c,0x8);				//GSPI clock disable
@@ -122,7 +115,7 @@ void GSPI_power_off(void)
 
 void eMMC_power_off(void)
 {
-	dprintk("eMMC off\n");
+	pr_debug("rtk-ip-power: " "eMMC off\n");
 	//Turn off eMMC
 	rtd_clearbits(0x18000004,0x800);			//eMMC reset
 	rtd_clearbits(0x1800000c,0x11000000);	//eMMC/eMMC_IP clock disable
@@ -131,7 +124,7 @@ void eMMC_power_off(void)
 
 void CardReader_power_off(void)
 {
-	dprintk("CardReader off\n");
+	pr_debug("rtk-ip-power: " "CardReader off\n");
 	//Turn off Card Reader
 	rtd_clearbits(0x18000004,0x400);			//Card Reader reset
 	rtd_clearbits(0x1800000c,0x82000000);	//Card Reader/SD_IP clock disable
@@ -140,7 +133,7 @@ void CardReader_power_off(void)
 
 void CP_RNG_power_off(void)
 {
-	dprintk("CP_RNG off\n");
+	pr_debug("rtk-ip-power: " "CP_RNG off\n");
 	//Turn off CP, RNG
 	rtd_clearbits(0x18000000,0x2000000);	//CP reset
 	rtd_clearbits(0x1800000c,0x80000);	//CP clock disable
@@ -149,7 +142,7 @@ void CP_RNG_power_off(void)
 
 void MD_power_off(void)
 {
-	dprintk("MD off\n");
+	pr_debug("rtk-ip-power: " "MD off\n");
 	//Turn off MD
 	rtd_clearbits(0x18000000,0x4000000);	//MD reset
 	rtd_clearbits(0x1800000c,0x100000);		//MD clock disable
@@ -157,14 +150,14 @@ void MD_power_off(void)
 
 void AE_power_off(void)
 {
-	dprintk("AE off\n");
+	pr_debug("rtk-ip-power: " "AE off\n");
 	//Turn off AE
 	rtd_clearbits(0x18000000,0x10000000);	//AE reset
 }
 
 void VCPU_VE1_VE2_GPU_power_off(void)
 {
-	dprintk("VCPU_VE1_VE2_GPU off\n");
+	pr_debug("rtk-ip-power: " "VCPU_VE1_VE2_GPU off\n");
 	//Turn off VCPU VE1,VE2,GPU
 	rtd_clearbits(0x18000000,0x60000);		//VE1 264.JPEG reset
 	rtd_clearbits(0x1800000c,0x3000);			//VE1 264.JPEG clock disable
@@ -178,7 +171,7 @@ void VCPU_VE1_VE2_GPU_power_off(void)
 
 void VO_TVE_power_off(void)
 {
-	dprintk("VO_TVE off\n");
+	pr_debug("rtk-ip-power: " "VO_TVE off\n");
 	//Turn off display VO, TVE
 	rtd_clearbits(0x18000000,0x100000);		//VO reset
 	rtd_clearbits(0x1800000c,0x8000);			//VO clock disable
@@ -190,7 +183,7 @@ void VO_TVE_power_off(void)
 
 void VideoDAC_A_power_off(void)
 {
-	dprintk("VideoDAC_A off\n");
+	pr_debug("rtk-ip-power: " "VideoDAC_A off\n");
 	//Turn off Video DAC A
 	//rtd_clearbits(0x18018200,0x780000);		//A~C
 	rtd_clearbits(0x180183a0,0xc0000000);	//current DAC disable
@@ -199,7 +192,7 @@ void VideoDAC_A_power_off(void)
 
 void TP_power_off(void)
 {
-	dprintk("TP off\n");
+	pr_debug("rtk-ip-power: " "TP off\n");
 	//Turn off TP
 	rtd_clearbits(0x18000000,0x8000000);	//TP reset
 	rtd_clearbits(0x1800000c,0x200000);		//TP clock disable
@@ -207,7 +200,7 @@ void TP_power_off(void)
 
 void SE_power_off(void)
 {
-	dprintk("SE off\n");
+	pr_debug("rtk-ip-power: " "SE off\n");
 	//Turn off SE
 	rtd_clearbits(0x18000000,0x400000);		//SE reset
 	rtd_clearbits(0x1800000c,0x20000);		//SE clock disable
@@ -215,7 +208,7 @@ void SE_power_off(void)
 
 void HDMITx_power_off(void)
 {
-	dprintk("HDMITx/MHLTx off\n");
+	pr_debug("rtk-ip-power: " "HDMITx/MHLTx off\n");
 	//Turn off HDMI Tx
 	rtd_clearbits(0x18000000,0x1000);			//HDMI Tx reset
 	rtd_clearbits(0x1800000c,0x100);			//HDMI Tx clock disable
@@ -226,14 +219,14 @@ void HDMITx_power_off(void)
 
 void Audio_I2S_power_off(void)
 {
-	dprintk("Audio_I2S off\n");
+	pr_debug("rtk-ip-power: " "Audio_I2S off\n");
 	//Turn off Audio I2S in/out
 	rtd_clearbits(0x18000010,0xc00000);		//I2S clock disable
 }
 
 void AudioDAC_power_off(void)
 {
-	dprintk("AudioDAC off\n");
+	pr_debug("rtk-ip-power: " "AudioDAC off\n");
 	//Turn off Audio DAC
 	rtd_outl(0x18006604,0xaaa00);		//AO DAC power down
 	_sync();
@@ -242,14 +235,14 @@ void AudioDAC_power_off(void)
 
 void SPDIF_power_off(void)
 {
-	dprintk("SPDIF off\n");
+	pr_debug("rtk-ip-power: " "SPDIF off\n");
 	//Turn off SPDIF
 	rtd_clearbits(0x18000010,0x200000);		//SPDIF
 }
 
 void HDMIRx_power_off(void)
 {
-	dprintk("HDMIRx/MHLRx off\n");
+	pr_debug("rtk-ip-power: " "HDMIRx/MHLRx off\n");
 	//Turn off HDMI Rx (flow PLL?)
 	rtd_clearbits(0x18000000,0x800);			//HDMI Rx reset
 	rtd_clearbits(0x1800000c,0x2);				//HDMI Rx clock disable
@@ -257,7 +250,7 @@ void HDMIRx_power_off(void)
 
 void LVDS_power_off(void)
 {
-	dprintk("LVDS off\n");
+	pr_debug("rtk-ip-power: " "LVDS off\n");
 	//Turn off LVDS (flow, PLL?)
 	rtd_clearbits(0x18000000,0x200000);	//LVDS reset
 	rtd_clearbits(0x1800000c,0x10000);		//LVDS clock disable
@@ -266,7 +259,7 @@ void LVDS_power_off(void)
 
 void MIPI_power_off(void)
 {
-	dprintk("MIPI off\n");
+	pr_debug("rtk-ip-power: " "MIPI off\n");
 	//Turn off MIPI
 	rtd_clearbits(0x18000000,0x40000000);//MIPI reset
 	rtd_clearbits(0x1800000c,0x8000000);	//MIPI clock disable
@@ -274,14 +267,14 @@ void MIPI_power_off(void)
 
 void LSADC_power_off(void)
 {
-	dprintk("LSADC off\n");
+	pr_debug("rtk-ip-power: " "LSADC off\n");
 	//Turn off LSADC
 	rtd_outl(0x1801bc28,0x0);					//LSADC power down
 }
 
 void ALL_AV_power_off(void)
 {
-	dprintk("all AV off\n");
+	pr_debug("rtk-ip-power: " "all AV off\n");
 	//Turn off all AV
 	rtd_clearbits(0x18000000,0x8000);			//AIO reset
 	rtd_clearbits(0x1800000c,0x400);			//AIO clock disable
@@ -290,7 +283,7 @@ void ALL_AV_power_off(void)
 
 void ETN_power_off(void)
 {
-	dprintk("ETN off\n");
+	pr_debug("rtk-ip-power: " "ETN off\n");
 	//Turn off ETN & PHY
 	rtd_clearbits(0x18007088,0x600);			//ISO ETN ISO reset
 	rtd_clearbits(0x1800708c,0x1800);			//ISO ETN clock disable
@@ -302,7 +295,7 @@ void ETN_power_off(void)
 
 void VFD_power_off(void)
 {
-	dprintk("VFD off\n");
+	pr_debug("rtk-ip-power: " "VFD off\n");
 	//Turn off VFD
 	rtd_clearbits(0x18007088,0x1);				//ISO VFD ISO reset
 	rtd_clearbits(0x1800708c,0x2);				//ISO VFD clock disable
@@ -310,7 +303,7 @@ void VFD_power_off(void)
 
 void CBUS_power_off(void)
 {
-	dprintk("CBUS off\n");
+	pr_debug("rtk-ip-power: " "CBUS off\n");
 	//Turn off CBUS
 	rtd_clearbits(0x18007088,0x2060);			//ISO CBUS reset
 	rtd_clearbits(0x1800708c,0x78);				//ISO CBUS clock disable
@@ -318,7 +311,7 @@ void CBUS_power_off(void)
 
 void CEC_power_off(void)
 {
-	dprintk("CEC off\n");
+	pr_debug("rtk-ip-power: " "CEC off\n");
 	//Turn off CEC
 	rtd_clearbits(0x18007088,0xc);			//ISO CEC reset
 	rtd_clearbits(0x1800708c,0x4);				//ISO CEC clock disable

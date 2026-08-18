@@ -424,7 +424,7 @@ static scd_driver mars_scd_driver =
  *------------------------------------------------------------------*/
 static int mars_scd_module_init(void)
 {
-    SC_INFO("mars scd module init\n");
+    pr_info("rtk-scd: " "mars scd module init\n");
 
     if (register_scd_driver(&mars_scd_driver)!=0)
         return -EFAULT;
@@ -446,7 +446,7 @@ static int mars_scd_module_init(void)
  *------------------------------------------------------------------*/
 static void mars_scd_module_exit(void)
 {
-    SC_INFO("mars scd module init\n");
+    pr_info("rtk-scd: " "mars scd module init\n");
 
     unregister_scd_device(&mars_scd_controller[0]);
     //unregister_scd_device(&mars_scd_controller[1]);

@@ -982,17 +982,17 @@ static struct drm_display_mode *rtk_drm_mode_detailed(struct edid *edid,struct d
         return NULL;
 
 //	if (pt->misc & DRM_EDID_PT_STEREO) {
-//		HDMI_ERROR("stereo mode not supported");
+//		pr_err("rtk-hdmitx: " "stereo mode not supported");
 //		return NULL;
 //	}
 //	if (!(pt->misc & DRM_EDID_PT_SEPARATE_SYNC)) {
-//		HDMI_ERROR("composite sync not supported");
+//		pr_err("rtk-hdmitx: " "composite sync not supported");
 //		return NULL;
 //	}
 //
 //	/* it is incorrect if hsync/vsync width is zero */
 //	if (!hsync_pulse_width || !vsync_pulse_width) {
-//		HDMI_ERROR("Incorrect Detailed timing.Wrong Hsync/Vsync pulse width");
+//		pr_err("rtk-hdmitx: " "Incorrect Detailed timing.Wrong Hsync/Vsync pulse width");
 //		return NULL;
 //	}
 
@@ -1384,7 +1384,7 @@ static void parse_hdmi_hdr_db(struct sink_capabilities_t *sink_cap, const u8 *db
 	sink_cap->vout_edid_data.max_luminace = db[4];
 	sink_cap->vout_edid_data.max_frame_avg = db[5];
 	sink_cap->vout_edid_data.min_luminace = db[6];
-	HDMI_DEBUG("[%s] et(0x%02x) db(0x%02x) max_lum(0x%02x) max_frame_avg(0x%02x), min_lum(0x%02x)",__FUNCTION__,
+	pr_debug("rtk-hdmitx: " "[%s] et(0x%02x) db(0x%02x) max_lum(0x%02x) max_frame_avg(0x%02x), min_lum(0x%02x)",__FUNCTION__,
 						sink_cap->vout_edid_data.et,
 						sink_cap->vout_edid_data.sm,
 						sink_cap->vout_edid_data.max_luminace,

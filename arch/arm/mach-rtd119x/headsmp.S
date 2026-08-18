@@ -1,8 +1,6 @@
 #include <linux/linkage.h>
 #include <linux/init.h>
 
-	.section ".text.head", "ax"
-
 ENTRY(rtk119x_secondary_startup)
 	b	secondary_startup
 ENDPROC(rtk119x_secondary_startup)

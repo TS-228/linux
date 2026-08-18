@@ -309,7 +309,7 @@ long DecFlushRegs(hantrodec_t *dev, struct core_desc *core)
 	ret = copy_from_user(dec_regs[id], (u32 *)core->regs, HANTRO_DEC_REGS*4);
 	if (ret)
 	{
-		PDEBUG("%s copy_from_user failed, returned %li\n", DEV_NAME, ret);
+		pr_debug("rtk-ve: " "%s copy_from_user failed, returned %li\n", DEV_NAME, ret);
 		return -EFAULT;
 	}
 
@@ -320,7 +320,7 @@ long DecFlushRegs(hantrodec_t *dev, struct core_desc *core)
 	/* write the status register, which may start the decoder */
 	iowrite32(dec_regs[id][1], dev->hwregs[id] + 4);
 
-	PDEBUG("%s flushed registers on core %d\n", DEV_NAME, id);
+	pr_debug("rtk-ve: " "%s flushed registers on core %d\n", DEV_NAME, id);
 
 	return 0;
 }
@@ -342,7 +342,7 @@ long DecRefreshRegs(hantrodec_t *dev, struct core_desc *core)
 	ret = copy_to_user((u32 *)core->regs, dec_regs[id], HANTRO_DEC_REGS*4);
 	if (ret)
 	{
-		PDEBUG("%s copy_to_user failed, returned %li\n", DEV_NAME, ret);
+		pr_debug("rtk-ve: " "%s copy_to_user failed, returned %li\n", DEV_NAME, ret);
 		return -EFAULT;
 	}
 
@@ -374,11 +374,11 @@ long WaitDecReadyAndRefreshRegs(hantrodec_t *dev, struct core_desc *core)
 {
 	u32 id = core->id;
 
-	PDEBUG("%s wait_event_interruptible DEC[%d]\n", DEV_NAME, id);
+	pr_debug("rtk-ve: " "%s wait_event_interruptible DEC[%d]\n", DEV_NAME, id);
 
 	if(wait_event_interruptible(dec_wait_queue, CheckDecIrq(dev, id)))
 	{
-		PDEBUG("%s DEC[%d]  wait_event_interruptible interrupted\n", DEV_NAME, id);
+		pr_debug("rtk-ve: " "%s DEC[%d]  wait_event_interruptible interrupted\n", DEV_NAME, id);
 		return -ERESTARTSYS;
 	}
 
@@ -445,11 +445,11 @@ static int CheckCoreIrq(hantrodec_t *dev, const struct file *filp, int *id)
 
 long WaitCoreReady(hantrodec_t *dev, const struct file *filp, int *id)
 {
-	PDEBUG("%s wait_event_interruptible CORE\n", DEV_NAME);
+	pr_debug("rtk-ve: " "%s wait_event_interruptible CORE\n", DEV_NAME);
 
 	if(wait_event_interruptible(dec_wait_queue, CheckCoreIrq(dev, filp, id)))
 	{
-		PDEBUG("%s CORE  wait_event_interruptible interrupted\n", DEV_NAME);
+		pr_debug("rtk-ve: " "%s CORE  wait_event_interruptible interrupted\n", DEV_NAME);
 		return -ERESTARTSYS;
 	}
 
@@ -474,7 +474,7 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 	struct timeval *end_time_arg;
 #endif
 
-	PDEBUG("%s ioctl cmd 0x%08x\n", DEV_NAME, cmd);
+	pr_debug("rtk-ve: " "%s ioctl cmd 0x%08x\n", DEV_NAME, cmd);
 	/*
 	 * extract the type and number bitfields, and don't decode
 	 * wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok()
@@ -523,7 +523,7 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 		tmp = copy_to_user((u64 *) arg, multicorebase, sizeof(multicorebase));
 		if (err)
 		{
-			PDEBUG("%s copy_to_user failed, returned %li\n", DEV_NAME, tmp);
+			pr_debug("rtk-ve: " "%s copy_to_user failed, returned %li\n", DEV_NAME, tmp);
 			return -EFAULT;
 		}
 		break;
@@ -539,7 +539,7 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 		tmp = copy_from_user(&core, (void*)arg, sizeof(struct core_desc));
 		if (tmp)
 		{
-			PDEBUG("%s copy_from_user failed, returned %li\n", DEV_NAME tmp);
+			pr_debug("rtk-ve: " "%s copy_from_user failed, returned %li\n", DEV_NAME tmp);
 			return -EFAULT;
 		}
 
@@ -554,7 +554,7 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 		tmp = copy_from_user(&core, (void*)arg, sizeof(struct core_desc));
 		if (tmp)
 		{
-			PDEBUG("%s copy_from_user failed, returned %li\n", DEV_NAME, tmp);
+			pr_debug("rtk-ve: " "%s copy_from_user failed, returned %li\n", DEV_NAME, tmp);
 			return -EFAULT;
 		}
 
@@ -562,18 +562,18 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 	}
 	case HANTRODEC_IOCH_DEC_RESERVE:
 	{
-		PDEBUG("%s Reserve DEC core, format = %li\n", DEV_NAME, arg);
+		pr_debug("rtk-ve: " "%s Reserve DEC core, format = %li\n", DEV_NAME, arg);
 		return ReserveDecoder(&hantrodec_data, filp, arg);
 	}
 	case HANTRODEC_IOCT_DEC_RELEASE:
 	{
 		if(arg >= hantrodec_data.cores || dec_owner[arg] != filp)
 		{
-			PDEBUG("%s bogus DEC release, core = %li\n", DEV_NAME, arg);
+			pr_debug("rtk-ve: " "%s bogus DEC release, core = %li\n", DEV_NAME, arg);
 			return -EFAULT;
 		}
 
-		PDEBUG("%s Release DEC, core = %li\n", DEV_NAME, arg);
+		pr_debug("rtk-ve: " "%s Release DEC, core = %li\n", DEV_NAME, arg);
 
 		ReleaseDecoder(&hantrodec_data, arg);
 
@@ -587,7 +587,7 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 		tmp = copy_from_user(&core, (void*)arg, sizeof(struct core_desc));
 		if (tmp)
 		{
-			PDEBUG("%s copy_from_user failed, returned %li\n", DEV_NAME, tmp);
+			pr_debug("rtk-ve: " "%s copy_from_user failed, returned %li\n", DEV_NAME, tmp);
 			return -EFAULT;
 		}
 
@@ -633,7 +633,7 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 		if (get_user(clkgate, (u32 __user *) arg))
 			return -EFAULT;
 
-		PDEBUG("%s HANTRODEC_SET_CLOCK_ENABLE:%d\n", DEV_NAME, clkgate);
+		pr_debug("rtk-ve: " "%s HANTRODEC_SET_CLOCK_ENABLE:%d\n", DEV_NAME, clkgate);
 
 		if (clkgate)
 		{
@@ -663,7 +663,7 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 	break;
 	case HANTRODEC_RESET_CLK_GATING:
 	{
-		PDEBUG("%s HANTRODEC_RESET_CLK_GATING\n", DEV_NAME);
+		pr_debug("rtk-ve: " "%s HANTRODEC_RESET_CLK_GATING\n", DEV_NAME);
 		ve3_clk_disable(s_ve3_clk);
 		reset_control_reset(rstc_ve3);
 		ve3_clk_enable(s_ve3_clk);
@@ -687,14 +687,14 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 		tmp = copy_from_user(&core, (void*)arg, sizeof(struct core_desc));
 		if (tmp)
 		{
-			PDEBUG("%s copy_from_user failed, returned %li\n", DEV_NAME, tmp);
+			pr_debug("rtk-ve: " "%s copy_from_user failed, returned %li\n", DEV_NAME, tmp);
 			return -EFAULT;
 		}
 
 		tmp = copy_to_user((u32 *)core.regs, asic_dec_regs[core.id], HANTRO_DEC_REGS*4);
 		if (tmp)
 		{
-			PDEBUG("%s copy_to_user failed, returned %li\n", DEV_NAME, tmp);
+			pr_debug("rtk-ve: " "%s copy_to_user failed, returned %li\n", DEV_NAME, tmp);
 			return -EFAULT;
 		}
 	}
@@ -720,7 +720,7 @@ static long hantrodec_ioctl(struct file *filp, unsigned int cmd,
 
 static int hantrodec_open(struct inode *inode, struct file *filp)
 {
-	PDEBUG("%s dev opened\n", DEV_NAME);
+	pr_debug("rtk-ve: " "%s dev opened\n", DEV_NAME);
 	inst_cnt++;
 	return 0;
 }
@@ -737,7 +737,7 @@ static int hantrodec_release(struct inode *inode, struct file *filp)
 	int n;
 	hantrodec_t *dev = &hantrodec_data;
 
-	PDEBUG("%s closing ...\n", DEV_NAME);
+	pr_debug("rtk-ve: " "%s closing ...\n", DEV_NAME);
 
 	inst_cnt--;
 
@@ -745,12 +745,12 @@ static int hantrodec_release(struct inode *inode, struct file *filp)
 	{
 		if(dec_owner[n] == filp)
 		{
-			PDEBUG("%s releasing dec core %i lock\n", DEV_NAME, n);
+			pr_debug("rtk-ve: " "%s releasing dec core %i lock\n", DEV_NAME, n);
 			ReleaseDecoder(dev, n);
 		}
 	}
 
-	PDEBUG("%s closed\n", DEV_NAME);
+	pr_debug("rtk-ve: " "%s closed\n", DEV_NAME);
 	return 0;
 }
 
@@ -798,7 +798,7 @@ int __init hantrodec_init(void)
 {
 	int result = 0;
 
-	PDEBUG("%s module init\n", DEV_NAME);
+	pr_debug("rtk-ve: " "%s module init\n", DEV_NAME);
 
 #if 0 //Fuchun, move to probe function
 	int i = 0;
@@ -1234,7 +1234,7 @@ irqreturn_t hantrodec_isr(int irq, void *dev_id)
 			irq_status_dec &= (~HANTRODEC_DEC_IRQ);
 			iowrite32(irq_status_dec, hwregs + HANTRODEC_IRQ_STAT_DEC_OFF);
 
-			PDEBUG("%s decoder IRQ received! core %d\n", DEV_NAME, i);
+			pr_debug("rtk-ve: " "%s decoder IRQ received! core %d\n", DEV_NAME, i);
 
 			atomic_inc(&irq_rx);
 
@@ -1248,7 +1248,7 @@ irqreturn_t hantrodec_isr(int irq, void *dev_id)
 	spin_unlock_irqrestore(&owner_lock, flags);
 
 	if(!handled)
-		PDEBUG("%s IRQ received, but not VE3's!\n", DEV_NAME);
+		pr_debug("rtk-ve: " "%s IRQ received, but not VE3's!\n", DEV_NAME);
 
 	return IRQ_RETVAL(handled);
 }
@@ -1291,10 +1291,10 @@ void dump_regs(hantrodec_t *dev)
 {
 	int i,c;
 
-	PDEBUG("%s Reg Dump Start\n", DEV_NAME);
+	pr_debug("rtk-ve: " "%s Reg Dump Start\n", DEV_NAME);
 	for(c = 0 ; c < dev->cores ; c++) {
 		for(i = 0 ; i < dev->iosize ; i += 4*4) {
-			PDEBUG("%s \toffset %04X: %08X  %08X  %08X  %08X\n",
+			pr_debug("rtk-ve: " "%s \toffset %04X: %08X  %08X  %08X  %08X\n",
 				DEV_NAME,
 				i,
 				ioread32(dev->hwregs[c] + i),
@@ -1303,7 +1303,7 @@ void dump_regs(hantrodec_t *dev)
 				ioread32(dev->hwregs[c] + i + 24));
 		}
 	}
-	PDEBUG("%s Reg Dump End\n", DEV_NAME);
+	pr_debug("rtk-ve: " "%s Reg Dump End\n", DEV_NAME);
 }
 #endif
 
@@ -1321,7 +1321,7 @@ void ve3_clk_put(struct clk *clk)
 int ve3_clk_enable(struct clk *clk)
 {
 	if (clk) {
-		PDEBUG("%s ve3_clk_enable\n", DEV_NAME);
+		pr_debug("rtk-ve: " "%s ve3_clk_enable\n", DEV_NAME);
 		return clk_prepare_enable(clk);
 	}
 	return 0;
@@ -1330,7 +1330,7 @@ int ve3_clk_enable(struct clk *clk)
 void ve3_clk_disable(struct clk *clk)
 {
 	if (clk) {
-		PDEBUG("%s ve3_clk_disable\n", DEV_NAME);
+		pr_debug("rtk-ve: " "%s ve3_clk_disable\n", DEV_NAME);
 		while(__clk_is_enabled(clk))
 			clk_disable_unprepare(clk);
 	}

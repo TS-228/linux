@@ -23,13 +23,6 @@
 
 
 #define RTL_DEBUG       1
-#ifdef RTL_DEBUG
-#define DBG(fmt, ...) printk(KERN_ERR "%s:%d: " fmt "\n", \
-			__func__, __LINE__, ## __VA_ARGS__)
-#else
-#define DBG(fmt, ...)
-#endif
-
 extern rtl8651_tblAsic_ethernet_t	rtl8651AsicEthernetTable[];
 extern uint8 hwnat_mac0_enable; /* 0: interface used by SATA, 1: interface used by NAT */
 extern uint8 hwnat_mac0_mode; /* 0:RGMII, 1:SGMII */
@@ -56,7 +49,7 @@ void rtd129x_mac0_sgmii_link_chk(void)
 	/* 1. Get link status */
 	val = READ_MEM32(SERDES_WRP_SDS_LINK) >> SERDES_WRP_SDS_LINK_partner_ablity_shift;
 	remote_ablity = val;
-	//DBG("SERDES_WRP_SDS_LINK_partner_ablity = 0x%05x", val);
+	//pr_debug("rtk-hwnat: " "SERDES_WRP_SDS_LINK_partner_ablity = 0x%05x", val);
 	if ((val & SERDES_WRP_SDS_LINK_partner_fib_linkok) == 0) {
 		if (lnk_state == 0)
 			return;
@@ -69,7 +62,7 @@ void rtd129x_mac0_sgmii_link_chk(void)
 		/* update MAC0 as force 10M link down */
 		val = READ_MEM32(PCRP0) & ~(PauseFlowControl_MASK | AutoNegoSts_MASK | PollLinkStatus | ForceLink);
 		val |= EnForceMode | ForceSpeed10M | EnablePHYIf;
-		DBG("link down!");
+		pr_debug("rtk-hwnat: " "link down!");
 		WRITE_MEM32(PCRP0, val);
 
 		rtl8651_setAsicEthernetLinkStatus(0, FALSE);
@@ -86,7 +79,7 @@ void rtd129x_mac0_sgmii_link_chk(void)
 		/* 2. Force link down */
 		val = READ_MEM32(PCRP0) & ~(PauseFlowControl_MASK | PollLinkStatus | ForceLink);
 		val |= EnForceMode | EnablePHYIf;
-		//DBG("PCRP0 = 0x%08x", val);
+		//pr_debug("rtk-hwnat: " "PCRP0 = 0x%08x", val);
 		WRITE_MEM32(PCRP0, val);
 
 		/* 3. Wait for all queues empty */
@@ -111,7 +104,7 @@ void rtd129x_mac0_sgmii_link_chk(void)
 retry:
 			//mdelay(100);
 			lnk_state = 0;
-			DBG("val 0x%08x, P0_DCR0: 0x%08x 0x%08x 0x%08x 0x%08x", val, READ_MEM32(P0_DCR0),
+			pr_debug("rtk-hwnat: " "val 0x%08x, P0_DCR0: 0x%08x 0x%08x 0x%08x 0x%08x", val, READ_MEM32(P0_DCR0),
 				READ_MEM32(P0_DCR1), READ_MEM32(P0_DCR2), READ_MEM32(P0_DCR3));
 			return;
 		}
@@ -125,24 +118,24 @@ retry:
 		switch (speed) {
 		case 2:
 			val |= ForceSpeed1000M;
-			DBG("Speed: 1000M");
+			pr_debug("rtk-hwnat: " "Speed: 1000M");
 			break;
 		case 1:
 			val |= ForceSpeed100M;
-			DBG("Speed: 100M");
+			pr_debug("rtk-hwnat: " "Speed: 100M");
 			break;
 		case 0:
 		default:
-			DBG("Speed: 10M");
+			pr_debug("rtk-hwnat: " "Speed: 10M");
 			val |= ForceSpeed10M;
 		}
 		if (duplex > 0) {
 			val |= ForceDuplex;
-			DBG("Full duplex");
+			pr_debug("rtk-hwnat: " "Full duplex");
 		} else {
-			DBG("Half duplex");
+			pr_debug("rtk-hwnat: " "Half duplex");
 		}
-		//DBG("PCRP0 = 0x%08x", val);
+		//pr_debug("rtk-hwnat: " "PCRP0 = 0x%08x", val);
 		WRITE_MEM32(PCRP0, val);
 
 		rtl8651_setAsicEthernetLinkStatus(0, TRUE);
@@ -156,17 +149,17 @@ static void sec_timer_function(unsigned long data)
 	link_mon_t *ln = (link_mon_t *) data;
 	//scheduler work queue
 	if (schedule_work(&ln->work_q) == 0) {
-		DBG("cannot schedule work!!!");
+		pr_debug("rtk-hwnat: " "cannot schedule work!!!");
 	}
 	ln->counter++;
-	//DBG("Timer Expired interval is %d!!", ln->interval);
-	//DBG("name [%s] counter =%d", ln->name, ln->counter);
+	//pr_debug("rtk-hwnat: " "Timer Expired interval is %d!!", ln->interval);
+	//pr_debug("rtk-hwnat: " "name [%s] counter =%d", ln->name, ln->counter);
 }
 
 //Register a kernel timer
 static void sec_timer_register (struct timer_list * ptimer, uintptr_t data) {
 	link_mon_t *ln = (link_mon_t *) data;
-	DBG("periodic task: name [%s] interval %d secs", ln->name, ln->interval);
+	pr_debug("rtk-hwnat: " "periodic task: name [%s] interval %d secs", ln->name, ln->interval);
 	init_timer(ptimer);
 	ptimer->data = data;
 	ptimer->expires = jiffies + (ln->interval * HZ);

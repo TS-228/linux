@@ -9,24 +9,12 @@
  * option) any later version.
  */
 
-
 #ifndef _RTK_GPIO_H_
 #define _RTK_GPIO_H_
 
 #include <linux/io.h>
 #include <linux/spinlock.h>
 #include <linux/gpio/driver.h>
-
-
-//#define RTK_GPIO_DEBUG
-#ifdef RTK_GPIO_DEBUG
-#define RTK_GPIO_DBG(fmt, ...) pr_info("[GPIO DBG] " fmt "\n", ## __VA_ARGS__)
-#else
-#define RTK_GPIO_DBG(fmt, ...)
-#endif
-
-#define RTK_GPIO_INF(fmt, ...) pr_info("[GPIO] " fmt "\n", ## __VA_ARGS__)
-#define RTK_GPIO_ERR(fmt, ...) pr_err("[GPIO Error] " fmt "\n", ## __VA_ARGS__)
 
 #define GP_HIGH		1
 #define GP_LOW		0
@@ -60,7 +48,6 @@ enum {
 	GP_REG_DP
 };
 
-
 struct rtk_gpio_groups {
 	const char	*group_name;
 	u32	group_index;
@@ -80,7 +67,6 @@ struct rtk_gpio_groups {
 	u32	reg_dp_off[GPIO_REG_ARRAY_SIZE];
 	u32	reg_deb_off;
 };
-
 
 struct rtk_gpio_controller {
 	struct gpio_chip	chip;

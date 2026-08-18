@@ -36,9 +36,11 @@
 #include "rtk_rpc.h"
 #include "dc2vo/dc2vo.h"
 
+#ifdef CONFIG_ION_RTK
 #include "uapi/ion.h"
 #include "ion/ion.h"
 #include "uapi/ion_rtk.h"
+#endif
 #include <soc/realtek/kernel-rpc.h>
 
 

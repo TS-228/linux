@@ -44,18 +44,12 @@ extern void ta_hdcp_lib_set_i2c_enable(unsigned int  i2c_enable_value);
 
 #endif
 
-
 /* DEFINE FLAG ENABLE */
 #define MINIMUM_DELAY_EN
 #define SPIN_LOCK_PROTECT_EN
 #define EDID_4BLOCK_SUPPORT /* For HDMI TX CTS 7-1 */
 
-/* DEBUG */
-#ifdef DEV_DEBUG
-#define RTK_DEBUG(fmt, ...) pr_info(fmt, ##__VA_ARGS__)
-#else
-#define RTK_DEBUG(fmt, ...)
-#endif /* DEV_DEBUG */
+/* DEBUG: gated by dynamic debug */
 
 /* LOG EVENT */
 #ifdef I2C_PROFILEING_EN

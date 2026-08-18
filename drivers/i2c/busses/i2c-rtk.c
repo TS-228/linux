@@ -57,7 +57,7 @@ struct rtk_i2c_dev {
 
 void i2c_rtk_dump_msg(const struct i2c_msg *p_msg)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 	pr_info("msg->addr  = %02x\n", p_msg->addr);
 	pr_info("msg->flags = %04x\n", p_msg->flags);
 	pr_info("msg->len   = %d\n", p_msg->len);
@@ -82,7 +82,7 @@ static int  i2c_rtk_xfer(struct i2c_adapter *adap,
 	struct pinctrl *pctrl;
 	struct pinctrl_state *pctrl_state;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 #ifdef CONFIG_ARCH_RTD16xx
 	if (handler->id == 0) {

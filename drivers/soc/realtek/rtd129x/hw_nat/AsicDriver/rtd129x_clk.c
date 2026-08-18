@@ -26,13 +26,6 @@
 #include "sata_reg.h"
 
 //#define RTL_DEBUG       1
-#ifdef RTL_DEBUG
-#define DBG(fmt, ...) printk(KERN_ERR "%s:%d: " fmt "\n", \
-			__func__, __LINE__, ## __VA_ARGS__)
-#else
-#define DBG(fmt, ...)
-#endif
-
 #define CLK_SYS_PHYSICAL_BASE	SYS_SOFT_RESET1
 #define CLK_SYS_LEN		0x20000
 extern void __iomem *rtl_hwnat_clk_mmio;
@@ -488,21 +481,21 @@ static uint32_t rtd129x_hwnat_set_serdes_sgmii_init(void)
 	val |= (1 << SB2_SATA_PHY_CTRL_sata_rx50_link_0_shift);
 	CLK_SYS_WRITE_MEM32(SB2_SATA_PHY_CTRL, val);
 	mdelay(50);
-	DBG("SB2_SATA_PHY_CTRL 0x%08x = 0x%08x, val = 0x%08x", SB2_SATA_PHY_CTRL, CLK_SYS_READ_MEM32(SB2_SATA_PHY_CTRL), val);
+	pr_debug("rtk-hwnat: " "SB2_SATA_PHY_CTRL 0x%08x = 0x%08x, val = 0x%08x", SB2_SATA_PHY_CTRL, CLK_SYS_READ_MEM32(SB2_SATA_PHY_CTRL), val);
 
 	/* switch to SGMII */
 	val = CLK_SYS_READ_MEM32(SB2_SATA_PHY_CTRL);
 	val &= ~(1 << SB2_SATA_PHY_CTRL_sata_sgmii_sel_shift);
 	CLK_SYS_WRITE_MEM32(SB2_SATA_PHY_CTRL, val);
 	mdelay(200);
-	DBG("SB2_SATA_PHY_CTRL 0x%08x = 0x%08x, val = 0x%08x", SB2_SATA_PHY_CTRL, CLK_SYS_READ_MEM32(SB2_SATA_PHY_CTRL), val);
+	pr_debug("rtk-hwnat: " "SB2_SATA_PHY_CTRL 0x%08x = 0x%08x, val = 0x%08x", SB2_SATA_PHY_CTRL, CLK_SYS_READ_MEM32(SB2_SATA_PHY_CTRL), val);
 
 	/* Beginning of SATA PHY register tuning */
 	/* SATA DPHY control by NAT enable */
 	val = READ_MEM32(NAT_WRP_SERDES);
 	val |= (1 << NAT_WRP_SERDES_sata_phy_mdio_en_shift);
 	WRITE_MEM32(NAT_WRP_SERDES, val);
-	DBG("NAT_WRP_SERDES 0x%lx = 0x%08x, val = 0x%08x", NAT_WRP_SERDES, READ_MEM32(NAT_WRP_SERDES), val);
+	pr_debug("rtk-hwnat: " "NAT_WRP_SERDES 0x%lx = 0x%08x, val = 0x%08x", NAT_WRP_SERDES, READ_MEM32(NAT_WRP_SERDES), val);
 
 	/* SATA PHY reg13[8:7]=00, choose 1.25GHz */
 	/* PHY ID 6 means SATA SGMII internal PHY */
@@ -510,7 +503,7 @@ static uint32_t rtd129x_hwnat_set_serdes_sgmii_init(void)
 	val &= ~(3 << 7);
 	rtl8651_setAsicEthernetPHYReg(6, 13, val);
 	mdelay(50);
-	DBG("SATA PHY ID 6 reg 13 = 0x%08x", val);
+	pr_debug("rtk-hwnat: " "SATA PHY ID 6 reg 13 = 0x%08x", val);
 
 	/* 5GHz tuning */
 	rtl8651_setAsicEthernetPHYReg(6, 4, 0x52f5);
@@ -533,21 +526,21 @@ static uint32_t rtd129x_hwnat_set_serdes_sgmii_init(void)
 	val = READ_MEM32(NAT_WRP_SERDES);
 	val &= ~(1 << NAT_WRP_SERDES_sata_phy_mdio_en_shift);
 	WRITE_MEM32(NAT_WRP_SERDES, val);
-	DBG("NAT_WRP_SERDES 0x%lx = 0x%08x, val = 0x%08x", NAT_WRP_SERDES, READ_MEM32(NAT_WRP_SERDES), val);
+	pr_debug("rtk-hwnat: " "NAT_WRP_SERDES 0x%lx = 0x%08x, val = 0x%08x", NAT_WRP_SERDES, READ_MEM32(NAT_WRP_SERDES), val);
 
 	/* SERDES IP clock enable */
 	val = READ_MEM32(NAT_WRP_SERDES);
 	val |= (1 << NAT_WRP_SERDES_serdes_clk_en_shift);
 	WRITE_MEM32(NAT_WRP_SERDES, val);
 	mdelay(50);
-	DBG("NAT_WRP_SERDES 0x%lx = 0x%08x, val = 0x%08x", NAT_WRP_SERDES, READ_MEM32(NAT_WRP_SERDES), val);
+	pr_debug("rtk-hwnat: " "NAT_WRP_SERDES 0x%lx = 0x%08x, val = 0x%08x", NAT_WRP_SERDES, READ_MEM32(NAT_WRP_SERDES), val);
 
 	/* Sdsif IP clock enable */
 	val = READ_MEM32(NAT_WRP_SERDES);
 	val |= (1 << NAT_WRP_SERDES_sdsif_clk_en_shift);
 	WRITE_MEM32(NAT_WRP_SERDES, val);
 	mdelay(50);
-	DBG("NAT_WRP_SERDES 0x%lx = 0x%08x, val = 0x%08x", NAT_WRP_SERDES, READ_MEM32(NAT_WRP_SERDES), val);
+	pr_debug("rtk-hwnat: " "NAT_WRP_SERDES 0x%lx = 0x%08x, val = 0x%08x", NAT_WRP_SERDES, READ_MEM32(NAT_WRP_SERDES), val);
 
 	/* wait for phy ready, clock fine-tuned */
 #define PHY_RETRY_CNT	30
@@ -562,7 +555,7 @@ static uint32_t rtd129x_hwnat_set_serdes_sgmii_init(void)
 		printk("Wait SATA_SATA_PHY_MON timeout, val = 0x%08x\n", val);
 		return 1;
 	} else
-		DBG("cnt = %d", cnt);
+		pr_debug("rtk-hwnat: " "cnt = %d", cnt);
 
 	/* SERDES/NAT spec, SERDES auto mode */
 	val = READ_MEM32(HWNAT_SERDES_SDS_REG02);
@@ -582,7 +575,7 @@ static uint32_t rtd129x_hwnat_set_serdes_sgmii_init(void)
 		printk("Wait SerDes link timeout, val = 0x%08x\n", val);
 		return 2;
 	} else
-		DBG("cnt = %d", cnt);
+		pr_debug("rtk-hwnat: " "cnt = %d", cnt);
 
 	return 0;
 }
@@ -595,7 +588,7 @@ static void rtd129x_phy_8211f_init(int phyid, bool flow_ctrl_en)
 	/* read PHY ID */
 	rtl8651_getAsicEthernetPHYReg(phyid, 2, &id1);
 	rtl8651_getAsicEthernetPHYReg(phyid, 3, &id2);
-	DBG("PHY ID %d, ID1 0x%x, ID2 0x%x", phyid, id1, id2);
+	pr_debug("rtk-hwnat: " "PHY ID %d, ID1 0x%x, ID2 0x%x", phyid, id1, id2);
 	if (id1 == 0x1c && id2 == 0xc916) { /* for RTL8211F & RTL8211FS only */
 		/* disable RTL8211F CLK_OUT */
 		val = get_ext_phy(phyid, 0xa43, 25) & ~(1 << 0);
@@ -920,7 +913,7 @@ void rtd129x_hwnat_clk_init(struct device *dev)
 		return;
 	}
 	else
-		DBG("rtd129x_system_init() ok!");
+		pr_debug("rtk-hwnat: " "rtd129x_system_init() ok!");
 
 	if ((ret = rtd129x_switch_init()) != 0) {
 		switch(ret) {
@@ -936,10 +929,10 @@ void rtd129x_hwnat_clk_init(struct device *dev)
 		return;
 	}
 	else
-		DBG("rtd129x_switch_init() ok!");
+		pr_debug("rtk-hwnat: " "rtd129x_switch_init() ok!");
 
 #if 0
 	rtd129x_nic_setting();
-	DBG("rtd129x_nic_setting() ok!");
+	pr_debug("rtk-hwnat: " "rtd129x_nic_setting() ok!");
 #endif
 }

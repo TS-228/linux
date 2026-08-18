@@ -66,7 +66,7 @@ void hdmitx_send_hdmioff(void)
 {
 	struct VIDEO_RPC_VOUT_CONFIG_TV_SYSTEM tv_system;
 
-	HDMI_INFO("[%s]", __func__);
+	pr_info("rtk-hdmitx: " "[%s]", __func__);
 
 	memset(&tv_system, 0, sizeof(tv_system));
 	tv_system.videoInfo.standard = VO_STANDARD_NTSC_J;
@@ -128,7 +128,7 @@ static int hdmitx_switch_thread(void *arg)
 		s_data.hpd_state = hpd;
 
 		if (state != s_data.state) {
-			HDMI_INFO("%s:start, HPD(%d) RX_Sense(%u)", state?"plugged in":"pulled out", hpd, rxsense);
+			pr_info("rtk-hdmitx: " "%s:start, HPD(%d) RX_Sense(%u)", state?"plugged in":"pulled out", hpd, rxsense);
 
 			if (state == 1) {
 				hdmitx_get_sink_capability((asoc_hdmi_t *)hdmitx_get_drvdata(pdev));
@@ -141,7 +141,7 @@ static int hdmitx_switch_thread(void *arg)
 
 			s_data.state = state;
 			switch_set_state(sdev, s_data.state);
-			HDMI_INFO("%s:done", s_data.state?"plugged in":"pulled out");
+			pr_info("rtk-hdmitx: " "%s:done", s_data.state?"plugged in":"pulled out");
 		}
 
 		msleep(700);
@@ -159,7 +159,7 @@ static void hdmitx_switch_work_func(struct work_struct *work)
 
 	state = gpio_get_value(s_data.pin);
 
-	HDMI_INFO("%s:start", state?"plugged in":"pulled out");
+	pr_info("rtk-hdmitx: " "%s:start", state?"plugged in":"pulled out");
 
 	if (state == 1)
 		sink_changed = hdmitx_get_sink_capability(drvdata);
@@ -169,12 +169,12 @@ static void hdmitx_switch_work_func(struct work_struct *work)
 	if (sink_changed)
 		hdmitx_dump_error_code();
 
-	HDMI_INFO("%s:done", state?"plugged in":"pulled out");
+	pr_info("rtk-hdmitx: " "%s:done", state?"plugged in":"pulled out");
 
 	if (state != switch_get_state(sdev)) {
 		s_data.state = state;
 		switch_set_state(sdev, s_data.state);
-		HDMI_INFO("Switch state to %u", s_data.state);
+		pr_info("rtk-hdmitx: " "Switch state to %u", s_data.state);
 
 		if (s_data.state == 1) {
 			/* HDMI 1.4 CTS 9-5 PA increment, also include hotplug pluse for HDCP repeater CTS */
@@ -198,7 +198,7 @@ static void hdmitx_switch_work_func(struct work_struct *work)
 static irqreturn_t hdmitx_switch_isr(int irq, void *data)
 {
 	schedule_work(&s_data.work);
-	HDMI_DEBUG("hdmitx_switch_isr");
+	pr_debug("rtk-hdmitx: " "hdmitx_switch_isr");
 
 	return IRQ_HANDLED;
 }
@@ -208,7 +208,7 @@ int register_hdmitx_switchdev(hdmitx_device_t *device)
 	int ret;
 	int hpd_state;
 
-	HDMI_DEBUG("register_hdmitx_switch");
+	pr_debug("rtk-hdmitx: " "register_hdmitx_switch");
 
 	if (&device->sdev == NULL)
 		return -ENOMEM;
@@ -218,7 +218,7 @@ int register_hdmitx_switchdev(hdmitx_device_t *device)
 
 	ret = switch_dev_register(sdev);
 	if (ret < 0) {
-		HDMI_ERROR("err_register_switch");
+		pr_err("rtk-hdmitx: " "err_register_switch");
 		goto err_register_switch;
 	}
 
@@ -233,7 +233,7 @@ int register_hdmitx_switchdev(hdmitx_device_t *device)
 	/* Hotplug/Rxsense detect polling therad */
 	hdmitx_hpd_tsk = kthread_run(hdmitx_switch_thread, sdev, "hdmitx_hpd_thread");
 	if (IS_ERR(hdmitx_hpd_tsk)) {
-		HDMI_ERROR("Create hdmitx_hpd_tsk fail");
+		pr_err("rtk-hdmitx: " "Create hdmitx_hpd_tsk fail");
 		goto err_register_switch;
 	}
 #else
@@ -248,13 +248,13 @@ int register_hdmitx_switchdev(hdmitx_device_t *device)
 	irq_set_irq_type(s_data.irq, IRQ_TYPE_EDGE_BOTH);
 	ret = request_irq(s_data.irq, hdmitx_switch_isr, IRQF_SHARED, "switch_hdmitx", &device->dev);
 	if (ret)
-		HDMI_ERROR("Cannot register IRQ %d", s_data.irq);
+		pr_err("rtk-hdmitx: " "Cannot register IRQ %d", s_data.irq);
 #endif
 
 	goto end;
 
 err_register_switch:
-	HDMI_ERROR("register_hdmitx_switch failed");
+	pr_err("rtk-hdmitx: " "register_hdmitx_switch failed");
 end:
 	return ret;
 }
@@ -288,13 +288,13 @@ int rtk_hdmitx_switch_suspend(void)
 #if HDMI_RX_SENSE_SUPPORT
 	ret = kthread_stop(hdmitx_hpd_tsk);
 	if (!ret)
-		HDMI_INFO("hdmitx_hpd_tsk stopped");
+		pr_info("rtk-hdmitx: " "hdmitx_hpd_tsk stopped");
 	else
-		HDMI_ERROR("Stop hdmitx_hpd_tsk fail");
+		pr_err("rtk-hdmitx: " "Stop hdmitx_hpd_tsk fail");
 #else
 	disable_irq(s_data.irq);
 	free_irq(s_data.irq, &pdev->dev);
-	HDMI_DEBUG("%s free irq=%x ", __func__, s_data.irq);
+	pr_debug("rtk-hdmitx: " "%s free irq=%x ", __func__, s_data.irq);
 
 	/* Cancel work and wait for it to finish */
 	cancel_work_sync(&s_data.work);
@@ -318,9 +318,9 @@ int rtk_hdmitx_switch_resume(void)
 #if HDMI_RX_SENSE_SUPPORT
 	hdmitx_hpd_tsk = kthread_run(hdmitx_switch_thread, sdev, "hdmitx_hpd_thread");
 	if (IS_ERR(hdmitx_hpd_tsk))
-		HDMI_ERROR("Create hdmitx_hpd_tsk fail");
+		pr_err("rtk-hdmitx: " "Create hdmitx_hpd_tsk fail");
 	else
-		HDMI_INFO("Wake up hdmitx_hpd_tsk");
+		pr_info("rtk-hdmitx: " "Wake up hdmitx_hpd_tsk");
 #else
 
 	s_data.state = gpio_get_value(s_data.pin);
@@ -328,14 +328,14 @@ int rtk_hdmitx_switch_resume(void)
 	if (s_data.state == 0) {
 		hdmitx_reset_sink_capability(drvdata);
 		switch_set_state(sdev, 0);
-		HDMI_INFO("Switch state to 0");
+		pr_info("rtk-hdmitx: " "Switch state to 0");
 	} else {
 		if (!hdmitx_check_same_edid(drvdata)) {
 			hdmitx_reset_sink_capability(drvdata);
 			hdmitx_get_sink_capability(drvdata);
 		}
 		switch_set_state(sdev, 1);
-		HDMI_INFO("Switch state to 1");
+		pr_info("rtk-hdmitx: " "Switch state to 1");
 
 		HdmiRx_save_tx_physical_addr(drvdata->sink_cap.cec_phy_addr[0], drvdata->sink_cap.cec_phy_addr[1]);
 		if (hdmitx_edid_info.scdc_capable&SCDC_RR_CAPABLE)
@@ -345,7 +345,7 @@ int rtk_hdmitx_switch_resume(void)
 	irq_set_irq_type(s_data.irq, IRQ_TYPE_EDGE_BOTH);
 	ret = request_irq(s_data.irq, hdmitx_switch_isr, IRQF_SHARED, "switch_hdmitx", &pdev->dev);
 	if (ret)
-		HDMI_ERROR("Cannot register IRQ %d", s_data.irq);
+		pr_err("rtk-hdmitx: " "Cannot register IRQ %d", s_data.irq);
 #endif
 
 	return 0;

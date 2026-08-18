@@ -50,6 +50,12 @@
 #include "debug.h"
 #include "../host/xhci-ext-caps.h"
 
+#ifdef CONFIG_USB_DWC3_RTK
+#define RTK_DWC3_RX_THRESHOLD_EN		BIT(29)
+#define RTK_DWC3_RX_PKT_CNT(n)			((n) << 24)
+#define RTK_DWC3_RX_MAX_BURST_SZ(n)		((n) << 19)
+#endif
+
 #define DWC3_DEFAULT_AUTOSUSPEND_DELAY	5000 /* ms */
 
 /**
@@ -1516,13 +1522,9 @@ static int dwc3_core_init(struct dwc3 *dwc)
 	/* workaround: to avoid transaction error and cause port reset
 	 * we enable threshold control for TX/RX
 	 */
-#define RX_THRESHOLD_EN			(1 << 29)
-#define RX_PKT_CNT(n)			((n) << 24)
-#define RX_MAX_BURST_SZ(n)		((n) << 19)
-
 	dwc3_writel(dwc->regs, DWC3_GTXTHRCFG, 0x01010000);
-	dwc3_writel(dwc->regs, DWC3_GRXTHRCFG, RX_THRESHOLD_EN |
-		    RX_PKT_CNT(3) | RX_MAX_BURST_SZ(3));
+	dwc3_writel(dwc->regs, DWC3_GRXTHRCFG, RTK_DWC3_RX_THRESHOLD_EN |
+		    RTK_DWC3_RX_PKT_CNT(3) | RTK_DWC3_RX_MAX_BURST_SZ(3));
 	dwc3_writel(dwc->regs, DWC3_GUCTL,
 		    dwc3_readl(dwc->regs, DWC3_GUCTL) | (1 << 14));
 
@@ -2200,7 +2202,7 @@ static struct power_supply *dwc3_get_usb_power_supply(struct dwc3 *dwc)
 static int dwc3_probe(struct platform_device *pdev)
 {
 	struct device		*dev = &pdev->dev;
-	struct resource		*res, dwc_res;
+	struct resource		*res;
 	unsigned int		hw_mode;
 	void __iomem		*regs;
 	struct dwc3		*dwc;
@@ -2234,6 +2236,9 @@ static int dwc3_probe(struct platform_device *pdev)
 	regs += 0x8100;
 	dev_info(dev, "rtk dwc3 fixed dwc3 globals register start address 0x%p\n", regs);
 #else
+	{
+		struct resource dwc_res;
+
 	/*
 	 * Request memory region but exclude xHCI regs,
 	 * since it will be requested by the xhci-plat driver.
@@ -2253,18 +2258,15 @@ static int dwc3_probe(struct platform_device *pdev)
 	}
 
 	regs = devm_ioremap_resource(dev, &dwc_res);
+	dwc->regs_size = resource_size(&dwc_res);
+	}
 #endif
 	if (IS_ERR(regs))
 		return PTR_ERR(regs);
 
 	dwc->regs	= regs;
 #ifdef CONFIG_USB_DWC3_RTK
-	/* due to rtk dwc3 ip DWC3_GLOBALS_REGS_START is not standard (0xc100)
-	 * we need to fixed it
-	 */
-	dwc->regs_size	= resource_size(res) - 0x8100;
-#else
-	dwc->regs_size	= resource_size(&dwc_res);
+	dwc->regs_size = resource_size(res) - 0x8100;
 #endif
 
 	dwc3_get_properties(dwc);
@@ -2756,25 +2758,13 @@ static int dwc3_resume(struct device *dev)
 #ifdef CONFIG_USB_DWC3_RTK
 	/* workaround: to avoid transaction error and cause port reset
 	 * we enable threshold control for TX/RX
-	 * [Dev_Fix] Enable DWC3 threshold control for USB compatibility issue
-	 * commit 77f116ba77cc089ee2a6ceca1d2aa496b39c98ba
-	 * [Dev_Fix] change RX threshold packet count from 1 to 3,
-	 * it will get better performance
-	 * commit fe8905c2112f899f9ec3ddbfd83e0f183d3fbf7d
-	 * [DEV_FIX] In case there may have transaction error once system bus busy
-	 * commit b36294740c5cf66932c0fec429f4c5399e26f591
-	 * */
-#define RX_THRESHOLD_EN			(1<<29)
-#define RX_PKT_CNT(n)			(n<<24)
-#define RX_MAX_BURST_SZ(n)		(n<<19)
-
+	 */
 	dwc3_writel(dwc->regs, DWC3_GTXTHRCFG, 0x01010000);
-	dwc3_writel(dwc->regs, DWC3_GRXTHRCFG,  RX_THRESHOLD_EN  |
-											RX_PKT_CNT(3)    |
-											RX_MAX_BURST_SZ(3));
-	// enable auto retry
+	dwc3_writel(dwc->regs, DWC3_GRXTHRCFG, RTK_DWC3_RX_THRESHOLD_EN |
+		    RTK_DWC3_RX_PKT_CNT(3) | RTK_DWC3_RX_MAX_BURST_SZ(3));
+	/* enable auto retry */
 	dwc3_writel(dwc->regs, DWC3_GUCTL,
-					dwc3_readl(dwc->regs, DWC3_GUCTL) | (1<<14));
+		    dwc3_readl(dwc->regs, DWC3_GUCTL) | (1 << 14));
 
 #ifdef CONFIG_USB_PATCH_ON_RTK
 	if (dwc->revision >= DWC3_REVISION_300A)

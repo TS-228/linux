@@ -50,26 +50,8 @@
 #include "../rtk_fb.h"
 #include "dc2vo.h"
 
-static int debug = 1;
-static int warning = 1;
-static int info = 1;
 
-#define dprintk(msg...) \
-	if (debug) { \
-		pr_debug("D/DC: " msg); \
-	}
-#define eprintk(msg...) \
-	if (1) { \
-		pr_err("E/DC: " msg); \
-	}
-#define wprintk(msg...) \
-	if (warning) { \
-		pr_warn("W/DC: " msg); \
-	}
-#define iprintk(msg...) \
-	if (info) { \
-		pr_info("I/DC: " msg); \
-	}
+
 
 #ifndef DC_UNREFERENCED_PARAMETER
 #define DC_UNREFERENCED_PARAMETER(param) (param) = (param)
@@ -217,8 +199,8 @@ int DC_Set_RPCAddr(struct fb_info *fb, VENUSFB_MACH_INFO * video_info, DCRT_PARA
 		//ioremap((phys_addr_t)ulPhyAddrFilter(param->ringPhyAddr),sizeof(pdc_info->RING_HEADER));
 	#endif
 
-	dprintk("[%s] REFCLK: phy:0x%08x vir:%p\n", __func__, (u32)param->refclockAddr, pdc_info->REF_CLK);
-	dprintk("[%s] RING_HEADER: phy:0x%08x vir:%p\n", __func__, (u32)param->ringPhyAddr, pdc_info->RING_HEADER);
+	pr_debug("rtk-dc2vo: " "[%s] REFCLK: phy:0x%08x vir:%p\n", __func__, (u32)param->refclockAddr, pdc_info->REF_CLK);
+	pr_debug("rtk-dc2vo: " "[%s] RING_HEADER: phy:0x%08x vir:%p\n", __func__, (u32)param->ringPhyAddr, pdc_info->RING_HEADER);
 	DC_Reset_OSD_param(fb,video_info);
 
 	pdc_info->REF_CLK->mastership.videoMode = AVSYNC_FORCED_MASTER;
@@ -226,8 +208,8 @@ int DC_Set_RPCAddr(struct fb_info *fb, VENUSFB_MACH_INFO * video_info, DCRT_PARA
 	{
 		DC_PRESENTATION_INFO pos;
 		clkGetPresentation(pdc_info->REF_CLK, &pos);
-		iprintk("CLK pts:%lld ctx:%d\n", pos.videoSystemPTS,pos.videoContext);
-		iprintk("drvBeAddr:%x s:%u id:%u rw:(%x %x) #rPtr:%u\n",
+		pr_info("rtk-dc2vo: " "CLK pts:%lld ctx:%d\n", pos.videoSystemPTS,pos.videoContext);
+		pr_info("rtk-dc2vo: " "drvBeAddr:%x s:%u id:%u rw:(%x %x) #rPtr:%u\n",
 				(unsigned int)pli_IPCReadULONG((BYTE*)&pdc_info->RING_HEADER->beginAddr),
 				pli_IPCReadULONG((BYTE*)&pdc_info->RING_HEADER->size),
 				pli_IPCReadULONG((BYTE*)&pdc_info->RING_HEADER->bufferID),
@@ -358,7 +340,7 @@ int DC_Set_RateInfo(struct fb_info *fb, VENUSFB_MACH_INFO * video_info,DCRT_PARA
 	pdc_info->CLK_ADDR_LOW = (unsigned int*)phys_to_virt((phys_addr_t)ulPhyAddrFilter(param->clockAddrLow));
 	pdc_info->CLK_ADDR_HI =  (unsigned int*)phys_to_virt((phys_addr_t)ulPhyAddrFilter(param->clockAddrHi));
 #endif
-	iprintk("DC rInfo: pdc_info->CLK_ADDR_LOW=%p pdc_info->CLK_ADDR_HI=%p\n", pdc_info->CLK_ADDR_LOW, pdc_info->CLK_ADDR_HI);
+	pr_info("rtk-dc2vo: " "DC rInfo: pdc_info->CLK_ADDR_LOW=%p pdc_info->CLK_ADDR_HI=%p\n", pdc_info->CLK_ADDR_LOW, pdc_info->CLK_ADDR_HI);
 	return 0;
 }
 
@@ -369,7 +351,7 @@ int DC_Get_Clock_Map_Info(struct fb_info *fb, VENUSFB_MACH_INFO * video_info,DC_
 	DC_UNREFERENCED_PARAMETER (fb);
 	DC_UNREFERENCED_PARAMETER (video_info);
 #if 1
-	wprintk("[%s] WE ARE NOT SUPPORT!\n",__func__);
+	pr_warn("rtk-dc2vo: " "[%s] WE ARE NOT SUPPORT!\n",__func__);
 	memset(param,0,sizeof(DC_CLOCK_MAP_INFO));
 #else
 	if(pdc_info->CLK_ADDR_LOW == NULL || pdc_info->CLK_ADDR_HI == NULL) return -EAGAIN;
@@ -449,7 +431,7 @@ int DC_Get_Surface(struct fb_info *fb, VENUSFB_MACH_INFO * video_info, DCRT_PARA
 	DC_UNREFERENCED_PARAMETER (fb);
 	DC_UNREFERENCED_PARAMETER (video_info);
 	DC_UNREFERENCED_PARAMETER (param);
-	wprintk("[%s] WE ARE NOT SUPPORT!\n",__func__);
+	pr_warn("rtk-dc2vo: " "[%s] WE ARE NOT SUPPORT!\n",__func__);
 	return 0;
 #else
 	int err=0;
@@ -507,7 +489,7 @@ int DC_Set_ION_Share_Memory(struct fb_info *fb, VENUSFB_MACH_INFO *video_info,
 
 		refclk_handle = ion_import_dma_buf(pdc_info->gpsIONClient, dma_buf_get(param->sfd_refclk));
 		pdc_info->REF_CLK = ion_map_kernel(pdc_info->gpsIONClient, refclk_handle);
-		dprintk("[%s] refclk sfd:%d handle:%p vAddr:%p\n", __func__,
+		pr_debug("rtk-dc2vo: " "[%s] refclk sfd:%d handle:%p vAddr:%p\n", __func__,
 				param->sfd_refclk, refclk_handle, pdc_info->REF_CLK);
 	}
 	if (param->sfd_rbHeader!= 0) {
@@ -515,7 +497,7 @@ int DC_Set_ION_Share_Memory(struct fb_info *fb, VENUSFB_MACH_INFO *video_info,
 
 		rbHeader_handle = ion_import_dma_buf(pdc_info->gpsIONClient, dma_buf_get(param->sfd_rbHeader));
 		pdc_info->RING_HEADER =  ion_map_kernel(pdc_info->gpsIONClient, rbHeader_handle);
-		dprintk("[%s] rbHeader sfd:%d handle:%p vAddr:%p\n", __func__,
+		pr_debug("rtk-dc2vo: " "[%s] rbHeader sfd:%d handle:%p vAddr:%p\n", __func__,
 				param->sfd_rbHeader, rbHeader_handle, pdc_info->RING_HEADER);
 	}
 	if (param->sfd_rbBase != 0) {
@@ -523,7 +505,7 @@ int DC_Set_ION_Share_Memory(struct fb_info *fb, VENUSFB_MACH_INFO *video_info,
 
 		rbBase_handle = ion_import_dma_buf(pdc_info->gpsIONClient, dma_buf_get(param->sfd_rbBase));
 		pdc_info->RING_HEADER_BASE = ion_map_kernel(pdc_info->gpsIONClient, rbBase_handle);
-		dprintk("[%s] rbHeaderBase sfd:%d handle:%p vAddr:%p\n", __func__,
+		pr_debug("rtk-dc2vo: " "[%s] rbHeaderBase sfd:%d handle:%p vAddr:%p\n", __func__,
 				param->sfd_rbBase, rbBase_handle, pdc_info->RING_HEADER_BASE);
 	}
 	return 0;
@@ -545,15 +527,15 @@ int DC_Set_Buffer_Info(struct fb_info *fb, VENUSFB_MACH_INFO *video_info, DC_BUF
 	pdc_info->uiRes32Width = param->width;
 	pdc_info->uiRes32Height = param->height;
 
-	dprintk("[%s] enable:%d width:%d height:%d\n",__func__,param->enable,param->width,param->height);
+	pr_debug("rtk-dc2vo: " "[%s] enable:%d width:%d height:%d\n",__func__,param->enable,param->width,param->height);
 	return 0;
 err:
-	eprintk("[%s] ERROR!",__func__);
+	pr_err("rtk-dc2vo: " "[%s] ERROR!",__func__);
 	return -1;
 }
 
 #define goERROR(tag) { \
-eprintk("ERROR! CMD = %u LINE = %d tag = %d",cmd,__LINE__,tag); \
+pr_err("rtk-dc2vo: " "ERROR! CMD = %u LINE = %d tag = %d",cmd,__LINE__,tag); \
 goto ERROR; \
 }
 
@@ -773,7 +755,7 @@ int DC_Ioctl (struct fb_info *fb, VENUSFB_MACH_INFO *video_info,
 	case DC2VO_SET_DISABLE:
 	case DC2VO_SET_MODIFY:
 		{
-			dprintk("[%s %d] CMD = %u \n",__func__,__LINE__,cmd);
+			pr_debug("rtk-dc2vo: " "[%s %d] CMD = %u \n",__func__,__LINE__,cmd);
 			break;
 		}
 	default:
@@ -827,7 +809,7 @@ int Activate_vSync(VENUSFB_MACH_INFO * video_info)
 	DC_INFO * pdc_info = (DC_INFO*)video_info->dc_info;
 	int result=0;
 	DC_UNREFERENCED_PARAMETER (pdc_info);
-	dprintk("%s:%d DEBUG!!!! \n", __func__, __LINE__);
+	pr_debug("rtk-dc2vo: " "%s:%d DEBUG!!!! \n", __func__, __LINE__);
 #ifndef CONFIG_RTK_RPC
 	if( !(pdc_info->flags & ISR_INIT))
 	{
@@ -837,11 +819,11 @@ int Activate_vSync(VENUSFB_MACH_INFO * video_info)
 			result = request_irq(DCRT_IRQ, dc_irq_handler, IRQF_SHARED, "dc2vo", (void *) video_info);
 		if(result)
 		{
-			eprintk("DC: irq ins fail %i\n", DCRT_IRQ);
+			pr_err("rtk-dc2vo: " "DC: irq ins fail %i\n", DCRT_IRQ);
 			return result;
 		}
 		else {
-			dprintk("DC irq Ins\n");
+			pr_debug("rtk-dc2vo: " "DC irq Ins\n");
 			smp_mb();
 			pdc_info->flags |= ISR_INIT;
 			smp_mb();
@@ -868,7 +850,7 @@ int DeInit_vSync(VENUSFB_MACH_INFO * video_info)
 		smp_mb();
 		pdc_info->flags &= ~ISR_INIT;
 		smp_mb();
-		dprintk("DC irqUn\n");
+		pr_debug("rtk-dc2vo: " "DC irqUn\n");
 	}
 	spin_unlock_irqrestore(&vSyncLock, ulLockFlags);
 	return 0;
@@ -907,7 +889,7 @@ long dc_wait_vsync_timeout(DC_INFO *pdc_info)
 
 	if (timeout ==  -ETIME) {
 		unsigned int flag = pli_IPCReadULONG((BYTE*)pdc_info->vo_vsync_flag);
-		eprintk("[%s %d] wait vsync timeout! vo_vsync_flag:0x%08x\n",
+		pr_err("rtk-dc2vo: " "[%s %d] wait vsync timeout! vo_vsync_flag:0x%08x\n",
 				__func__, __LINE__, flag);
         ret = -1L;
 	}
@@ -951,10 +933,10 @@ static void dc_fence_put(struct sync_file *fence)
 void dc_buffer_dump(struct dc_buffer *buf)
 {
 	if (!buf) {
-		eprintk("buffer is null!\n");
+		pr_err("rtk-dc2vo: " "buffer is null!\n");
 		return;
 	}
-	wprintk("buffer:%p id:%d ov_engine:%d fmt:%d offset:0x%x ctx:%d [%d %d %d %d] [%d %d %d %d]\n",
+	pr_warn("rtk-dc2vo: " "buffer:%p id:%d ov_engine:%d fmt:%d offset:0x%x ctx:%d [%d %d %d %d] [%d %d %d %d]\n",
 			buf, buf->id, buf->overlay_engine, buf->format, buf->offset, buf->context,
 			buf->sourceCrop.left,
 			buf->sourceCrop.top,
@@ -1001,7 +983,7 @@ static struct sync_file *dc_sw_complete_fence(DC_INFO *pdc_info)
 		pdc_info->timeline_max = 1;
 	}
 
-	dprintk("[%s %d] sw_sync_pt_create (%d)\n", __func__, __LINE__, pdc_info->timeline_max);
+	pr_debug("rtk-dc2vo: " "[%s %d] sw_sync_pt_create (%d)\n", __func__, __LINE__, pdc_info->timeline_max);
 	pt = sw_sync_pt_create(pdc_info->timeline, pdc_info->timeline_max);
 	pdc_info->timeline_max++;
 	if (!pt)
@@ -1015,10 +997,10 @@ static struct sync_file *dc_sw_complete_fence(DC_INFO *pdc_info)
 	return complete_fence;
 
 err_fence_create:
-	eprintk("[%s %d]\n", __func__, __LINE__);
+	pr_err("rtk-dc2vo: " "[%s %d]\n", __func__, __LINE__);
 	sync_pt_free(pt);
 err_pt_create:
-	eprintk("[%s %d]\n", __func__, __LINE__);
+	pr_err("rtk-dc2vo: " "[%s %d]\n", __func__, __LINE__);
 	pdc_info->timeline_max--;
 	return ERR_PTR(-ENOSYS);
 }
@@ -1077,7 +1059,7 @@ static int dc_buffer_import(DC_INFO *pdc_info,
 	if (user_buf.acquire.fence_fd >= 0) {
 		buf->acquire.fence = sync_file_fdget(user_buf.acquire.fence_fd);
 		if (!buf->acquire.fence) {
-			eprintk("getting fence fd %lld failed\n", user_buf.acquire.fence_fd);
+			pr_err("rtk-dc2vo: " "getting fence fd %lld failed\n", user_buf.acquire.fence_fd);
 			ret = -EINVAL;
 			goto done;
 		}
@@ -1085,12 +1067,12 @@ static int dc_buffer_import(DC_INFO *pdc_info,
 		buf->acquire.fence = (struct sync_file *) NULL;
 
 	if (buf->overlay_engine > eEngine_MAX) {
-		eprintk("invalid overlay engine id mask %u\n", buf->overlay_engine);
+		pr_err("rtk-dc2vo: " "invalid overlay engine id mask %u\n", buf->overlay_engine);
 		//ret = -EINVAL;
 		//goto done;
 	}
 
-	dprintk("[%s %d] buf->acquire_fenc : %p\n", __func__, __LINE__, buf->acquire.fence);
+	pr_debug("rtk-dc2vo: " "[%s %d] buf->acquire_fenc : %p\n", __func__, __LINE__, buf->acquire.fence);
 done:
 	/*
 	 * if (ret < 0)
@@ -1187,27 +1169,27 @@ static int dc_do_simple_post_config(VENUSFB_MACH_INFO * video_info, void *arg)
 	//complete_fence_fd = get_unused_fd();
 	complete_fence_fd = get_unused_fd_flags(O_CLOEXEC);
 	if (complete_fence_fd < 0) {
-		eprintk("[%s %d] complete_fence_fd = %d\n", __func__, __LINE__, complete_fence_fd);
+		pr_err("rtk-dc2vo: " "[%s %d] complete_fence_fd = %d\n", __func__, __LINE__, complete_fence_fd);
 		return complete_fence_fd;
 	}
 
 	ret = dc_buffer_import(pdc_info, &cfg->buf, &buf);
 	if (ret < 0) {
-		eprintk("[%s %d] ret = %d\n", __func__, __LINE__, ret);
+		pr_err("rtk-dc2vo: " "[%s %d] ret = %d\n", __func__, __LINE__, ret);
 		goto err_import;
 	}
 
 	complete_fence = dc_simple_post(pdc_info, &buf);
 	if (IS_ERR(complete_fence)) {
 		ret = PTR_ERR(complete_fence);
-		eprintk("[%s %d] complete_fence : %p\n", __func__, __LINE__, complete_fence);
+		pr_err("rtk-dc2vo: " "[%s %d] complete_fence : %p\n", __func__, __LINE__, complete_fence);
 		goto err_put_user;
 	}
 
 	 fd_install(complete_fence_fd, complete_fence->file);
 
 	if (put_user(complete_fence_fd, &cfg->complete_fence_fd)) {
-		eprintk("[%s %d] put_user complete_fence_fd:%d failed!\n", __func__, __LINE__, complete_fence_fd);
+		pr_err("rtk-dc2vo: " "[%s %d] put_user complete_fence_fd:%d failed!\n", __func__, __LINE__, complete_fence_fd);
 		ret = -EFAULT;
 		goto err_put_user;
 	}
@@ -1256,7 +1238,7 @@ int DC_Swap_Buffer(struct fb_info *fb, VENUSFB_MACH_INFO * video_info)
 	return 0;
 
 err:
-	eprintk("[%s %d]!!!!!!! \n", __func__, __LINE__);
+	pr_err("rtk-dc2vo: " "[%s %d]!!!!!!! \n", __func__, __LINE__);
 	if (debug)
 		console_lock();
 	return -EFAULT;
@@ -1301,7 +1283,7 @@ static int dc_prepare_framebuffer_target(DC_INFO *pdc_info, struct dc_buffer *bu
 	struct fb_info *fb  = pdc_info->pfbi;
 	bool bIsAFBC = (buffer->flags & eBuffer_AFBC_Enable)?true:false;
 
-	//dprintk("[%s] phyAddr:0x%08x", __FUNCTION__, buffer->phyAddr);
+	//pr_debug("rtk-dc2vo: " "[%s] phyAddr:0x%08x", __FUNCTION__, buffer->phyAddr);
 	buffer->stride	  = fb->fix.line_length;
 	buffer->format	  = (pdc_info->flags & BG_SWAP)? INBAND_CMD_GRAPHIC_FORMAT_RGBA8888 : INBAND_CMD_GRAPHIC_FORMAT_ARGB8888_LITTLE;
 
@@ -1361,7 +1343,7 @@ static int dc_queue_vo_buffer(DC_INFO *pdc_info, struct dc_buffer *buffer)
 	VIDEO_GRAPHIC_PICTURE_OBJECT obj;
 
 	if (!(pdc_info->flags & RPC_READY)) {
-		eprintk("[%s %d] pdc_info->RING_HEADER = %p\n",
+		pr_err("rtk-dc2vo: " "[%s %d] pdc_info->RING_HEADER = %p\n",
 			__func__, __LINE__, pdc_info->RING_HEADER);
 		buffer->id = eFrameBufferSkip;
 		return 0;
@@ -1399,7 +1381,7 @@ static int dc_queue_vo_buffer(DC_INFO *pdc_info, struct dc_buffer *buffer)
 #endif /* End of DC2VO_SUPPORT_MEMORY_TRASH */
 
 	if (ICQ_WriteCmd(&obj, pdc_info->RING_HEADER, pdc_info->RING_HEADER_BASE)) {
-		eprintk("[%s %d]ERROR!! Write CMD Error!\n",__FUNCTION__, __LINE__);
+		pr_err("rtk-dc2vo: " "[%s %d]ERROR!! Write CMD Error!\n",__FUNCTION__, __LINE__);
 		return -EAGAIN;
 	}
 
@@ -1413,7 +1395,7 @@ static int dc_queue_vo_buffer(DC_INFO *pdc_info, struct dc_buffer *buffer)
 static int dc_queue_framebuffer(DC_INFO *pdc_info, struct dc_buffer *buffer)
 {
 
-	dprintk("[%s %d]\n", __func__, __LINE__);
+	pr_debug("rtk-dc2vo: " "[%s %d]\n", __func__, __LINE__);
 
 	if(dc_prepare_framebuffer(pdc_info, buffer))
 		goto err;
@@ -1430,7 +1412,7 @@ err:
 static int dc_queue_framebuffer_target(DC_INFO *pdc_info, struct dc_buffer *buffer)
 {
 
-	dprintk("[%s %d]\n", __func__, __LINE__);
+	pr_debug("rtk-dc2vo: " "[%s %d]\n", __func__, __LINE__);
 
 	if(dc_prepare_framebuffer_target(pdc_info, buffer))
 		goto err;
@@ -1447,7 +1429,7 @@ err:
 static int dc_queue_user_buffer(DC_INFO *pdc_info, struct dc_buffer *buffer)
 {
 
-	dprintk("[%s %d]\n", __func__, __LINE__);
+	pr_debug("rtk-dc2vo: " "[%s %d]\n", __func__, __LINE__);
 
 	if(dc_prepare_user_buffer(pdc_info, buffer))
 		goto err;
@@ -1471,7 +1453,7 @@ static int dc_wait_context_ready(DC_INFO *pdc_info, unsigned int context, unsign
 		refContext = pli_IPCReadULONG((BYTE*)&pdc_info->REF_CLK->videoContext);
 
 		if ((refContext > (context + 1)) && (refContext != -1U))
-			wprintk("refContext:%d context:%d \n", refContext, context);
+			pr_warn("rtk-dc2vo: " "refContext:%d context:%d \n", refContext, context);
 
 		if (context > refContext && (context - refContext) > (-1U/2))
 			overflow = true;
@@ -1482,7 +1464,7 @@ static int dc_wait_context_ready(DC_INFO *pdc_info, unsigned int context, unsign
 			if (refContext >= context)
 				break;
 		} else {
-			iprintk("refContext:%d context:%d overflow:%d\n", refContext, context, overflow);
+			pr_info("rtk-dc2vo: " "refContext:%d context:%d overflow:%d\n", refContext, context, overflow);
 			break;
 		}
 
@@ -1507,7 +1489,7 @@ static int dc_wait_context_ready(DC_INFO *pdc_info, unsigned int context, unsign
 
 	return 0;
 err:
-	eprintk("[%s %d] context:%d refContext:%d waitVsyncTimes %d\n",
+	pr_err("rtk-dc2vo: " "[%s %d] context:%d refContext:%d waitVsyncTimes %d\n",
 			__func__, __LINE__, context, refContext, 10 - maxWaitVsync);
 	return -EAGAIN;
 }
@@ -1523,9 +1505,9 @@ static int dc_vo_post(DC_INFO *pdc_info, struct dc_buffer *buf)
 	} else if (buf->id == eFrameBufferTarget) {
 		ret = dc_queue_framebuffer_target(pdc_info, buf);
 	} else if (buf->id == eFrameBufferSkip) {
-		dprintk("eFrameBufferSkip!");
+		pr_debug("rtk-dc2vo: " "eFrameBufferSkip!");
 	} else
-		eprintk("buffer id (%u) is not ready!",buf->id)
+		pr_err("rtk-dc2vo: " "buffer id (%u) is not ready!",buf->id);
 
 	if (ret)
 		goto err;
@@ -1566,12 +1548,12 @@ static int dc_vo_complete(DC_INFO *pdc_info, struct dc_buffer *buf)
 			}
 		case eFrameBufferSkip:
 			{
-				dprintk("eFrameBufferSkip!");
+				pr_debug("rtk-dc2vo: " "eFrameBufferSkip!");
 				break;
 			}
 		default:
 			{
-				eprintk("buffer id (%u) is not ready!",buf->id);
+				pr_err("rtk-dc2vo: " "buffer id (%u) is not ready!",buf->id);
 				ret = -1;
 				break;
 			}
@@ -1586,13 +1568,13 @@ static int dc_vo_complete(DC_INFO *pdc_info, struct dc_buffer *buf)
 		u32 errContext = pli_IPCReadULONG((BYTE*)&pdc_info->REF_CLK->memorytrashContext);
 		if (errContext != -1) {
 			u32 errPhyAddr = pli_IPCReadULONG((BYTE*)&pdc_info->REF_CLK->memorytrashAddr);
-			wprintk("[%s] (MemoryTrash) err: %d(0x%08x) free: %d(%08x) CTX:%d\n",
+			pr_warn("rtk-dc2vo: " "[%s] (MemoryTrash) err: %d(0x%08x) free: %d(%08x) CTX:%d\n",
 					__FUNCTION__, errContext, errPhyAddr, buf->context, buf->phyAddr, pdc_info->CTX);
 			pli_IPCWriteULONG((BYTE *) &pdc_info->REF_CLK->memorytrashContext, -1);
 		}
 
 		if (tempContext != -1U && buf->context != (tempContext+1))
-			wprintk("[%s] tempContext:%d free: %d(%08x) CTX:%d\n",
+			pr_warn("rtk-dc2vo: " "[%s] tempContext:%d free: %d(%08x) CTX:%d\n",
 					__FUNCTION__, tempContext, buf->context, buf->phyAddr, pdc_info->CTX);
 
 		tempContext = buf->context;
@@ -1620,7 +1602,7 @@ static void dc_post_work_func(struct kthread_work *work)
 	list_replace_init(&pdc_info->post_list, &saved_list);
 	mutex_unlock(&pdc_info->post_lock);
 
-	dprintk("[%s %d]\n", __func__, __LINE__);
+	pr_debug("rtk-dc2vo: " "[%s %d]\n", __func__, __LINE__);
 
 	list_for_each_entry_safe(post, next, &saved_list, head) {
 		int i;
@@ -1637,7 +1619,7 @@ static void dc_post_work_func(struct kthread_work *work)
 			if (buffer->overlay_engine == eEngine_VO) {
 				dc_vo_post(pdc_info, buffer);
 			} else
-				eprintk("overlay_engine (%u) is not ready!",buffer->overlay_engine)
+				pr_err("rtk-dc2vo: " "overlay_engine (%u) is not ready!",buffer->overlay_engine);
 		}
 
 		mutex_lock(&pdc_info->complete_lock);
@@ -1667,7 +1649,7 @@ static void dc_complete_work_func(struct kthread_work *work)
 			if (buffer->overlay_engine == eEngine_VO) {
 				dc_vo_complete(pdc_info, buffer);
 			} else
-				eprintk("overlay_engine (%u) is not ready!",buffer->overlay_engine)
+				pr_err("rtk-dc2vo: " "overlay_engine (%u) is not ready!",buffer->overlay_engine);
 		}
 #ifdef CREATE_THREAD_FOR_RELEASE_DEBUG
 		mutex_lock(&pdc_info->free_lock);
@@ -1886,18 +1868,18 @@ DONE:
 
 void DC_Deinit(VENUSFB_MACH_INFO * video_info)
 {
-	iprintk("[%s %d]\n",__func__,__LINE__);
+	pr_info("rtk-dc2vo: " "[%s %d]\n",__func__,__LINE__);
 	DeInit_post_Worker(video_info);
 	DeInit_vSync(video_info);
 	if (video_info->dc_info != NULL) {
 #if 1
-		iprintk("[%s %d] NOT TO FREE DC INFO BUFFER!",__func__,__LINE__);
+		pr_info("rtk-dc2vo: " "[%s %d] NOT TO FREE DC INFO BUFFER!",__func__,__LINE__);
 #else
 		kfree(video_info->dc_info);
 		video_info->dc_info = NULL;
 #endif
 	} else {
-		wprintk("[%s %d] video_info->dc_info == NULL \n",__func__,__LINE__);
+		pr_warn("rtk-dc2vo: " "[%s %d] video_info->dc_info == NULL \n",__func__,__LINE__);
 	}
 	DCINIT = 0;
 }
@@ -1965,7 +1947,7 @@ static void dc_sys_debug_work_func(struct kthread_work *work)
 		gbDcSysError = true;
 
 	if (gbDcSysError)
-		eprintk("[%s] dc_sys_debug(0x%08x) = 0x%08x\n", __FUNCTION__,
+		pr_err("rtk-dc2vo: " "[%s] dc_sys_debug(0x%08x) = 0x%08x\n", __FUNCTION__,
 				DC2VO_DCSYS_CONTROL, readl(gpDcSysControl));
 }
 

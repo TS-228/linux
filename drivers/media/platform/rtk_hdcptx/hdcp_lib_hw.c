@@ -149,7 +149,7 @@ int hdcp_lib_generate_an(uint8_t *an)
 
 	hdcp_lib_read_an(an);
 
-	HDCP_DEBUG("AN1: %x %x %x %x %x %x %x %x",
+	pr_debug("rtk-hdcp: " "AN1: %x %x %x %x %x %x %x %x",
 		an[0], an[1], an[2], an[3], an[4], an[5], an[6], an[7]);
 
 	return HDCP_OK;
@@ -161,7 +161,7 @@ int hdcp_lib_generate_an(uint8_t *an)
  */
 void hdcp_lib_set_repeater_bit_in_tx(enum hdcp_repeater rx_mode)
 {
-	HDCP_DEBUG("hdcp_lib_set_repeater_bit_in_tx() value=%d", rx_mode);
+	pr_debug("rtk-hdcp: " "hdcp_lib_set_repeater_bit_in_tx() value=%d", rx_mode);
 
 	WR_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_CR,
 		HDMI_HDCP_CR_write_en4(1) |
@@ -254,11 +254,11 @@ void hdcp_lib_set_encryption(enum encryption_state enc_state)
 			HDMI_HDCP_AUTH_write_en1(0) | HDMI_HDCP_AUTH_authrequest(0));
 
 	} else {
-		HDCP_ERROR("unknown ENC state");
+		pr_err("rtk-hdcp: " "unknown ENC state");
 	}
 
 	if (hdcp.print_messages)
-		HDCP_DEBUG("Encryption state changed: %s HDCP_AUTH_reg: %02x",
+		pr_debug("rtk-hdcp: " "Encryption state changed: %s HDCP_AUTH_reg: %02x",
 			enc_state == HDCP_ENC_OFF ? "OFF" : "ON",
 			RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_AUTH));
 
@@ -336,7 +336,7 @@ int hdcp_lib_compute_V(struct hdcp_sha_in *sha)
 			sha_wd = (sha_blk[4*i+0]<<24) | (sha_blk[4*i+1]<<16) |
 				(sha_blk[4*i+2]<<8) | (sha_blk[4*i+3]<<0);/* change endian */
 
-			HDCP_DEBUG("sha_blk[%2d,%2d,%2d,%2d]= %2x %2x %2x %2x, sha_wd=%x\n",
+			pr_debug("rtk-hdcp: " "sha_blk[%2d,%2d,%2d,%2d]= %2x %2x %2x %2x, sha_wd=%x\n",
 				4*i+0, 4*i+1, 4*i+2, 4*i+3,
 				sha_blk[4*i+0], sha_blk[4*i+1], sha_blk[4*i+2], sha_blk[4*i+3],
 				sha_wd);
@@ -362,13 +362,13 @@ int hdcp_lib_compute_V(struct hdcp_sha_in *sha)
 	while (!HDMI_HDCP_SHARR_get_shaready(RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_SHARR))) {
 		mdelay(100);
 		if (retry >= 20) {
-			HDCP_ERROR("2rd step authentication : compute V failed\n");
+			pr_err("rtk-hdcp: " "2rd step authentication : compute V failed\n");
 			return -HDCP_SHA1_ERROR;
 		}
 		retry++;
 	}
 
-	HDCP_INFO("2rd step authentication : compute V is done\n");
+	pr_info("rtk-hdcp: " "2rd step authentication : compute V is done\n");
 
 	return HDCP_OK;
 }
@@ -386,7 +386,7 @@ int hdcp_lib_verify_V(struct hdcp_sha_in *sha)
 	retry = 0;
 	for (i = 0; i < SHA1_HASH_SIZE; i++) {
 		memcpy(&data, (void *)&sha->vprime[DDC_V_LEN*i], sizeof(data));
-		HDCP_DEBUG("2rd step authentication : v data=%x", data);
+		pr_debug("rtk-hdcp: " "2rd step authentication : v data=%x", data);
 		/* should not swap */
 		WR_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_SHADR, HDMI_HDCP_SHADR_sha_data(data));
 	}
@@ -396,17 +396,17 @@ int hdcp_lib_verify_V(struct hdcp_sha_in *sha)
 
 		mdelay(100);
 		if (retry >= 30) {
-			HDCP_ERROR("2rd step authentication : timeout of shaready;verify V failed\n");
+			pr_err("rtk-hdcp: " "2rd step authentication : timeout of shaready;verify V failed\n");
 			return -HDCP_SHA1_ERROR;
 		}
 		retry++;
 	}
 
 	if (HDMI_HDCP_SHARR_get_vmatch(RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_SHARR))) {
-		HDCP_INFO("2rd step authentication : verify V passed");
+		pr_info("rtk-hdcp: " "2rd step authentication : verify V passed");
 		return HDCP_OK;
 	} else {
-		HDCP_ERROR("2rd step authentication : verify V failed");
+		pr_err("rtk-hdcp: " "2rd step authentication : verify V failed");
 		return -HDCP_SHA1_ERROR;
 	}
 
@@ -587,7 +587,7 @@ void hdcp_lib_set_av_mute(enum av_mute av_mute_state)
 				HDMI_GCPCR_enablegcp(1) | HDMI_GCPCR_gcp_clearavmute(1) |
 				HDMI_GCPCR_gcp_setavmute(0) | HDMI_GCPCR_write_data(1));
 	} else {
-			HDCP_ERROR("unknown av mute parameter\n");
+			pr_err("rtk-hdcp: " "unknown av mute parameter\n");
 	}
 	/* spin_unlock_irqrestore(&hdcp.spinlock, flags); */
 

@@ -97,7 +97,7 @@ static long memalloc_ioctl(struct file *filp, unsigned int cmd,
     MemallocParams memparams;
     unsigned long busaddr;
 
-    PDEBUG("ioctl cmd 0x%08x\n", cmd);
+    pr_debug("rtk-ve: " "ioctl cmd 0x%08x\n", cmd);
 
     /*
      * extract the type and number bitfields, and don't decode
@@ -114,11 +114,11 @@ static long memalloc_ioctl(struct file *filp, unsigned int cmd,
 
     switch (cmd) {
     case MEMALLOC_IOCHARDRESET:
-        PDEBUG("HARDRESET\n");
+        pr_debug("rtk-ve: " "HARDRESET\n");
         ResetMems();
         break;
     case MEMALLOC_IOCXGETBUFFER:
-        PDEBUG("GETBUFFER");
+        pr_debug("rtk-ve: " "GETBUFFER");
 
         ret = copy_from_user(&memparams, (MemallocParams *)arg,
                              sizeof(MemallocParams));
@@ -133,7 +133,7 @@ static long memalloc_ioctl(struct file *filp, unsigned int cmd,
 
         break;
     case MEMALLOC_IOCSFREEBUFFER:
-        PDEBUG("FREEBUFFER\n");
+        pr_debug("rtk-ve: " "FREEBUFFER\n");
 
         __get_user(busaddr, (unsigned long *)arg);
         ret = FreeMemory(busaddr, filp);
@@ -146,7 +146,7 @@ static long memalloc_ioctl(struct file *filp, unsigned int cmd,
 
 static int memalloc_open(struct inode *inode, struct file *filp) {
 
-    PDEBUG("dev opened\n");
+    pr_debug("rtk-ve: " "dev opened\n");
     return 0;
 }
 
@@ -196,7 +196,7 @@ static int memalloc_release(struct inode *inode, struct file *filp) {
     }
 #endif /* end of SUPPORT_RESERVED_VIDEO_MEMORY */
 
-    PDEBUG("dev closed\n");
+    pr_debug("rtk-ve: " "dev closed\n");
     return 0;
 }
 
@@ -213,7 +213,7 @@ void __exit memalloc_cleanup(void) {
     misc_deregister(&s_memalloc_dev);
 #endif
 
-    PDEBUG("module removed\n");
+    pr_debug("rtk-ve: " "module removed\n");
     return;
 }
 
@@ -242,7 +242,7 @@ static struct file_operations memalloc_fops = {
 int __init memalloc_init(void) {
     int result;
 
-    PDEBUG("module init\n");
+    pr_debug("rtk-ve: " "module init\n");
     printk("memalloc: Linear Memory Allocator\n");
 
 #ifdef SUPPORT_RESERVED_VIDEO_MEMORY
@@ -274,7 +274,7 @@ int __init memalloc_init(void) {
 #if 0
     result = register_chrdev(memalloc_major, "memalloc", &memalloc_fops);
     if (result < 0) {
-        PDEBUG("memalloc: unable to get major %d\n", memalloc_major);
+        pr_debug("rtk-ve: " "memalloc: unable to get major %d\n", memalloc_major);
         goto err;
     } else if (result != 0) {/* this is for dynamic major */
         memalloc_major = result;
@@ -378,7 +378,7 @@ static int AllocMemory(unsigned *busaddr, unsigned long size, unsigned int mem_t
             rtk_hlina_chunks[i].phys_addr = phys_addr;
             rtk_hlina_chunks[i].filp = filp;
             *busaddr = rtk_hlina_chunks[i].phys_addr;
-            PDEBUG("memalloc: base:0x%lx, phy_addr:0x%lx, size:%d\n", rtk_hlina_chunks[i].base, rtk_hlina_chunks[i].phys_addr, rtk_hlina_chunks[i].size);
+            pr_debug("rtk-ve: " "memalloc: base:0x%lx, phy_addr:0x%lx, size:%d\n", rtk_hlina_chunks[i].base, rtk_hlina_chunks[i].phys_addr, rtk_hlina_chunks[i].size);
             break;
         }
     }
@@ -389,7 +389,7 @@ static int AllocMemory(unsigned *busaddr, unsigned long size, unsigned int mem_t
         printk("memalloc: Allocation FAILED: size = %d\n", (int)size);
         return -EFAULT;
     } else {
-        PDEBUG("MEMALLOC OK: size: %d, reserved: %ld\n", (int)size,
+        pr_debug("rtk-ve: " "MEMALLOC OK: size: %d, reserved: %ld\n", (int)size,
                alloc_chunks * CHUNK_SIZE);
     }
 

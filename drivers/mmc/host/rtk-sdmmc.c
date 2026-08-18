@@ -630,7 +630,7 @@ static u8 rtk_sdmmc_search_final_phase(struct rtk_sdmmc_host *rtk_host, u32 phas
 	}
 
 	if (cont_path_cnt == 0) {
-		rtk_sdmmc_debug(" %s No continuous phase path\n", __func__);
+		pr_debug("rtk-sdmmc: " " %s No continuous phase path\n", __func__);
 		goto finish;
 	} else {
 		/* Calculate last continuous path length and middle point */
@@ -687,14 +687,14 @@ static u8 rtk_sdmmc_search_final_phase(struct rtk_sdmmc_host *rtk_host, u32 phas
 			final_path_idx = i;
 		}
 
-		rtk_sdmmc_debug("%s path[%d].start = %d\n", __func__, i, path[i].start);
-		rtk_sdmmc_debug("%s path[%d].end = %d\n", __func__, i, path[i].end);
-		rtk_sdmmc_debug("%s path[%d].len = %d\n", __func__, i, path[i].len);
-		rtk_sdmmc_debug("%s path[%d].mid = %d\n", __func__, i, path[i].mid);
+		pr_debug("rtk-sdmmc: " "%s path[%d].start = %d\n", __func__, i, path[i].start);
+		pr_debug("rtk-sdmmc: " "%s path[%d].end = %d\n", __func__, i, path[i].end);
+		pr_debug("rtk-sdmmc: " "%s path[%d].len = %d\n", __func__, i, path[i].len);
+		pr_debug("rtk-sdmmc: " "%s path[%d].mid = %d\n", __func__, i, path[i].mid);
 	}
 
 finish:
-	rtk_sdmmc_debug("%s Final chosen phase: %d\n", __func__, final_phase);
+	pr_debug("rtk-sdmmc: " "%s Final chosen phase: %d\n", __func__, final_phase);
 	return final_phase;
 }
 
@@ -825,7 +825,7 @@ static int rtk_sdmmc_tuning_tx(struct rtk_sdmmc_host *rtk_host)
 
 	phase_map = 0xFFFFFFFF;
 	for (i = 0 ; i < TUNING_CNT ; i++) {
-		rtk_sdmmc_debug("%s TX raw_phase_map[%d] = 0x%08x\n", __func__, i, raw_phase_map[i]);
+		pr_debug("rtk-sdmmc: " "%s TX raw_phase_map[%d] = 0x%08x\n", __func__, i, raw_phase_map[i]);
 		phase_map &= raw_phase_map[i];
 	}
 
@@ -833,9 +833,9 @@ static int rtk_sdmmc_tuning_tx(struct rtk_sdmmc_host *rtk_host)
 
 	if (phase_map) {
 		final_phase = rtk_sdmmc_search_final_phase(rtk_host, phase_map);
-		rtk_sdmmc_debug("%s final phase = 0x%08x\n", __func__, final_phase);
+		pr_debug("rtk-sdmmc: " "%s final phase = 0x%08x\n", __func__, final_phase);
 		if (final_phase == 0xFF) {
-			rtk_sdmmc_debug("%s final phase = 0x%08x\n", __func__, final_phase);
+			pr_debug("rtk-sdmmc: " "%s final phase = 0x%08x\n", __func__, final_phase);
 			ret = -EINVAL;
 			goto out ;
 		}
@@ -843,7 +843,7 @@ static int rtk_sdmmc_tuning_tx(struct rtk_sdmmc_host *rtk_host)
 		ret = 0;
 		goto out ;
 	} else {
-		rtk_sdmmc_debug("%s  fail !phase_map\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s  fail !phase_map\n", __func__);
 		ret = -EINVAL;
 		goto out ;
 	}
@@ -883,16 +883,16 @@ static int rtk_sdmmc_tuning_rx(struct rtk_sdmmc_host *rtk_host)
 
 	phase_map = 0xFFFFFFFF;
 	for (i = 0 ; i < TUNING_CNT ; i++) {
-		rtk_sdmmc_debug("%s RX raw_phase_map[%d] = 0x%08x\n", __func__, i, raw_phase_map[i]);
+		pr_debug("rtk-sdmmc: " "%s RX raw_phase_map[%d] = 0x%08x\n", __func__, i, raw_phase_map[i]);
 		phase_map &= raw_phase_map[i];
 	}
 	printk(KERN_DEBUG "%s RX phase_map = 0x%08x\n", __func__, phase_map);
 
 	if (phase_map) {
 		final_phase = rtk_sdmmc_search_final_phase(rtk_host, phase_map);
-		rtk_sdmmc_debug("%s final phase = 0x%08x\n", __func__, final_phase);
+		pr_debug("rtk-sdmmc: " "%s final phase = 0x%08x\n", __func__, final_phase);
 		if (final_phase == 0xFF) {
-			rtk_sdmmc_debug("%s final phase = 0x%08x\n", __func__, final_phase);
+			pr_debug("rtk-sdmmc: " "%s final phase = 0x%08x\n", __func__, final_phase);
 			ret = -EINVAL;
 			goto out ;
 		}
@@ -900,7 +900,7 @@ static int rtk_sdmmc_tuning_rx(struct rtk_sdmmc_host *rtk_host)
 		ret = 0;
 		goto out ;
 	} else {
-		rtk_sdmmc_debug("%s  fail !phase_map\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s  fail !phase_map\n", __func__);
 		ret = -EINVAL;
 		goto out ;
 	}
@@ -995,23 +995,23 @@ static void rtk_sdmmc_set_speed(struct rtk_sdmmc_host *rtk_host, u8 level)
 
 	switch (level) {
 	case 0: //ddr50 , highest speed
-		rtk_sdmmc_debug("%s: speed 2100\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed 2100\n", __func__);
 		writel(0x00002100, sdmmc_base + CR_SD_CKGEN_CTL);
 		break;
 	case 1:
-		rtk_sdmmc_debug("%s: speed 2101\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed 2101\n", __func__);
 		writel(0x00002101, sdmmc_base + CR_SD_CKGEN_CTL);
 		break;
 	case 2:
-		rtk_sdmmc_debug("%s: speed 2102\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed 2102\n", __func__);
 		writel(0x00002102, sdmmc_base + CR_SD_CKGEN_CTL);
 		break;
 	case 3:
-		rtk_sdmmc_debug("%s: speed 2103\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed 2103\n", __func__);
 		writel(0x00002103, sdmmc_base + CR_SD_CKGEN_CTL);
 		break;
 	default :
-		rtk_sdmmc_debug("%s: default speed 2102\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: default speed 2102\n", __func__);
 		writel(0x00002102, sdmmc_base + CR_SD_CKGEN_CTL);
 		break;
 	}
@@ -1038,22 +1038,22 @@ static void rtk_sdmmc_speed(struct rtk_sdmmc_host *rtk_host, enum sdmmc_clock_sp
 
 	switch (sd_speed) {
 	case SDMMC_CLOCK_200KHZ:
-		rtk_sdmmc_debug("%s: speed SDMMC_CLOCK_200KHZ\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed SDMMC_CLOCK_200KHZ\n", __func__);
 		rtk_sdmmc_set_div(rtk_host, CLOCK_DIV_256); //0x580 = 0xd0
 		rtk_sdmmc_set_speed(rtk_host, 1); //0x478 = 0x2101
 		break;
 	case SDMMC_CLOCK_400KHZ:
-		rtk_sdmmc_debug("%s: speed SDMMC_CLOCK_400KHZ\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed SDMMC_CLOCK_400KHZ\n", __func__);
 		rtk_sdmmc_set_div(rtk_host, CLOCK_DIV_256); //0x580 = 0xd0
 		rtk_sdmmc_set_speed(rtk_host, 0); //0x478 = 0x2100
 		break;
 	case SDMMC_CLOCK_6200KHZ:
-		rtk_sdmmc_debug("%s: speed SDMMC_CLOCK_6200KHZ\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed SDMMC_CLOCK_6200KHZ\n", __func__);
 		rtk_sdmmc_set_div(rtk_host, CLOCK_DIV_NON); //0x580 = 0x10
 		rtk_sdmmc_set_speed(rtk_host, 3); //0x478 = 0x2103
 		break;
 	case SDMMC_CLOCK_25000KHZ:
-		rtk_sdmmc_debug("%s: speed SDMMC_CLOCK_25000KHZ\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed SDMMC_CLOCK_25000KHZ\n", __func__);
 		if (rtk_host->mmc->ios.timing == MMC_TIMING_UHS_SDR12) {
 			rtk_sdmmc_set_div(rtk_host, CLOCK_DIV_NON); //0x580 = 0x10
 			rtk_sdmmc_set_speed(rtk_host, 2); //0x478 = 0x2101
@@ -1063,7 +1063,7 @@ static void rtk_sdmmc_speed(struct rtk_sdmmc_host *rtk_host, enum sdmmc_clock_sp
 		}
 		break;
 	case SDMMC_CLOCK_50000KHZ:
-		rtk_sdmmc_debug("%s: speed SDMMC_CLOCK_50000KHZ\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed SDMMC_CLOCK_50000KHZ\n", __func__);
 		if (rtk_host->mmc->ios.timing == MMC_TIMING_UHS_DDR50) {
 
 			//writel(readl(pll_base + CR_PLL_SD2) | 0x00000003, pll_base + CR_PLL_SD2); //PLL_SD2
@@ -1099,7 +1099,7 @@ static void rtk_sdmmc_speed(struct rtk_sdmmc_host *rtk_host, enum sdmmc_clock_sp
 		}
 		break;
 	case SDMMC_CLOCK_100000KHZ:
-		rtk_sdmmc_debug("%s: speed SDMMC_CLOCK_100000KHZ\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed SDMMC_CLOCK_100000KHZ\n", __func__);
 
 #if defined(CONFIG_ARCH_RTD16xx) || defined(CONFIG_ARCH_RTD13xx)
 		tmp = (0x3fc3fc3 << 4) | (readl(isopad_base + 0xc) & 0xf);
@@ -1127,7 +1127,7 @@ static void rtk_sdmmc_speed(struct rtk_sdmmc_host *rtk_host, enum sdmmc_clock_sp
 		rtk_sdmmc_set_speed(rtk_host, 0); //0x478 = 0x2100
 		break;
 	case SDMMC_CLOCK_208000KHZ:
-		rtk_sdmmc_debug("%s: speed SDMMC_CLOCK_208000KHZ\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: speed SDMMC_CLOCK_208000KHZ\n", __func__);
 #if defined(CONFIG_ARCH_RTD119X)
                 if(magic_num == 0x0 || magic_num == 0x1){
 			writeb(0X3F, sdmmc_base+CARD_SD_CLK_PAD_DRIVE);
@@ -1353,7 +1353,7 @@ static void rtk_sdmmc_speed(struct rtk_sdmmc_host *rtk_host, enum sdmmc_clock_sp
 		rtk_sdmmc_set_speed(rtk_host, 0); //0x478 = 0x2100
 		break;
 	default :
-		rtk_sdmmc_debug("%s: default speed SDMMC_CLOCK_400KHZ\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: default speed SDMMC_CLOCK_400KHZ\n", __func__);
 		rtk_sdmmc_set_div(rtk_host, CLOCK_DIV_256); //0x580 = 0xd0
 		rtk_sdmmc_set_speed(rtk_host, 0); //0x478 = 0x2100
 		break;
@@ -1642,7 +1642,7 @@ int rtk_sdmmc_int_wait(char* drv_name, struct rtk_sdmmc_host *rtk_host, u8 cmdco
 
 static int rtk_sdmmc_set_rspparam(struct sdmmc_cmd_pkt *cmd_info)
 {
-	rtk_sdmmc_debug("%s: opcode = %d\n", __func__, cmd_info->cmd->opcode);
+	pr_debug("rtk-sdmmc: " "%s: opcode = %d\n", __func__, cmd_info->cmd->opcode);
 
 	switch (cmd_info->cmd->opcode) {
 	case MMC_GO_IDLE_STATE: //cmd 0
@@ -2060,7 +2060,7 @@ static int rtk_sdmmc_stream_cmd(u16 cmdcode, struct sdmmc_cmd_pkt *cmd_info, u8 
 		}
 
 	} else if (cmd_info->cmd->data->flags & MMC_DATA_WRITE) {
-		rtk_sdmmc_debug("%s: DMA sa = 0x%x\nDMA len = 0x%x\nDMA set = 0x%x\n", __func__, (u32)sa, block_count, DMA_XFER);
+		pr_debug("rtk-sdmmc: " "%s: DMA sa = 0x%x\nDMA len = 0x%x\nDMA set = 0x%x\n", __func__, (u32)sa, block_count, DMA_XFER);
 		writel((u32)sa, sdmmc_base + CR_SD_DMA_CTL1);
 		writel(block_count, sdmmc_base + CR_SD_DMA_CTL2);
 
@@ -2089,16 +2089,16 @@ static int rtk_sdmmc_stream_cmd(u16 cmdcode, struct sdmmc_cmd_pkt *cmd_info, u8 
 
 	if (ret == CR_TRANS_OK) {
 		if ((cmdcode == SD_AUTOREAD1) || (cmdcode == SD_AUTOWRITE1)) {
-			rtk_sdmmc_debug("%s: auto read/write 1 skip response\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: auto read/write 1 skip response\n", __func__);
 #ifdef CMD25_WO_STOP_COMMAND
 		} else if (cmdcode == SD_AUTOWRITE2) {
-			rtk_sdmmc_debug("%s: auto write 2 skip response\n", __func__); //CMD + DATA
+			pr_debug("rtk-sdmmc: " "%s: auto write 2 skip response\n", __func__); //CMD + DATA
 		} else if (cmdcode == SD_AUTOWRITE3) {
-			rtk_sdmmc_debug("%s: auto write 3 skip response\n", __func__); //DATA only, clear rsp
+			pr_debug("rtk-sdmmc: " "%s: auto write 3 skip response\n", __func__); //DATA only, clear rsp
 #endif
 		} else {
 			rtk_sdmmc_read_rsp(rtk_host,rsp, rsp_len);
-			rtk_sdmmc_debug("%s: stream cmd done\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: stream cmd done\n", __func__);
 		}
 	}
 
@@ -2146,7 +2146,7 @@ static int rtk_sdmmc_stream(struct sdmmc_cmd_pkt *cmd_info)
 		dma_leng = sg_dma_len(sg);
 		dma_addr = sg_dma_address(sg);
 
-		rtk_sdmmc_debug("%s: dma_addr: 0x%x, dma_leng: 0x%x\n", __func__, dma_addr, dma_leng);
+		pr_debug("rtk-sdmmc: " "%s: dma_addr: 0x%x, dma_leng: 0x%x\n", __func__, dma_addr, dma_leng);
 
 		if ((cmd_idx == SD_SWITCH) && (cmd_info->cmd->flags | MMC_CMD_ADTC)) {
 			cmd_info->byte_count = 0x40;
@@ -2461,7 +2461,7 @@ static void rtk_sdmmc_send_command(struct rtk_sdmmc_host *rtk_host, struct mmc_c
 
 			sg_init_one(&sg, ssr, 64);
 
-			rtk_sdmmc_debug("%s: data->blksz= %d, data->blocks= %d \n", __func__, cmd_info.data->blksz, cmd_info.data->blocks);
+			pr_debug("rtk-sdmmc: " "%s: data->blksz= %d, data->blocks= %d \n", __func__, cmd_info.data->blksz, cmd_info.data->blocks);
 
 			data_SCR.blksz = cmd_info.data->blksz;
 			data_SCR.blocks = cmd_info.data->blocks;
@@ -2478,7 +2478,7 @@ static void rtk_sdmmc_send_command(struct rtk_sdmmc_host *rtk_host, struct mmc_c
 			if (!ret) {
 				sg_copy_from_buffer(data_SCR.sg, data_SCR.sg_len, ssr, data_SCR.blksz);
 				cmd_info.data->bytes_xfered = data_SCR.blksz;
-				rtk_sdmmc_debug("%s: SCR =\n", __func__);
+				pr_debug("rtk-sdmmc: " "%s: SCR =\n", __func__);
 			}
 			kfree(ssr);
 		}
@@ -2731,66 +2731,66 @@ static void rtk_sdmmc_set_ios(struct mmc_host *host, struct mmc_ios *ios)
 	}
 #endif
 	if (ios->bus_mode == MMC_BUSMODE_PUSHPULL) {
-		rtk_sdmmc_debug("%s: ios busmode = pushpull\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: ios busmode = pushpull\n", __func__);
 		if (ios->bus_width == MMC_BUS_WIDTH_8) {
-			rtk_sdmmc_debug("%s: set bus width 8\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: set bus width 8\n", __func__);
 			rtk_sdmmc_set_bits(rtk_host, BUS_WIDTH_8);
 		} else if (ios->bus_width == MMC_BUS_WIDTH_4) {
-			rtk_sdmmc_debug("%s: set bus width 4\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: set bus width 4\n", __func__);
 			rtk_sdmmc_set_bits(rtk_host, BUS_WIDTH_4);
 		} else {
 			rtk_sdmmc_set_bits(rtk_host, BUS_WIDTH_1);
-			rtk_sdmmc_debug("%s: set bus width 1\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: set bus width 1\n", __func__);
 		}
 
 		if (ios->clock >= UHS_SDR104_MAX_DTR && ios->timing == MMC_TIMING_UHS_SDR104) {
 			rtk_sdmmc_set_access_mode(rtk_host, ACCESS_MODE_SD30);
 			rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_208000KHZ);
-			rtk_sdmmc_debug("%s: UHS SDR104 SDMMC_CLOCK_208000KHZ\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: UHS SDR104 SDMMC_CLOCK_208000KHZ\n", __func__);
 		} else if (ios->clock >= UHS_SDR50_MAX_DTR && ios->timing == MMC_TIMING_UHS_SDR50) {
 			rtk_sdmmc_set_access_mode(rtk_host, ACCESS_MODE_SD30);
 			rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_100000KHZ);
-			rtk_sdmmc_debug("%s: UHS SDR50 SDMMC_CLOCK_100000KHZ\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: UHS SDR50 SDMMC_CLOCK_100000KHZ\n", __func__);
 		} else if (ios->clock >= UHS_SDR25_MAX_DTR && ios->timing == MMC_TIMING_UHS_SDR25) {
 			rtk_sdmmc_set_access_mode(rtk_host, ACCESS_MODE_SD30);
 			rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_50000KHZ);
-			rtk_sdmmc_debug("%s: UHS SDR25 SDMMC_CLOCK_50000KHZ\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: UHS SDR25 SDMMC_CLOCK_50000KHZ\n", __func__);
 		} else if (ios->clock >= UHS_SDR12_MAX_DTR && ios->timing == MMC_TIMING_UHS_SDR12) {
 			rtk_sdmmc_set_access_mode(rtk_host, ACCESS_MODE_SD30);
 			rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_25000KHZ);
-			rtk_sdmmc_debug("%s: UHS SDR12 SDMMC_CLOCK_25000KHZ\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: UHS SDR12 SDMMC_CLOCK_25000KHZ\n", __func__);
 		} else if (ios->clock >= UHS_DDR50_MAX_DTR && ios->timing == MMC_TIMING_UHS_DDR50) {
 			rtk_sdmmc_set_access_mode(rtk_host, ACCESS_MODE_DDR);
 			rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_50000KHZ);
-			rtk_sdmmc_debug("%s: UHS DDR50 SDMMC_CLOCK_50000KHZ\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: UHS DDR50 SDMMC_CLOCK_50000KHZ\n", __func__);
 		} else if (ios->clock >= HIGH_SPEED_MAX_DTR && ios->timing == MMC_TIMING_SD_HS) {
 			rtk_sdmmc_set_access_mode(rtk_host, ACCESS_MODE_SD20);
 			rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_50000KHZ);
-			rtk_sdmmc_debug("%s: High Speed SDMMC_CLOCK_50000KHZ\n", __func__);
+			pr_debug("rtk-sdmmc: " "%s: High Speed SDMMC_CLOCK_50000KHZ\n", __func__);
 		} else if (ios->clock >= 25000000) {
 			rtk_sdmmc_set_access_mode(rtk_host, ACCESS_MODE_SD20);
 			rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_25000KHZ);
 		} else {
 			if (rtk_host->rtflags & RTKCR_FCARD_SELECTED) {
 				rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_6200KHZ);
-				rtk_sdmmc_debug("%s: Mid speed RTKCR_FCARD_SELECTED = 1 SDMMC_CLOCK_6200KHZ\n", __func__);
+				pr_debug("rtk-sdmmc: " "%s: Mid speed RTKCR_FCARD_SELECTED = 1 SDMMC_CLOCK_6200KHZ\n", __func__);
 			} else {
 				rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_400KHZ);
-				rtk_sdmmc_debug("%s: Low speed SDMMC_CLOCK_400KHZ\n", __func__);
+				pr_debug("rtk-sdmmc: " "%s: Low speed SDMMC_CLOCK_400KHZ\n", __func__);
 			}
 		}
 	} else {  //MMC_BUSMODE_OPENDRAIN
-		rtk_sdmmc_debug("%s: ios busmode != pushpull low speed SDMMC_CLOCK_400KHZ\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: ios busmode != pushpull low speed SDMMC_CLOCK_400KHZ\n", __func__);
 		rtk_sdmmc_speed(rtk_host, SDMMC_CLOCK_400KHZ);
 		rtk_sdmmc_set_bits(rtk_host,BUS_WIDTH_1);
 	}
 
 	if (ios->power_mode == MMC_POWER_UP) {
 		rtk_host->ops->card_power(rtk_host, 1); //power on
-		rtk_sdmmc_debug("%s: Power on\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: Power on\n", __func__);
 	} else if (ios->power_mode == MMC_POWER_OFF) {
 		rtk_host->ops->card_power(rtk_host, 0); //power off
-		rtk_sdmmc_debug("%s: Power off\n", __func__);
+		pr_debug("rtk-sdmmc: " "%s: Power off\n", __func__);
 	}
 #if defined(CONFIG_ARCH_RTD139x) || defined(CONFIG_ARCH_RTD16xx) || defined(CONFIG_ARCH_RTD13xx)
 	//in 1395 platform, system will turn off the SD clock. This case is to handle that the SD card si unplugged during suspend
@@ -2943,7 +2943,7 @@ static void rtk_sdmmc_hw_reset(struct mmc_host *host)
 	struct rtk_sdmmc_host *rtk_host = mmc_priv(host);
 	void __iomem *sdmmc_base = rtk_host->sdmmc;
 #ifdef CONFIG_ARCH_RTD129x
-	rtk_sdmmc_debug("%s: CARD_EXIST = %x\n", __func__, readb(sdmmc_base + CARD_EXIST));
+	pr_debug("rtk-sdmmc: " "%s: CARD_EXIST = %x\n", __func__, readb(sdmmc_base + CARD_EXIST));
 #endif
 	sd_in_receive_data_state = 0; //CMD25_WO_STOP_COMMAND
 	sd_current_blk_address = 0; //CMD25_WO_STOP_COMMAND

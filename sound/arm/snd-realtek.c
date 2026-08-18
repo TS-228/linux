@@ -40,11 +40,6 @@
 #include <linux/suspend.h>
 #include "snd-realtek-compress.h"
 
-#ifdef RTK_TRACE_ALSA_EN
-#define RTK_TRACE_ALSA(format, ...) printk(KERN_ALERT format, ##__VA_ARGS__);
-#else
-#define RTK_TRACE_ALSA(format, ...)
-#endif
 
 #define MIS_CLK90K_TM_LO_reg            0x9801B540
 #define MIS_CLK90K_TM_HI_reg            0x9801B544
@@ -366,10 +361,10 @@ int snd_monitor_audio_data_queue(void)
     }
     else
     {
-        //ALSA_WARNING("NO exist share memory !!\n");
+        //pr_warn("rtk-alsa: " "NO exist share memory !!\n");
     }
 
-    //ALSA_VitalPrint("audiofw total latency %d (dec_out_msec %d ao_out_msec %d)\n", ret + dec_out_msec, dec_out_msec, ret);
+    //pr_debug("rtk-alsa: " "audiofw total latency %d (dec_out_msec %d ao_out_msec %d)\n", ret + dec_out_msec, dec_out_msec, ret);
     audioLatency += dec_out_msec;
     return audioLatency;
     */
@@ -465,7 +460,7 @@ int snd_monitor_audio_data_queue_new(struct snd_pcm_substream *substream)
         audioLatency = ENDIAN_CHANGE(audioLatency);
         audioLatency += dec_out_msec;
     } else {
-        ALSA_WARNING("NO exist share memory !!\n");
+        pr_warn("rtk-alsa: " "NO exist share memory !!\n");
     }
 
     mtotal_latency = audioLatency;
@@ -495,7 +490,7 @@ static int snd_realtek_hw_check_audio_ready(void)
     wait_queue_head_t     waitQueue;        /* for blocking read */
     int ret = 0;
 
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     // Initialize wait queue...
     init_waitqueue_head(&waitQueue);
@@ -535,8 +530,8 @@ static int snd_realtek_hw_capture_init_ringheader_of_AI(snd_pcm_runtime_t *runti
         //nRingHeader.pRingBufferHeaderList[ch] = (unsigned int) (pAIRingHeader + ch);
         nRingHeader.pRingBufferHeaderList[ch] = (unsigned long) (pAIRingHeader + ch) - (unsigned long)dpcm + dpcm->phy_addr;
 
-//        ALSA_VitalPrint("[ALSA ringHeader %x %x]\n", ch, nRingHeader.pRingBufferHeaderList[ch]);
-        ALSA_DbgPrint("[ALSA %d ring %x %x %x %x]\n", ch, (unsigned int)pAIRingHeader_LE[ch].beginAddr
+//        pr_debug("rtk-alsa: " "[ALSA ringHeader %x %x]\n", ch, nRingHeader.pRingBufferHeaderList[ch]);
+        pr_debug("rtk-alsa: " "[ALSA %d ring %x %x %x %x]\n", ch, (unsigned int)pAIRingHeader_LE[ch].beginAddr
             , (unsigned int)pAIRingHeader_LE[ch].size, (unsigned int)pAIRingHeader_LE[ch].readPtr[0]
             , (unsigned int)pAIRingHeader_LE[ch].writePtr);
     }
@@ -549,7 +544,7 @@ static int snd_realtek_hw_capture_init_ringheader_of_AI(snd_pcm_runtime_t *runti
 
     // RPC set AI ring header
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&nRingHeader, nRingHeader.listSize) < 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     };
 
@@ -590,7 +585,7 @@ static int snd_realtek_hw_capture_destroy_LPCM_ringheader_of_Audio(snd_pcm_runti
 
 	// RPC set AI ring header
 	if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&nRingHeader, nRingHeader.listSize) < 0) {
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -1;
 	};
 
@@ -631,7 +626,7 @@ static int snd_realtek_hw_capture_init_LPCM_ringheader_of_AI(snd_pcm_runtime_t *
 
 	// RPC set AI ring header
 	if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&nRingHeader, nRingHeader.listSize) < 0) {
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -1;
 	};
 
@@ -674,7 +669,7 @@ static int snd_realtek_hw_capture_init_PTS_ringheader_of_AI(snd_pcm_runtime_t *r
     // RPC set AI ring header
     //if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&nRingHeader, runtime->channels) < 0) {
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&nRingHeader, nRingHeader.listSize) < 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     };
 
@@ -685,7 +680,7 @@ static int snd_realtek_hw_capture_init_PTS_ringheader_of_AI(snd_pcm_runtime_t *r
 // init ringheader of decoder_outring and AO_inring
 static int snd_realtek_hw_init_ringheader_of_DEC_AO(snd_pcm_runtime_t *runtime)
 {
-    //ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 
     snd_card_RTK_pcm_t *dpcm = runtime->private_data;
     RINGBUFFER_HEADER *pAORingHeader = dpcm->decOutRing;
@@ -717,7 +712,7 @@ static int snd_realtek_hw_init_ringheader_of_DEC_AO(snd_pcm_runtime_t *runtime)
     // RPC set DEC outring header
     //if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&nRingHeader, runtime->channels) < 0) {
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&nRingHeader, nRingHeader.listSize) < 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     };
 
@@ -734,7 +729,7 @@ static int snd_realtek_hw_init_ringheader_of_DEC_AO(snd_pcm_runtime_t *runtime)
     // RPC set AO inring header
     //if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&nRingHeader, runtime->channels) < 0) {
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&nRingHeader, nRingHeader.listSize) < 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     };
 
@@ -752,7 +747,7 @@ static int snd_realtek_hw_init_connect_decoder_ao(snd_card_RTK_pcm_t *dpcm)
     nConnection.desPinID = dpcm->AOpinID;
 
     if (RPC_TOAGENT_CONNECT_SVC(&nConnection)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     };
     return 0;
@@ -761,7 +756,7 @@ static int snd_realtek_hw_init_connect_decoder_ao(snd_card_RTK_pcm_t *dpcm)
 // 1. init decoder in_ring
 // 2. init decoder inband ring
 static int snd_realtek_hw_init_decoder_ring(snd_pcm_runtime_t *runtime) {
-    //ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 
     snd_card_RTK_pcm_t *dpcm = runtime->private_data;
     AUDIO_RPC_RINGBUFFER_HEADER ringbuf_header;
@@ -801,13 +796,13 @@ static int snd_realtek_hw_init_decoder_ring(snd_pcm_runtime_t *runtime) {
     // RPC set decoder in_ring
     //if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&ringbuf_header, runtime->channels))
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&ringbuf_header, ringbuf_header.listSize)) {
-        ALSA_WARNING("[fail %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[fail %s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     };
 
     // init inband ring header
     dpcm->decInbandRing.beginAddr = htonl((int)((unsigned long)dpcm->decInbandData - (unsigned long)dpcm + dpcm->phy_addr));
-    //TRACE_CODE("[INBAND RING] beginAddr %x\n", dpcm->decInbandRing.beginAddr);
+    //pr_debug("rtk-alsa: " "[INBAND RING] beginAddr %x\n", dpcm->decInbandRing.beginAddr);
     dpcm->decInbandRing.size = htonl(sizeof(dpcm->decInbandData));
     dpcm->decInbandRing.readPtr[0] = dpcm->decInbandRing.beginAddr;
     dpcm->decInbandRing.writePtr = dpcm->decInbandRing.beginAddr;
@@ -822,7 +817,7 @@ static int snd_realtek_hw_init_decoder_ring(snd_pcm_runtime_t *runtime) {
 
     //if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&ringbuf_header, runtime->channels))
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&ringbuf_header, ringbuf_header.listSize)) {
-        ALSA_WARNING("[fail %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[fail %s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     };
     return 0;
@@ -833,14 +828,14 @@ static int snd_realtek_hw_capture_run(snd_card_RTK_capture_pcm_t *dpcm)
     // AI pause
     if (RPC_TOAGENT_PAUSE_SVC(dpcm->AIAgentID))
     {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
     // AI run
     if(RPC_TOAGENT_RUN_SVC(dpcm->AIAgentID))
     {
-        ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -849,15 +844,15 @@ static int snd_realtek_hw_capture_run(snd_card_RTK_capture_pcm_t *dpcm)
 
 static int snd_realtek_hw_resume(snd_card_RTK_pcm_t *dpcm)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     // decoder run & AO run
     if (RPC_TOAGENT_RUN_SVC(dpcm->DECAgentID)) {
-        ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
     if (RPC_TOAGENT_RUN_SVC((dpcm->AOAgentID | dpcm->AOpinID))) {
-        ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
     return 0;
@@ -871,10 +866,10 @@ int writeInbandCmd(snd_card_RTK_pcm_t *dpcm, void *data, int len)
     limit = base + sizeof(dpcm->decInbandData);
     wp = base + (unsigned long)(ntohl(dpcm->decInbandRing.writePtr) - ntohl(dpcm->decInbandRing.beginAddr));
 
-    //ALSA_VitalPrint("base %x limit %x wp %x\n", (long)base, (long)limit, (long)wp);
+    //pr_debug("rtk-alsa: " "base %x limit %x wp %x\n", (long)base, (long)limit, (long)wp);
     wp = buf_memcpy2_ring(base, limit, wp, (char *)data, (unsigned long)len);
     dpcm->decInbandRing.writePtr = ntohl((int)(wp - base) + ntohl(dpcm->decInbandRing.beginAddr));
-    //TRACE_CODE("[INBAND RING] writeAddr %x\n", dpcm->decInbandRing.writePtr);
+    //pr_debug("rtk-alsa: " "[INBAND RING] writeAddr %x\n", dpcm->decInbandRing.writePtr);
     return len;
 }
 
@@ -887,8 +882,8 @@ int snd_realtek_hw_ring_write(RINGBUFFER_HEADER* ring, void *data, int len, unsi
     base = (unsigned long)(ntohl(ring->beginAddr)) + offset;
     limit = base + ntohl(ring->size);
     wp = (unsigned long)(ntohl(ring->writePtr)) + offset;
-    ALSA_VitalPrint("base %x limit %x wp %x \n", (unsigned int)base, (unsigned int)limit, (unsigned int)wp);
-    //TRACE_CODE("base %x limit %x wp %x \n", (long)base, (long)limit, (long)wp);
+    pr_debug("rtk-alsa: " "base %x limit %x wp %x \n", (unsigned int)base, (unsigned int)limit, (unsigned int)wp);
+    //pr_debug("rtk-alsa: " "base %x limit %x wp %x \n", (long)base, (long)limit, (long)wp);
     wp = buf_memcpy2_ring((long)base, (long)limit, (long)wp, (char *)data, (long)len);
     ring->writePtr = htonl(wp - offset); // record physical address
     return len;
@@ -936,18 +931,18 @@ static int snd_realtek_hw_init_decoder_info(snd_pcm_runtime_t *runtime)
     AUDIO_DEC_NEW_FORMAT cmd;
     AUDIO_RPC_SENDIO sendio;
 
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     // AO pause
     if (RPC_TOAGENT_PAUSE_SVC(dpcm->AOAgentID | dpcm->AOpinID)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
     // decoder pause
     //if (RPC_TOAGENT_PAUSE_SVC(dpcm->DECAgentID))
     if (RPC_TOAGENT_STOP_SVC(dpcm->DECAgentID)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -955,13 +950,13 @@ static int snd_realtek_hw_init_decoder_info(snd_pcm_runtime_t *runtime)
     sendio.instanceID = dpcm->DECAgentID;
     sendio.pinID = dpcm->DECpinID;
     if (RPC_TOAGENT_FLUSH_SVC(&sendio)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
     // decoder run
     if (RPC_TOAGENT_RUN_SVC(dpcm->DECAgentID)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -1034,7 +1029,7 @@ static int snd_realtek_hw_init_decoder_info(snd_pcm_runtime_t *runtime)
     //snd_realtek_hw_ring_write(((unsigned long)dpcm->decInbandRing - (unsigned long)dpcm + dpcm->phy_addr), &cmd, sizeof(AUDIO_DEC_NEW_FORMAT));
     snd_realtek_hw_ring_write(&dpcm->decInbandRing, &cmd, sizeof(AUDIO_DEC_NEW_FORMAT), (unsigned long)dpcm - (unsigned long)dpcm->phy_addr);
 #endif
-    //ALSA_VitalPrint("[ALSA LPCM ch %d sample_bit %d sample rate %d]\n", runtime->channels, runtime->sample_bits, runtime->rate);
+    //pr_debug("rtk-alsa: " "[ALSA LPCM ch %d sample_bit %d sample rate %d]\n", runtime->channels, runtime->sample_bits, runtime->rate);
     return 0;
 }
 
@@ -1056,19 +1051,19 @@ static int snd_realtek_reprepare(snd_pcm_runtime_t *runtime)
 
 	// decoder stop
     if (RPC_TOAGENT_STOP_SVC(dpcm->DECAgentID)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
     // AO pause
     if (RPC_TOAGENT_PAUSE_SVC(dpcm->AOAgentID | dpcm->AOpinID)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
 	// AO stop
     if (RPC_TOAGENT_STOP_SVC(dpcm->AOAgentID | dpcm->AOpinID)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -1076,13 +1071,13 @@ static int snd_realtek_reprepare(snd_pcm_runtime_t *runtime)
     sendio.instanceID = dpcm->DECAgentID;
     sendio.pinID = dpcm->DECpinID;
     if (RPC_TOAGENT_FLUSH_SVC(&sendio)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
 	// destroy decoder
     if (RPC_TOAGENT_DESTROY_SVC(dpcm->DECAgentID)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -1099,7 +1094,7 @@ static int snd_realtek_reprepare(snd_pcm_runtime_t *runtime)
 // malloc ring buffer for AI.
 static int snd_realtek_hw_capture_malloc_ring(snd_pcm_runtime_t *runtime)
 {
-    //ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 
     snd_card_RTK_capture_pcm_t *dpcm = runtime->private_data;
     int ch , bMallocSuccess = 1;
@@ -1111,7 +1106,7 @@ static int snd_realtek_hw_capture_malloc_ring(snd_pcm_runtime_t *runtime)
     {
         if(dpcm->pAIRingData[ch])
         {
-            ALSA_WARNING("[re-malloc error !!! %s %d]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[re-malloc error !!! %s %d]\n", __FUNCTION__, __LINE__);
 #ifdef USE_ION_AUDIO_HEAP
             if(alsa_client != NULL && enc_in_handle[ch] != NULL)
             {
@@ -1130,20 +1125,20 @@ static int snd_realtek_hw_capture_malloc_ring(snd_pcm_runtime_t *runtime)
         enc_in_handle[ch] = ion_alloc(alsa_client, RTK_ENC_AI_BUFFER_SIZE, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
         if (IS_ERR(enc_in_handle[ch])) {
-             ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+             pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
              return bMallocSuccess;
         }
 
         if(ion_phys(alsa_client, enc_in_handle[ch], &dat, &len) != 0)
         {
             snd_realtek_hw_capture_free_ring(runtime);
-            ALSA_WARNING("[malloc ch %d fail and terminate %s %d]\n", ch, __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[malloc ch %d fail and terminate %s %d]\n", ch, __FUNCTION__, __LINE__);
             return bMallocSuccess;
         }
 
         dpcm->phy_pAIRingData[ch] = dat;
         dpcm->pAIRingData[ch] = ion_map_kernel(alsa_client, enc_in_handle[ch]);
-        ALSA_VitalPrint("[ALSA ch %d phy %x vir %p]\n", ch, (unsigned int)dpcm->phy_pAIRingData[ch], dpcm->pAIRingData[ch]);
+        pr_debug("rtk-alsa: " "[ALSA ch %d phy %x vir %p]\n", ch, (unsigned int)dpcm->phy_pAIRingData[ch], dpcm->pAIRingData[ch]);
 #else
         void *addr = 0;
         addr = dma_alloc_coherent(NULL, RTK_ENC_AI_BUFFER_SIZE, &dpcm->phy_pAIRingData[ch], GFP_KERNEL);
@@ -1164,7 +1159,7 @@ static int snd_realtek_hw_capture_malloc_ring(snd_pcm_runtime_t *runtime)
 
 static int snd_realtek_hw_capture_malloc_lpcm_ring(snd_pcm_runtime_t *runtime)
 {
-    //ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 
     snd_card_RTK_capture_pcm_t *dpcm = runtime->private_data;
 
@@ -1178,7 +1173,7 @@ static int snd_realtek_hw_capture_malloc_lpcm_ring(snd_pcm_runtime_t *runtime)
     enc_lpcm_handle = ion_alloc(alsa_client, RTK_ENC_LPCM_BUFFER_SIZE, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(enc_lpcm_handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         return bMallocSuccess;
     }
 
@@ -1190,7 +1185,7 @@ static int snd_realtek_hw_capture_malloc_lpcm_ring(snd_pcm_runtime_t *runtime)
 
     dpcm->phy_pLPCMData= dat;
     dpcm->pLPCMData = ion_map_kernel(alsa_client, enc_lpcm_handle);
-    ALSA_VitalPrint("[ALSA LPCM phy %x vir %p]\n", (unsigned int)dpcm->phy_pLPCMData, dpcm->pLPCMData);
+    pr_debug("rtk-alsa: " "[ALSA LPCM phy %x vir %p]\n", (unsigned int)dpcm->phy_pLPCMData, dpcm->pLPCMData);
 #else
     void *addr = 0;
     addr = dma_alloc_coherent(NULL, RTK_ENC_LPCM_BUFFER_SIZE, &dpcm->phy_pLPCMData,  GFP_KERNEL);
@@ -1209,7 +1204,7 @@ static int snd_realtek_hw_capture_malloc_lpcm_ring(snd_pcm_runtime_t *runtime)
 
 static int snd_realtek_hw_capture_malloc_pts_ring(snd_pcm_runtime_t *runtime)
 {
-    //ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 
     snd_card_RTK_capture_pcm_t *dpcm = runtime->private_data;
 
@@ -1223,7 +1218,7 @@ static int snd_realtek_hw_capture_malloc_pts_ring(snd_pcm_runtime_t *runtime)
     enc_pts_handle = ion_alloc(alsa_client, RTK_ENC_PTS_BUFFER_SIZE, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(enc_pts_handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         return bMallocSuccess;
     }
 
@@ -1235,7 +1230,7 @@ static int snd_realtek_hw_capture_malloc_pts_ring(snd_pcm_runtime_t *runtime)
 
     dpcm->nPTSMem.pPhy = dat;
     dpcm->nPTSMem.pVirt = ion_map_kernel(alsa_client, enc_pts_handle);
-    ALSA_VitalPrint("[ALSA PTS phy %x vir %p]\n"
+    pr_debug("rtk-alsa: " "[ALSA PTS phy %x vir %p]\n"
         , (unsigned int)dpcm->nPTSMem.pPhy, dpcm->nPTSMem.pVirt);
 
     bMallocSuccess = 0; //Success
@@ -1246,7 +1241,7 @@ static int snd_realtek_hw_capture_malloc_pts_ring(snd_pcm_runtime_t *runtime)
 // in decoder-AO path, malloc AO in_ring
 static int snd_realtek_hw_malloc_ring(snd_pcm_runtime_t *runtime)
 {
-    //ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
     snd_card_RTK_pcm_t *dpcm = runtime->private_data;
     int ch, bMallocSuccess = 1;
 #ifdef USE_ION_AUDIO_HEAP
@@ -1274,7 +1269,7 @@ static int snd_realtek_hw_malloc_ring(snd_pcm_runtime_t *runtime)
         dec_out_handle[ch] = ion_alloc(alsa_client, rtk_dec_ao_buffer, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
         if (IS_ERR(dec_out_handle[ch])) {
-            ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
             return bMallocSuccess;
         }
 
@@ -1315,13 +1310,13 @@ static int snd_realtek_hw_create_AI(snd_pcm_substream_t *substream)
 
     if (snd_open_ai_count >= MAX_AI_DEVICES)
     {
-        ALSA_WARNING("[too more AI %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[too more AI %s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
     if(RPC_TOAGENT_CREATE_AI_AGENT(dpcm))
     {
-        ALSA_WARNING("[err %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[err %s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -1336,13 +1331,13 @@ static int snd_realtek_hw_get_AI(snd_pcm_substream_t *substream)
 
     if (snd_open_ai_count >= MAX_AI_DEVICES)
     {
-        ALSA_WARNING("[too more AI %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[too more AI %s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
     if(RPC_TOAGENT_GET_AI_AGENT(dpcm))
     {
-        ALSA_WARNING("[err %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[err %s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -1356,16 +1351,16 @@ static int snd_realtek_hw_open(snd_pcm_substream_t *substream)
     snd_pcm_runtime_t *runtime = substream->runtime;
     snd_card_RTK_pcm_t *dpcm = runtime->private_data;
 
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     if (snd_open_count >= MAX_PCM_SUBSTREAMS) {
-        ALSA_WARNING("[opened audio stream count excess %d]\n", MAX_PCM_SUBSTREAMS);
+        pr_warn("rtk-alsa: " "[opened audio stream count excess %d]\n", MAX_PCM_SUBSTREAMS);
         return -1;
     }
 
     // get ao flash pin ID
     if ((dpcm->AOpinID = RPC_TOAGENT_GET_AO_FLASH_PIN(dpcm)) < 0) {
-        ALSA_WARNING("[can't get flash pin %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[can't get flash pin %s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -1373,7 +1368,7 @@ static int snd_realtek_hw_open(snd_pcm_substream_t *substream)
     dpcm->volume = 31;
 
     snd_open_count ++;
-    ALSA_VitalPrint("[ALSA Open AO AgentID = %d pinID = %d]\n", dpcm->AOAgentID, dpcm->AOpinID);
+    pr_debug("rtk-alsa: " "[ALSA Open AO AgentID = %d pinID = %d]\n", dpcm->AOAgentID, dpcm->AOpinID);
     return 0;
 }
 
@@ -1381,7 +1376,7 @@ static int snd_realtek_hw_open(snd_pcm_substream_t *substream)
 // return 0(success), 1(fail)
 static int snd_realtek_hw_init(snd_card_RTK_pcm_t *dpcm)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     if (dpcm->bHWinit != 0)
         return 0;
@@ -1393,7 +1388,7 @@ static int snd_realtek_hw_init(snd_card_RTK_pcm_t *dpcm)
 
     if (RPC_TOAGENT_CREATE_AO_AGENT(&dpcm->AOAgentID, AUDIO_ALSA_OUT))
     {
-        ALSA_WARNING("[No AO agent %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[No AO agent %s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
     dpcm->bHWinit = 1;
@@ -1491,7 +1486,7 @@ static int snd_realtek_hw_free_ring (snd_pcm_runtime_t *runtime)
     snd_card_RTK_pcm_t *dpcm = runtime->private_data;
     int ch;
 
-    //ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 
     for (ch = 0; ch < dpcm->last_channel; ch++)
     {
@@ -1510,7 +1505,7 @@ static int snd_realtek_hw_free_ring (snd_pcm_runtime_t *runtime)
             dpcm->decOutData[ch] = NULL;
         }
     }
-    //TRACE_CODE("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
     return 0;
 }
 
@@ -1519,7 +1514,7 @@ static void snd_card_runtime_free(snd_pcm_runtime_t *runtime)
     snd_card_RTK_pcm_t *dpcm = runtime->private_data;
 	struct ion_handle *alsa_playback_handle_free = NULL;
 	alsa_playback_handle_free = dpcm->inRingHandle;
-    ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 
     //snd_realtek_hw_free_ring(runtime);
 #ifdef USE_ION_AUDIO_HEAP
@@ -1538,7 +1533,7 @@ static void snd_card_runtime_free(snd_pcm_runtime_t *runtime)
 
 static void snd_card_capture_runtime_free(snd_pcm_runtime_t *runtime)
 {
-    ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 #ifndef USE_ION_AUDIO_HEAP
     snd_card_RTK_capture_pcm_t *dpcm = runtime->private_data;
 #endif
@@ -1571,7 +1566,7 @@ static int snd_card_playback_open(snd_pcm_substream_t * substream)
 #if 0
 	if(is_suspend)
 	{
-		ALSA_VitalPrint("[ALSA %s %d] suspend\n", __FUNCTION__, __LINE__);
+		pr_debug("rtk-alsa: " "[ALSA %s %d] suspend\n", __FUNCTION__, __LINE__);
 		return ret;
 	}
 #endif
@@ -1581,7 +1576,7 @@ static int snd_card_playback_open(snd_pcm_substream_t * substream)
 	printk("%s create alsa_playback_handle %p\n", __FUNCTION__, alsa_playback_handle);
 
 	if (IS_ERR(alsa_playback_handle)) {
-		ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 		goto fail;
 	}
 
@@ -1616,7 +1611,7 @@ static int snd_card_playback_open(snd_pcm_substream_t * substream)
 	// check if AO exists
 	if (snd_realtek_hw_init(dpcm))
 	{
-		ALSA_WARNING("[error %s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[error %s %d]\n", __FUNCTION__, __LINE__);
 		ret = -ENOMEDIUM;
 		goto fail;
 	}
@@ -1626,7 +1621,7 @@ static int snd_card_playback_open(snd_pcm_substream_t * substream)
 	dpcm->nEOSState = SND_REALTEK_EOS_STATE_NONE;
 	if (snd_realtek_hw_open(substream) < 0)
 	{
-		ALSA_WARNING("[error %s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[error %s %d]\n", __FUNCTION__, __LINE__);
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -1646,7 +1641,7 @@ static int snd_card_playback_open(snd_pcm_substream_t * substream)
 		/* Create the file needs to after initalizing the sysem. */
 		dpcm->fp = filp_open("/data/debug_record.wav", O_RDWR | O_CREAT, 0644);
 		if (IS_ERR(dpcm->fp)){
-			ALSA_WARNING("[create file error %s %d]\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[create file error %s %d]\n", __FUNCTION__, __LINE__);
 		}
 		dpcm->pos =0;
 	}
@@ -1665,7 +1660,7 @@ static int snd_card_playback_open(snd_pcm_substream_t * substream)
 		sharemem_handle = ion_alloc(alsa_client, SHARE_MEM_SIZE, 32, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 		if (IS_ERR(sharemem_handle)) {
-			ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 			goto fail;
 		}
 
@@ -1697,7 +1692,7 @@ static int snd_card_playback_open(snd_pcm_substream_t * substream)
 		sharemem_handle2 = ion_alloc(alsa_client, SHARE_MEM_SIZE_LATENCY, 32, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 		if (IS_ERR(sharemem_handle2)) {
-			ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 			goto fail;
 		}
 
@@ -1730,7 +1725,7 @@ static int snd_card_playback_open(snd_pcm_substream_t * substream)
 		sharemem_handle3 = ion_alloc(alsa_client, SHARE_MEM_SIZE_LATENCY, 32, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 		if (IS_ERR(sharemem_handle3)) {
-			ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 			goto fail;
 		}
 
@@ -1789,13 +1784,13 @@ static int snd_card_capture_open(snd_pcm_substream_t * substream)
 
 	if(alsa_capture_handle)
 	{
-		ALSA_WARNING("ERR more than 1 capture instance!!!\n");
+		pr_warn("rtk-alsa: " "ERR more than 1 capture instance!!!\n");
 	}
 
 	alsa_capture_handle = ion_alloc(alsa_client, sizeof(snd_card_RTK_capture_pcm_t), 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 	if (IS_ERR(alsa_capture_handle)) {
-		ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 		goto fail;
 	}
 
@@ -1834,7 +1829,7 @@ static int snd_card_capture_open(snd_pcm_substream_t * substream)
 	// create AI
 	if (snd_realtek_hw_create_AI(substream) < 0)
 	{
-		ALSA_WARNING("[error %s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[error %s %d]\n", __FUNCTION__, __LINE__);
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -1847,7 +1842,7 @@ static int snd_card_capture_open(snd_pcm_substream_t * substream)
 	//spin_lock_init(&dpcm->nLock);
 	spin_lock_init(&capture_lock);
 
-	ALSA_VitalPrint("[ALSA %s END]\n", __FUNCTION__);
+	pr_debug("rtk-alsa: " "[ALSA %s END]\n", __FUNCTION__);
 
 	ret = 0;
 
@@ -1887,13 +1882,13 @@ static int snd_card_capture_nonpcm_open(snd_pcm_substream_t * substream)
 
 	if(alsa_capture_handle)
 	{
-		ALSA_WARNING("ERR more than 1 capture instance!!!\n");
+		pr_warn("rtk-alsa: " "ERR more than 1 capture instance!!!\n");
 	}
 
 	alsa_capture_handle = ion_alloc(alsa_client, sizeof(snd_card_RTK_capture_pcm_t), 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 	if (IS_ERR(alsa_capture_handle)) {
-		ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 		goto fail;
 	}
 
@@ -1931,7 +1926,7 @@ static int snd_card_capture_nonpcm_open(snd_pcm_substream_t * substream)
 	// create AI
 	if (snd_realtek_hw_create_AI(substream) < 0)
 	{
-		ALSA_WARNING("[error %s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[error %s %d]\n", __FUNCTION__, __LINE__);
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -1944,7 +1939,7 @@ static int snd_card_capture_nonpcm_open(snd_pcm_substream_t * substream)
 	//spin_lock_init(&dpcm->nLock);
 	spin_lock_init(&capture_lock);
 
-	ALSA_VitalPrint("[ALSA %s END]\n", __FUNCTION__);
+	pr_debug("rtk-alsa: " "[ALSA %s END]\n", __FUNCTION__);
 
 	ret = 0;
 
@@ -1984,13 +1979,13 @@ static int snd_card_capture_i2s_open(snd_pcm_substream_t * substream)
 
 	if(alsa_capture_handle)
 	{
-		ALSA_WARNING("ERR more than 1 capture instance!!!\n");
+		pr_warn("rtk-alsa: " "ERR more than 1 capture instance!!!\n");
 	}
 
 	alsa_capture_handle = ion_alloc(alsa_client, sizeof(snd_card_RTK_capture_pcm_t), 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 	if (IS_ERR(alsa_capture_handle)) {
-		ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 		goto fail;
 	}
 
@@ -2029,7 +2024,7 @@ static int snd_card_capture_i2s_open(snd_pcm_substream_t * substream)
 	// create AI
 	if (snd_realtek_hw_create_AI(substream) < 0)
 	{
-		ALSA_WARNING("[error %s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[error %s %d]\n", __FUNCTION__, __LINE__);
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -2042,7 +2037,7 @@ static int snd_card_capture_i2s_open(snd_pcm_substream_t * substream)
 	//spin_lock_init(&dpcm->nLock);
 	spin_lock_init(&capture_lock);
 
-	ALSA_VitalPrint("[ALSA %s END]\n", __FUNCTION__);
+	pr_debug("rtk-alsa: " "[ALSA %s END]\n", __FUNCTION__);
 
 	ret = 0;
 
@@ -2085,13 +2080,13 @@ static int snd_card_capture_audio_open(snd_pcm_substream_t * substream)
 
 	if(alsa_capture_handle)
 	{
-		ALSA_WARNING("ERR more than 1 capture instance!!!\n");
+		pr_warn("rtk-alsa: " "ERR more than 1 capture instance!!!\n");
 	}
 
 	alsa_capture_handle = ion_alloc(alsa_client, sizeof(snd_card_RTK_capture_pcm_t), 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 	if (IS_ERR(alsa_capture_handle)) {
-		ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 		goto fail;
 	}
 
@@ -2128,7 +2123,7 @@ static int snd_card_capture_audio_open(snd_pcm_substream_t * substream)
 	// get AI, AI is already
 	if (snd_realtek_hw_get_AI(substream) < 0)
 	{
-		ALSA_WARNING("[error %s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[error %s %d]\n", __FUNCTION__, __LINE__);
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -2144,7 +2139,7 @@ static int snd_card_capture_audio_open(snd_pcm_substream_t * substream)
 
 	spin_lock_init(&capture_lock);
 
-	ALSA_VitalPrint("[ALSA %s END]\n", __FUNCTION__);
+	pr_debug("rtk-alsa: " "[ALSA %s END]\n", __FUNCTION__);
 
 	ret = 0;
 
@@ -2182,13 +2177,13 @@ static int snd_card_capture_audio_v2_open(snd_pcm_substream_t * substream)
 
 	if(alsa_capture_handle)
 	{
-		ALSA_WARNING("ERR more than 1 capture instance!!!\n");
+		pr_warn("rtk-alsa: " "ERR more than 1 capture instance!!!\n");
 	}
 
 	alsa_capture_handle = ion_alloc(alsa_client, sizeof(snd_card_RTK_capture_pcm_t), 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 	if (IS_ERR(alsa_capture_handle)) {
-		ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 		goto fail;
 	}
 
@@ -2225,7 +2220,7 @@ static int snd_card_capture_audio_v2_open(snd_pcm_substream_t * substream)
 	// create AI
 	if (snd_realtek_hw_create_AI(substream) < 0)
 	{
-		ALSA_WARNING("[error %s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[error %s %d]\n", __FUNCTION__, __LINE__);
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -2237,7 +2232,7 @@ static int snd_card_capture_audio_v2_open(snd_pcm_substream_t * substream)
 
 	spin_lock_init(&capture_lock);
 
-	ALSA_VitalPrint("[ALSA %s END]\n", __FUNCTION__);
+	pr_debug("rtk-alsa: " "[ALSA %s END]\n", __FUNCTION__);
 
 	ret = 0;
 
@@ -2275,13 +2270,13 @@ static int snd_card_capture_audio_v3_open(snd_pcm_substream_t * substream)
 
 	if(alsa_capture_handle)
 	{
-		ALSA_WARNING("ERR more than 1 capture instance!!!\n");
+		pr_warn("rtk-alsa: " "ERR more than 1 capture instance!!!\n");
 	}
 
 	alsa_capture_handle = ion_alloc(alsa_client, sizeof(snd_card_RTK_capture_pcm_t), 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 	if (IS_ERR(alsa_capture_handle)) {
-		ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 		goto fail;
 	}
 
@@ -2318,7 +2313,7 @@ static int snd_card_capture_audio_v3_open(snd_pcm_substream_t * substream)
 	// create AI
 	if (snd_realtek_hw_create_AI(substream) < 0)
 	{
-		ALSA_WARNING("[error %s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[error %s %d]\n", __FUNCTION__, __LINE__);
 		ret = -ENOMEM;
 		goto fail;
 	}
@@ -2330,7 +2325,7 @@ static int snd_card_capture_audio_v3_open(snd_pcm_substream_t * substream)
 
 	spin_lock_init(&capture_lock);
 
-	ALSA_VitalPrint("[ALSA %s END]\n", __FUNCTION__);
+	pr_debug("rtk-alsa: " "[ALSA %s END]\n", __FUNCTION__);
 
 	ret = 0;
 
@@ -2370,7 +2365,7 @@ static int snd_card_capture_close_audio(snd_pcm_substream_t * substream)
 	{
 		if (RPC_TOAGENT_AI_DISCONNECT_ALSA_AUDIO(runtime))
 		{
-			ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 			goto exit;
 		}
 	}
@@ -2386,7 +2381,7 @@ static int snd_card_capture_close_audio(snd_pcm_substream_t * substream)
 		ndelay(ktime_to_ns(remaining));
 	ret = hrtimer_cancel(&dpcm->hr_timer);
 	if (ret){
-		ALSA_WARNING("The timer still alive...\n");
+		pr_warn("rtk-alsa: " "The timer still alive...\n");
 		goto exit;
 	}
 
@@ -2413,7 +2408,7 @@ static int snd_card_capture_close(snd_pcm_substream_t * substream)
 	{
 		if (RPC_TOAGENT_DESTROY_AI_FLOW_SVC(dpcm->AIAgentID))
 		{
-			ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 			goto exit;
 		}
 	}
@@ -2424,7 +2419,7 @@ static int snd_card_capture_close(snd_pcm_substream_t * substream)
 		ndelay(ktime_to_ns(remaining));
 	ret = hrtimer_cancel(&dpcm->hr_timer);
 	if (ret){
-		ALSA_WARNING("The timer still alive...\n");
+		pr_warn("rtk-alsa: " "The timer still alive...\n");
 		goto exit;
 	}
 
@@ -2497,7 +2492,7 @@ static int snd_card_playback_close(snd_pcm_substream_t * substream)
 		ndelay(ktime_to_ns(remaining));
 	ret = hrtimer_cancel(&dpcm->hr_timer);
 	if (ret){
-		ALSA_WARNING("The timer still alive...\n");
+		pr_warn("rtk-alsa: " "The timer still alive...\n");
 		goto exit;
 	}
 
@@ -2575,7 +2570,7 @@ static unsigned int snd_capture_monitor_delay(struct snd_pcm_substream *substrea
             lpcm_size /= 6; // 2ch, 3bytes per sample
             break;
         default:
-            ALSA_WARNING("capture err, %d @ %s %d\n", dpcm->nAIFormat, __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "capture err, %d @ %s %d\n", dpcm->nAIFormat, __FUNCTION__, __LINE__);
     }
 //    printk(KERN_ALERT "AI lpcm %x %x %x %x\n", (int)base, (int)limit, (int)wp, (int)rp);
 
@@ -2595,8 +2590,8 @@ static int snd_card_capture_ioctl(struct snd_pcm_substream *substream,  unsigned
 	int delay_ms;
 	unsigned int *volume = NULL;
 
-    TRACE_CODE("[%s %s %d cmd %d]\n", __FILE__, __FUNCTION__, __LINE__, cmd);
-    ALSA_VitalPrint("[%s %d cmd %d]\n",__FUNCTION__, __LINE__, cmd);
+    pr_debug("rtk-alsa: " "[%s %s %d cmd %d]\n", __FILE__, __FUNCTION__, __LINE__, cmd);
+    pr_debug("rtk-alsa: " "[%s %d cmd %d]\n",__FUNCTION__, __LINE__, cmd);
 
     switch (cmd)
     {
@@ -2703,18 +2698,18 @@ static int snd_card_capture_prepare_32bits_BE(snd_pcm_substream_t * substream)
     snd_pcm_runtime_t *runtime = substream->runtime;
     snd_card_RTK_capture_pcm_t *dpcm = runtime->private_data;
 
-    TRACE_CODE("[ @ %s %d]\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[ @ %s %d]\n", __FUNCTION__, __LINE__);
     // malloc AI ring buf
     if(snd_realtek_hw_capture_malloc_ring(runtime))
     {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -ENOMEM;
     }
 
     // init AI ring header
     if(snd_realtek_hw_capture_init_ringheader_of_AI(runtime))
     {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -ENOMEM;
     }
 
@@ -2727,7 +2722,7 @@ static int snd_card_capture_prepare_32bits_BE(snd_pcm_substream_t * substream)
     // private info
     if(RPC_TOAGENT_AI_CONNECT_ALSA(runtime))
     {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -ENOMEM;
     }
 
@@ -2735,7 +2730,7 @@ static int snd_card_capture_prepare_32bits_BE(snd_pcm_substream_t * substream)
 #if 0
     if(RPC_TOAGENT_CONFIGURE_AI_HW(runtime))
     {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -ENOMEM;
     }
 #endif
@@ -2743,7 +2738,7 @@ static int snd_card_capture_prepare_32bits_BE(snd_pcm_substream_t * substream)
     // run
     if(snd_realtek_hw_capture_run(dpcm))
     {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -ENOMEM;
     }
 
@@ -2761,28 +2756,28 @@ static int snd_card_capture_prepare_LPCM_audio(snd_pcm_substream_t * substream)
 	// malloc AI ring buf
 	if(snd_realtek_hw_capture_malloc_ring(runtime))
 	{
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
 	// malloc LPCM ring buf
 	if(snd_realtek_hw_capture_malloc_lpcm_ring(runtime))
 	{
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
 	// init LPCM ring header of AI
 	if(snd_realtek_hw_capture_init_LPCM_ringheader_of_AI(runtime))
 	{
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
 	// private info
 	if(RPC_TOAGENT_AI_CONNECT_ALSA(runtime))
 	{
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
@@ -2807,14 +2802,14 @@ static int snd_card_capture_prepare_LPCM(snd_pcm_substream_t * substream)
 			// malloc AI ring buf
 			if(snd_realtek_hw_capture_malloc_ring(runtime))
 			{
-				ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+				pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 				return -ENOMEM;
 			}
 
 			// init ring header of AI
 			if(snd_realtek_hw_capture_init_ringheader_of_AI(runtime))
 			{
-				ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+				pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 				return -ENOMEM;
 			}
 
@@ -2822,14 +2817,14 @@ static int snd_card_capture_prepare_LPCM(snd_pcm_substream_t * substream)
 			// malloc PTS ring buf
 			if(snd_realtek_hw_capture_malloc_pts_ring(runtime))
 			{
-				ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+				pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 				return -ENOMEM;
 			}
 
 			// init PTS ring header of AI
 			if(snd_realtek_hw_capture_init_PTS_ringheader_of_AI(runtime))
 			{
-				ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+				pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 				return -ENOMEM;
 			}
 #endif
@@ -2839,14 +2834,14 @@ static int snd_card_capture_prepare_LPCM(snd_pcm_substream_t * substream)
 	// malloc LPCM ring buf
 	if(snd_realtek_hw_capture_malloc_lpcm_ring(runtime))
 	{
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
 	// init LPCM ring header of AI
 	if(snd_realtek_hw_capture_init_LPCM_ringheader_of_AI(runtime))
 	{
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
@@ -2858,7 +2853,7 @@ static int snd_card_capture_prepare_LPCM(snd_pcm_substream_t * substream)
 			// For audio processing flow, doing connect alsa before config audio v2 or v3
 			if(RPC_TOAGENT_AI_CONNECT_ALSA(runtime))
 			{
-				ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+				pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 				return -ENOMEM;
 			}
 			RPC_TOAGENT_AI_CONFIG_AUDIO_IN(dpcm); // config audio v2 or v3
@@ -2882,7 +2877,7 @@ static int snd_card_capture_prepare_LPCM(snd_pcm_substream_t * substream)
 		default:
 			if(RPC_TOAGENT_AI_CONNECT_ALSA(runtime))
 			{
-				ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+				pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 				return -ENOMEM;
 			}
 			break;
@@ -2897,7 +2892,7 @@ static int snd_card_capture_prepare_LPCM(snd_pcm_substream_t * substream)
 		default:
 			if(snd_realtek_hw_capture_run(dpcm))
 			{
-				ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+				pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 				return -ENOMEM;
 			}
 			break;
@@ -2913,10 +2908,10 @@ static int snd_card_capture_prepare(snd_pcm_substream_t * substream)
 	snd_pcm_runtime_t *runtime = substream->runtime;
 	snd_card_RTK_capture_pcm_t *dpcm = runtime->private_data;
 
-	ALSA_WARNING("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+	pr_warn("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 	if(runtime->status->state == SNDRV_PCM_STATE_XRUN)
 	{
-		ALSA_WARNING("[SNDRV_PCM_STATE_XRUN appl_ptr %d hw_ptr %d]\n", (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
+		pr_warn("rtk-alsa: " "[SNDRV_PCM_STATE_XRUN appl_ptr %d hw_ptr %d]\n", (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
 	}
 
 	/* Setup the hr timer using ktime */
@@ -2936,17 +2931,17 @@ static int snd_card_capture_prepare(snd_pcm_substream_t * substream)
 			switch(runtime->format)
 			{
 				case SNDRV_PCM_FORMAT_S16_LE:
-					TRACE_CODE("[SNDRV_PCM_FORMAT_S16_LE]\n");
+					pr_debug("rtk-alsa: " "[SNDRV_PCM_FORMAT_S16_LE]\n");
 					dpcm->nAIFormat = AUDIO_ALSA_FORMAT_16BITS_LE_LPCM;
 					break;
 				case SNDRV_PCM_FORMAT_S24_LE:
-					TRACE_CODE("[SNDRV_PCM_FORMAT_S24_LE]\n");
-					ALSA_WARNING("[ALSA write .wav header err]\n");
+					pr_debug("rtk-alsa: " "[SNDRV_PCM_FORMAT_S24_LE]\n");
+					pr_warn("rtk-alsa: " "[ALSA write .wav header err]\n");
 					printk("[ALSA byte #32 of .wav should be 8=>6 manually]\n");
 					dpcm->nAIFormat = AUDIO_ALSA_FORMAT_24BITS_LE_LPCM;
 					break;
 				default:
-					ALSA_WARNING("[unsupport format %d %s %d]\n", runtime->format
+					pr_warn("rtk-alsa: " "[unsupport format %d %s %d]\n", runtime->format
 						, __FUNCTION__, __LINE__);
 					return -1;
 			}
@@ -2954,14 +2949,14 @@ static int snd_card_capture_prepare(snd_pcm_substream_t * substream)
 		case SNDRV_PCM_ACCESS_MMAP_NONINTERLEAVED:
 		case SNDRV_PCM_ACCESS_RW_NONINTERLEAVED:
 		default:
-			ALSA_WARNING("[unsupport access @ %s %d]\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[unsupport access @ %s %d]\n", __FUNCTION__, __LINE__);
 			return -1;
 	}
 
 	if(dpcm->bInitRing)
 	{
 		dpcm->nTotalWrite = 0;
-		ALSA_WARNING("[Re-Prepare %d %d %s %d]\n", (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr, __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[Re-Prepare %d %d %s %d]\n", (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr, __FUNCTION__, __LINE__);
 		return 0;
 	}
 
@@ -2971,10 +2966,10 @@ static int snd_card_capture_prepare(snd_pcm_substream_t * substream)
 	switch(dpcm->nAIFormat)
 	{
 		case AUDIO_ALSA_FORMAT_32BITS_BE_PCM:
-			ALSA_WARNING("ALSA: unsupport @ %s %d\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "ALSA: unsupport @ %s %d\n", __FUNCTION__, __LINE__);
 			if(snd_card_capture_prepare_32bits_BE(substream))
 			{
-				ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+				pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 				return -ENOMEM;
 			}
 			break;
@@ -2983,19 +2978,19 @@ static int snd_card_capture_prepare(snd_pcm_substream_t * substream)
 			if(dpcm->source_in == ENUM_AIN_AUDIO){
 				if(snd_card_capture_prepare_LPCM_audio(substream))
 				{
-					ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+					pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 					return -ENOMEM;
 				}
 			}else{
 				if(snd_card_capture_prepare_LPCM(substream))
 				{
-					ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+					pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 					return -ENOMEM;
 				}
 			}
 			break;
 		default:
-			ALSA_WARNING("[ALSA err %s %d]\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[ALSA err %s %d]\n", __FUNCTION__, __LINE__);
 			break;
 	}
 
@@ -3011,12 +3006,12 @@ static int snd_card_playback_prepare(snd_pcm_substream_t * substream)
 	printk("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 
 	if (is_suspend) {
-		ALSA_WARNING("[ALSA %s %d] suspend\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[ALSA %s %d] suspend\n", __FUNCTION__, __LINE__);
 		return 0;
 	}
 
 	if (runtime->status->state == SNDRV_PCM_STATE_XRUN) {
-		ALSA_WARNING("[SNDRV_PCM_STATE_XRUN appl_ptr %d hw_ptr %d]\n", (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
+		pr_warn("rtk-alsa: " "[SNDRV_PCM_STATE_XRUN appl_ptr %d hw_ptr %d]\n", (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
 	}
 
 	/* Setup the hr timer using ktime */
@@ -3059,7 +3054,7 @@ static int snd_card_playback_prepare(snd_pcm_substream_t * substream)
 
 	// create decoder agent
 	if (RPC_TOAGENT_CREATE_DECODER_AGENT(&dpcm->DECAgentID, &dpcm->DECpinID)) {
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
@@ -3070,26 +3065,26 @@ static int snd_card_playback_prepare(snd_pcm_substream_t * substream)
 
 	// malloc ao_inring
 	if (snd_realtek_hw_malloc_ring(runtime)) {
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
 	// init ringheader of decoder_outring and AO_inring
 	if (snd_realtek_hw_init_ringheader_of_DEC_AO(runtime)) {
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
 	// connet decoder and AO by RPC
 	if (snd_realtek_hw_init_connect_decoder_ao(dpcm)) {
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
 	// 1. init decoder in_ring
 	// 2. init decoder inband ring
 	if (snd_realtek_hw_init_decoder_ring(runtime)) {
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
@@ -3099,12 +3094,12 @@ static int snd_card_playback_prepare(snd_pcm_substream_t * substream)
 	// decoder flush
 	// write decoder info into inband of decoder
 	if (snd_realtek_hw_init_decoder_info(runtime)) {
-		ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
 	if (snd_realtek_hw_resume(dpcm)) {
-		ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
 		return -ENOMEM;
 	}
 
@@ -3253,7 +3248,7 @@ uint64_t snd_card_get_90k_pts(void)
     }
     else
     {
-        ALSA_WARNING("%p %p @ %s\n", clk90k_vaddr_hi, clk90k_vaddr_lo, __func__);
+        pr_warn("rtk-alsa: " "%p %p @ %s\n", clk90k_vaddr_hi, clk90k_vaddr_lo, __func__);
     }
 
     return ret;
@@ -3275,14 +3270,14 @@ static void snd_card_capture_setup_pts(snd_pcm_runtime_t *runtime, AUDIO_DEC_PTS
 
 	diffPTS = curPTS - pcmPTS;
 
-	//ALSA_VitalPrint("pcm pts %x %x\n", pcm_pts_hi, pcm_pts_lo);
-	//ALSA_VitalPrint("cur pts %x %x\n", (unsigned int)(curPTS >> 32), (unsigned int)curPTS);
-	//ALSA_VitalPrint("pcm dely %d ms\n", (int)((diffPTS * 1000) / 90000));
+	//pr_debug("rtk-alsa: " "pcm pts %x %x\n", pcm_pts_hi, pcm_pts_lo);
+	//pr_debug("rtk-alsa: " "cur pts %x %x\n", (unsigned int)(curPTS >> 32), (unsigned int)curPTS);
+	//pr_debug("rtk-alsa: " "pcm dely %d ms\n", (int)((diffPTS * 1000) / 90000));
 
 	ktime_get_ts(&dpcm->ts);
 	dpcm->ts.tv_sec -= (div64_ul(diffPTS, 90000));
 	dpcm->ts.tv_nsec -= (div64_ul(diffPTS * 100000, 9));
-	//ALSA_VitalPrint("cap ts %x\n\n", (unsigned int)dpcm->ts.tv_sec);
+	//pr_debug("rtk-alsa: " "cap ts %x\n\n", (unsigned int)dpcm->ts.tv_sec);
 }
 
 static void snd_card_capture_calculate_pts(snd_pcm_runtime_t *runtime, long nPeriodCount)
@@ -3301,7 +3296,7 @@ static void snd_card_capture_calculate_pts(snd_pcm_runtime_t *runtime, long nPer
     wp_offset = ntohl(dpcm->nPTSRingHdr.writePtr) - (unsigned int)dpcm->nPTSMem.pPhy;
     pRing->wp = pRing->base + (unsigned long)wp_offset;
 
-//    ALSA_VitalPrint("#pkt %d\n", (int)(ring_valid_data(pRing->base, pRing->limit, pRing->rp, pRing->wp) / sizeof(AUDIO_DEC_PTS_INFO)));
+//    pr_debug("rtk-alsa: " "#pkt %d\n", (int)(ring_valid_data(pRing->base, pRing->limit, pRing->rp, pRing->wp) / sizeof(AUDIO_DEC_PTS_INFO)));
 
     ////////////////////////////
     // find corresponding pts //
@@ -3313,7 +3308,7 @@ static void snd_card_capture_calculate_pts(snd_pcm_runtime_t *runtime, long nPer
     }
     else
     {
-        ALSA_WARNING("Err @ %s %d\n", __func__, __LINE__);
+        pr_warn("rtk-alsa: " "Err @ %s %d\n", __func__, __LINE__);
         goto exit;
     }
     do
@@ -3340,7 +3335,7 @@ static void snd_card_capture_calculate_pts(snd_pcm_runtime_t *runtime, long nPer
 
         nPkt_ptr[0] = ntohl(nPkt[0].wPtr);
         nPkt_ptr[1] = ntohl(nPkt[1].wPtr);
-//        ALSA_VitalPrint("lpcm %x pkt %x %x\n", lpcm_rp, nPkt_ptr[0], nPkt_ptr[1]);
+//        pr_debug("rtk-alsa: " "lpcm %x pkt %x %x\n", lpcm_rp, nPkt_ptr[0], nPkt_ptr[1]);
         if(ring_check_ptr_valid_32(nPkt_ptr[0], nPkt_ptr[1], lpcm_rp))
         {
             // get PTS
@@ -3359,13 +3354,13 @@ static void snd_card_capture_calculate_pts(snd_pcm_runtime_t *runtime, long nPer
     }while(1);
 
     // update rp
-//    ALSA_VitalPrint("pts rp %lx => %lx\n", old_rp, pRing->rp);
+//    pr_debug("rtk-alsa: " "pts rp %lx => %lx\n", old_rp, pRing->rp);
     rp_offset = pRing->rp - pRing->base;
     dpcm->nPTSRingHdr.readPtr[0] = htonl((unsigned int)dpcm->nPTSMem.pPhy + rp_offset);
 
 exit:
-/*    ALSA_VitalPrint("lpcm_rp %x time %x\n", lpcm_rp, (unsigned int)dpcm->ts.tv_sec);
-    ALSA_VitalPrint("pts b %x l %x w %x r %x\n"
+/*    pr_debug("rtk-alsa: " "lpcm_rp %x time %x\n", lpcm_rp, (unsigned int)dpcm->ts.tv_sec);
+    pr_debug("rtk-alsa: " "pts b %x l %x w %x r %x\n"
         , (unsigned int)ntohl(dpcm->nPTSRingHdr.beginAddr)
         , (unsigned int)(ntohl(dpcm->nPTSRingHdr.beginAddr) + dpcm->nPTSMem.size)
         , (unsigned int)ntohl(dpcm->nPTSRingHdr.writePtr), (unsigned int)ntohl(dpcm->nPTSRingHdr.readPtr[0])); */
@@ -3408,10 +3403,10 @@ static void snd_card_capture_lpcm_check_ringBuf(unsigned int data)
         limit= (long)(dpcm->nAIRing_LE[0].beginAddr + dpcm->nAIRing_LE[0].size);
         wp = (long)(ntohl(dpcm->nAIRing[0].writePtr));
         rp = (long)(ntohl(dpcm->nAIRing[0].readPtr[0]));
-        ALSA_VitalPrint("[ALSA AI HW_ring b %x l %x w %x r %x]\n", base, limit, wp, rp);
+        pr_debug("rtk-alsa: " "[ALSA AI HW_ring b %x l %x w %x r %x]\n", base, limit, wp, rp);
     }
 #endif
-    ALSA_VitalPrint("[ALSA AI size %x data %x LPCM size %x data %x]\n"
+    pr_debug("rtk-alsa: " "[ALSA AI size %x data %x LPCM size %x data %x]\n"
         , dpcm->nAIRing_LE[0].size >> 2, nDataOfAIInring, dpcm->nLPCMRing_LE.size / dpcm->nFrameBytes, nDataOfAILpcmRing / dpcm->nFrameBytes);
 }
 #endif
@@ -3423,7 +3418,7 @@ int snd_card_capture_get_time_info(struct snd_pcm_substream *substream,
 {
     snd_pcm_runtime_t *runtime = substream->runtime;
     snd_card_RTK_capture_pcm_t *dpcm = runtime->private_data;
-//    ALSA_VitalPrint("%s\n", __func__);
+//    pr_debug("rtk-alsa: " "%s\n", __func__);
     *system_ts = dpcm->ts;
     return 0;
 }
@@ -3441,18 +3436,18 @@ static void snd_card_capture_handle_HDMI_plug_out(snd_pcm_substream_t * substrea
 
     if(pBuf == NULL)
     {
-        ALSA_SEC_PRINT(1, "malloc FAILED @ %s %d\n", __func__, __LINE__);
+        pr_info_ratelimited("rtk-alsa: "malloc FAILED @ %s %d\n", __func__, __LINE__);
         return;
     }
 
     free_size = snd_pcm_capture_hw_avail(runtime);
     if(free_size <= runtime->period_size)
     {
-        ALSA_SEC_PRINT(1, "over flow %d %d @ %s %d\n", (int)free_size, (int)runtime->period_size, __func__, __LINE__);
+        pr_info_ratelimited("rtk-alsa: "over flow %d %d @ %s %d\n", (int)free_size, (int)runtime->period_size, __func__, __LINE__);
         return;
     }
 
-    ALSA_SEC_PRINT(2, " @ %s\n", __func__);
+    pr_info_ratelimited("rtk-alsa: " @ %s\n", __func__);
     // copy MUTE to DMA buffer
     memset(pBuf, 0, nFrameSize * dpcm->nFrameBytes);
     dst_ring.base = (unsigned long)runtime->dma_area;
@@ -3487,7 +3482,7 @@ static enum hrtimer_restart snd_card_capture_lpcm_timer_function(struct hrtimer 
 			, (unsigned long)runtime->control->appl_ptr
 			, (unsigned long)runtime->status->hw_ptr) > runtime->buffer_size)
 		{
-			ALSA_WARNING("[hw_ptr %d appl_ptr %d %d @ %s %d]\n"
+			pr_warn("rtk-alsa: " "[hw_ptr %d appl_ptr %d %d @ %s %d]\n"
 				, (int)runtime->status->hw_ptr
 				, (int)runtime->control->appl_ptr
 				, (int)runtime->buffer_size, __FUNCTION__, __LINE__);
@@ -3582,11 +3577,11 @@ static void snd_card_capture_timer_function(unsigned long data)
 
     if(ring_valid_data(0, runtime->boundary, runtime->control->appl_ptr, runtime->status->hw_ptr) > runtime->buffer_size)
     {
-        ALSA_WARNING("[hw_ptr %d appl_ptr %d %s %d]\n", (int)runtime->status->hw_ptr, (int)runtime->control->appl_ptr, __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[hw_ptr %d appl_ptr %d %s %d]\n", (int)runtime->status->hw_ptr, (int)runtime->control->appl_ptr, __FUNCTION__, __LINE__);
     }
 
 #if 0   // DEBUG: check wp/rp
-    ALSA_SEC_PRINT(2, "[���� state %d appl_ptr %d hw_ptr %d]\n", (int)runtime->status->state, (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
+    pr_info_ratelimited("rtk-alsa: "[���� state %d appl_ptr %d hw_ptr %d]\n", (int)runtime->status->state, (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
 #endif
 
     // fresh wp
@@ -3655,18 +3650,18 @@ static enum hrtimer_restart snd_card_timer_function(struct hrtimer *timer)
 			(unsigned int)ntohl(dpcm->decOutRing[0].beginAddr) + rtk_dec_ao_buffer,
 			(unsigned int)ntohl(dpcm->decOutRing[0].readPtr[0]),
 			(unsigned int)ntohl(dpcm->decOutRing[0].writePtr));
-		//ALSA_VitalPrint("dec_out_valid_size %d\n", dec_out_valid_size);
+		//pr_debug("rtk-alsa: " "dec_out_valid_size %d\n", dec_out_valid_size);
 		if (dec_out_valid_size > 0 && dec_out_valid_size <= dpcm->nRingSize)
 			dec_out_msec = ((dec_out_valid_size >> 2) * 1000) / runtime->rate;
 		else
 			dec_out_msec = 0;
-		//ALSA_VitalPrint("dec_out_msec %d\n", dec_out_msec);
+		//pr_debug("rtk-alsa: " "dec_out_msec %d\n", dec_out_msec);
 		//////////////////////////////////////////////////////////////////////////////////
 
 		if (runtime->control->appl_ptr == runtime->status->hw_ptr)
 		{
-			ALSA_WARNING("[appl_ptr %d = hw_ptr %s %d]\n", (int)runtime->control->appl_ptr, __FUNCTION__, __LINE__);
-			ALSA_WARNING("Need to check why data didn't send to alsa\n");
+			pr_warn("rtk-alsa: " "[appl_ptr %d = hw_ptr %s %d]\n", (int)runtime->control->appl_ptr, __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "Need to check why data didn't send to alsa\n");
 		}
 
 		// update HW rp
@@ -3704,7 +3699,7 @@ static enum hrtimer_restart snd_card_timer_function(struct hrtimer *timer)
 				nReadAddSize = runtime->buffer_size >> 1;
 				dpcm->nHWPtr = ring_add(0, runtime->buffer_size, dpcm->nPreHWPtr, nReadAddSize);
 #endif
-				//ALSA_WARNING("[ALSA maybe hang because Jitter %d, runtime->buffer size %d %s %d]\n", (int)nReadAddSize, (int)runtime->buffer_size, __FUNCTION__, __LINE__);
+				//pr_warn("rtk-alsa: " "[ALSA maybe hang because Jitter %d, runtime->buffer size %d %s %d]\n", (int)nReadAddSize, (int)runtime->buffer_size, __FUNCTION__, __LINE__);
 			}
 #endif
 			dpcm->nHWReadSize += nReadAddSize;
@@ -3758,8 +3753,8 @@ static enum hrtimer_restart snd_card_timer_function(struct hrtimer *timer)
 		}
 #endif
 
-		//ALSA_VitalPrint("[nReadAddSize %d pre %d cur %d %d]\n", nReadAddSize, dpcm->nPreHWPtr, dpcm->nHWPtr, dpcm->nHWReadSize);
-		//ALSA_VitalPrint("[nTotalWrite %d nTotalRead %d nPeriodCount %d]\n", dpcm->nTotalWrite, dpcm->nTotalRead, nPeriodCount);
+		//pr_debug("rtk-alsa: " "[nReadAddSize %d pre %d cur %d %d]\n", nReadAddSize, dpcm->nPreHWPtr, dpcm->nHWPtr, dpcm->nHWReadSize);
+		//pr_debug("rtk-alsa: " "[nTotalWrite %d nTotalRead %d nPeriodCount %d]\n", dpcm->nTotalWrite, dpcm->nTotalRead, nPeriodCount);
 
 		if (runtime->status->state == SNDRV_PCM_STATE_DRAINING) {
 			switch (dpcm->nEOSState) {
@@ -3767,17 +3762,17 @@ static enum hrtimer_restart snd_card_timer_function(struct hrtimer *timer)
 					//dpcm->nEOSState = SND_REALTEK_EOS_STATE_PROCESSING;
 					if (RPC_TOAGENT_INBAND_EOS_SVC(dpcm) < 0)
 					{
-						ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+						pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 					}
 					dpcm->nEOSState = SND_REALTEK_EOS_STATE_FINISH;
 					break;
 				//case SND_REALTEK_EOS_STATE_PROCESSING:
-				//    ALSA_VitalPrint("wilson [ALSA EOS %s %d]\n", __FUNCTION__, __LINE__);
+				//    pr_debug("rtk-alsa: " "wilson [ALSA EOS %s %d]\n", __FUNCTION__, __LINE__);
 				//    break;
 				case SND_REALTEK_EOS_STATE_FINISH:
 					if (dpcm->nTotalWrite == dpcm->nTotalRead)
 					{
-						DEBUG_CODE("[snd_pcm_period_elapsed]\n");
+						pr_debug("rtk-alsa: " "[snd_pcm_period_elapsed]\n");
 						dpcm->nHWReadSize = 0;
 						snd_pcm_period_elapsed(substream);
 					}
@@ -3789,7 +3784,7 @@ static enum hrtimer_restart snd_card_timer_function(struct hrtimer *timer)
 			//printk("dpcm nHWReadSize %lu, runtime->period_size %lu\n", dpcm->nHWReadSize, runtime->period_size);
 			if (dpcm->nHWReadSize >= runtime->period_size) {
 				dpcm->nHWReadSize %= runtime->period_size;
-				DEBUG_CODE("[snd_pcm_period_elapsed]\n");
+				pr_debug("rtk-alsa: " "[snd_pcm_period_elapsed]\n");
 				snd_pcm_period_elapsed(substream);
 			}
 		}
@@ -3802,21 +3797,21 @@ static enum hrtimer_restart snd_card_timer_function(struct hrtimer *timer)
 			dbg_count = 0;
 		if (dbg_count >= (HZ << 1))
 		{
-	        //ALSA_WARNING("[HANG !!! %s %d]\n", __FUNCTION__, __LINE__);
-	        //ALSA_WARNING("[state %d write_state %d]\n", (int)runtime->status->state, (int)dpcm->nWriteState);
+	        //pr_warn("rtk-alsa: " "[HANG !!! %s %d]\n", __FUNCTION__, __LINE__);
+	        //pr_warn("rtk-alsa: " "[state %d write_state %d]\n", (int)runtime->status->state, (int)dpcm->nWriteState);
 #if 0
-			ALSA_WARNING("[state %d]\n", (int)runtime->status->state);
-			ALSA_WARNING("[runtime->control->appl_ptr %d runtime->status->hw_ptr %d]\n", (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
-			ALSA_WARNING("[dpcm->nTotalWrite %d dpcm->nTotalRead %d dpcm->nHWPtr %d]\n", (int)dpcm->nTotalWrite, (int)dpcm->nTotalRead, (int)dpcm->nHWPtr);
-			ALSA_WARNING("[b %x l %x w %x r %x]\n",
+			pr_warn("rtk-alsa: " "[state %d]\n", (int)runtime->status->state);
+			pr_warn("rtk-alsa: " "[runtime->control->appl_ptr %d runtime->status->hw_ptr %d]\n", (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
+			pr_warn("rtk-alsa: " "[dpcm->nTotalWrite %d dpcm->nTotalRead %d dpcm->nHWPtr %d]\n", (int)dpcm->nTotalWrite, (int)dpcm->nTotalRead, (int)dpcm->nHWPtr);
+			pr_warn("rtk-alsa: " "[b %x l %x w %x r %x]\n",
 			   (unsigned int)(ntohl(dpcm->decInRing[0].beginAddr)),
 			   (unsigned int)((ntohl(dpcm->decInRing[0].beginAddr)) + dpcm->decInRing_LE[0].size),
 			   (unsigned int)(ntohl(dpcm->decInRing[0].writePtr)),
 			   (unsigned int)(ntohl(dpcm->decInRing[0].readPtr[0])));
 #endif
-	        //ALSA_WARNING("[HWRingRp %x nPeriodCount %d runtime->periods %d]\n", HWRingRp, nPeriodCount, runtime->periods);
-	        //ALSA_WARNING("[HWRingFreeSize %d HWRingFreeFrame %d dpcm->nPeriodBytes %d]\n", HWRingFreeSize, HWRingFreeFrame, dpcm->nPeriodBytes);
-	        //ALSA_WARNING("[snd_pcm_playback_avail %d runtime->control->avail_min %d]\n", snd_pcm_playback_avail(runtime), runtime->control->avail_min);
+	        //pr_warn("rtk-alsa: " "[HWRingRp %x nPeriodCount %d runtime->periods %d]\n", HWRingRp, nPeriodCount, runtime->periods);
+	        //pr_warn("rtk-alsa: " "[HWRingFreeSize %d HWRingFreeFrame %d dpcm->nPeriodBytes %d]\n", HWRingFreeSize, HWRingFreeFrame, dpcm->nPeriodBytes);
+	        //pr_warn("rtk-alsa: " "[snd_pcm_playback_avail %d runtime->control->avail_min %d]\n", snd_pcm_playback_avail(runtime), runtime->control->avail_min);
 			dbg_count = 0;
 		}
 #endif
@@ -3844,8 +3839,8 @@ static int snd_card_capture_trigger(snd_pcm_substream_t * substream, int cmd)
 	if(snd_pcm_capture_avail(runtime) > runtime->buffer_size
 		|| snd_pcm_capture_hw_avail(runtime) > runtime->buffer_size)
 	{
-		ALSA_WARNING("[ERROR BUG %d %s %s %d]\n", cmd, __FILE__, __FUNCTION__, __LINE__);
-		ALSA_WARNING("[state %d appl_ptr %d hw_ptr %d %d]\n", runtime->status->state, (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr, (int)runtime->buffer_size);
+		pr_warn("rtk-alsa: " "[ERROR BUG %d %s %s %d]\n", cmd, __FILE__, __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[state %d appl_ptr %d hw_ptr %d %d]\n", runtime->status->state, (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr, (int)runtime->buffer_size);
 	}
 
 	switch(cmd)
@@ -3877,7 +3872,7 @@ static int snd_card_playback_trigger(snd_pcm_substream_t * substream, int cmd)
 	unsigned long flags;
 
 	if (cmd != SNDRV_PCM_TRIGGER_SUSPEND && is_suspend) {
-		ALSA_VitalPrint("[ALSA %s %d] suspend\n", __FUNCTION__, __LINE__);
+		pr_debug("rtk-alsa: " "[ALSA %s %d] suspend\n", __FUNCTION__, __LINE__);
 		return 0;
 	}
 
@@ -3885,9 +3880,9 @@ static int snd_card_playback_trigger(snd_pcm_substream_t * substream, int cmd)
 	if (snd_pcm_playback_avail(runtime) > runtime->buffer_size
 		|| snd_pcm_playback_hw_avail(runtime) > runtime->buffer_size)
 	{
-		ALSA_WARNING("[ERROR BUG %s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
-		ALSA_WARNING("[state %d appl_ptr %d hw_ptr %d]\n", runtime->status->state, (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
-		ALSA_WARNING("[dpcm->nTotalWrite %d dpcm->nTotalRead %d]\n", (int)dpcm->nTotalWrite, (int)dpcm->nTotalRead);
+		pr_warn("rtk-alsa: " "[ERROR BUG %s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[state %d appl_ptr %d hw_ptr %d]\n", runtime->status->state, (int)runtime->control->appl_ptr, (int)runtime->status->hw_ptr);
+		pr_warn("rtk-alsa: " "[dpcm->nTotalWrite %d dpcm->nTotalRead %d]\n", (int)dpcm->nTotalWrite, (int)dpcm->nTotalRead);
 	}
 
 	switch(cmd)
@@ -3917,21 +3912,21 @@ static int snd_card_playback_trigger(snd_pcm_substream_t * substream, int cmd)
 
 		case SNDRV_PCM_TRIGGER_SUSPEND:
 			spin_lock_irqsave(&playback_lock, flags);
-			ALSA_WARNING("[+]SNDRV_PCM_TRIGGER_SUSPEND\n");
+			pr_warn("rtk-alsa: " "[+]SNDRV_PCM_TRIGGER_SUSPEND\n");
 			dpcm->enHRTimer = HRTIMER_NORESTART;
-			ALSA_WARNING("[-]SNDRV_PCM_TRIGGER_SUSPEND\n");
+			pr_warn("rtk-alsa: " "[-]SNDRV_PCM_TRIGGER_SUSPEND\n");
 			spin_unlock_irqrestore(&playback_lock, flags);
 			break;
 
 		case SNDRV_PCM_TRIGGER_RESUME:
-			ALSA_WARNING("[+]SNDRV_PCM_TRIGGER_RESUME\n");
+			pr_warn("rtk-alsa: " "[+]SNDRV_PCM_TRIGGER_RESUME\n");
 			dpcm->enHRTimer = HRTIMER_RESTART;
 			hrtimer_start(&dpcm->hr_timer, dpcm->ktime, HRTIMER_MODE_REL);
-			ALSA_WARNING("[-]SNDRV_PCM_TRIGGER_RESUME\n");
+			pr_warn("rtk-alsa: " "[-]SNDRV_PCM_TRIGGER_RESUME\n");
 			break;
 
 		default:
-			ALSA_WARNING("[err %d %s %d]\n", cmd, __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[err %d %s %d]\n", cmd, __FUNCTION__, __LINE__);
 			ret = -EINVAL;
 	}
 
@@ -3940,26 +3935,26 @@ static int snd_card_playback_trigger(snd_pcm_substream_t * substream, int cmd)
 
 static int snd_card_hw_params(snd_pcm_substream_t * substream, snd_pcm_hw_params_t * hw_params)
 {
-    //ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
     int err;
-    //ALSA_VitalPrint("[ALSA %s demand %d Bytes]\n", __FUNCTION__, params_buffer_bytes(hw_params));
-    TRACE_CODE("[ALSA %s demand %d Bytes]\n", __FUNCTION__, params_buffer_bytes(hw_params));
+    //pr_debug("rtk-alsa: " "[ALSA %s demand %d Bytes]\n", __FUNCTION__, params_buffer_bytes(hw_params));
+    pr_debug("rtk-alsa: " "[ALSA %s demand %d Bytes]\n", __FUNCTION__, params_buffer_bytes(hw_params));
     err = snd_pcm_lib_malloc_pages(substream, params_buffer_bytes(hw_params));
     if (err != 0 && err != 1) {
-        ALSA_WARNING("[fail %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[fail %s %d]\n", __FUNCTION__, __LINE__);
     }
     return err;
 }
 
 static int snd_card_capture_hw_free(snd_pcm_substream_t * substream)
 {
-    DEBUG_CODE("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
     return snd_pcm_lib_free_pages(substream);
 }
 
 static int snd_card_hw_free(snd_pcm_substream_t * substream)
 {
-    TRACE_CODE("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
     return snd_pcm_lib_free_pages(substream);
 }
 
@@ -4047,7 +4042,7 @@ int capture_substreams)
 	int i;
 
 	printk("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
-	RTK_TRACE_ALSA("%d %d @ %s %d\n", playback_substreams, capture_substreams, __func__, __LINE__);
+	pr_debug("rtk-alsa: " "%d %d @ %s %d\n", playback_substreams, capture_substreams, __func__, __LINE__);
 
 	// create PCM instance
 	if ((err = snd_pcm_new(pSnd->card
@@ -4057,7 +4052,7 @@ int capture_substreams)
 		, capture_substreams
 		, &pcm)) < 0)    // for Jupiter Capture Count = 0 (ie. there is no ain)
 	{
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		return err;
 	}
 
@@ -4090,7 +4085,7 @@ int capture_substreams)
 			sprintf(pcm->name, SND_REALTEK_DRIVER_AUDIO_V3_IN);
 			break;
 		default:
-			ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+			pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 			break;
 	}
 
@@ -4160,7 +4155,7 @@ static int __init snd_card_mars_new_mixer(RTK_snd_card_t * pRTK_card)
     for (idx = 0; idx < ARRAY_SIZE(snd_mars_controls); idx++) {
         if ((err = snd_ctl_add(card, snd_ctl_new1(&snd_mars_controls[idx], pRTK_card))) < 0)
         {
-            ALSA_WARNING("[snd_ctl_add faile %s %d]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[snd_ctl_add faile %s %d]\n", __FUNCTION__, __LINE__);
             return err;
         }
     }
@@ -4363,11 +4358,11 @@ static ssize_t alsa_active_store(struct kobject *kobj, struct kobj_attribute *at
     if (kstrtoul(buf, 10, &val) < 0)
         return -EINVAL;
 
-    //ALSA_VitalPrint("rtk_dec_ao value %d\n", val);
+    //pr_debug("rtk-alsa: " "rtk_dec_ao value %d\n", val);
     if (val >= 4096 && val <= (12*1024))
         rtk_dec_ao_buffer = val;
     else
-        ALSA_WARNING("set dec_ao_buffer failed! (size must be from 4k to 12k)\n");
+        pr_warn("rtk-alsa: " "set dec_ao_buffer failed! (size must be from 4k to 12k)\n");
 
     return count;
 }
@@ -4415,11 +4410,11 @@ static int snd_card_probe(struct platform_device *devptr)
     int dev = devptr->id;
     int idx, err;
 
-    TRACE_CODE("[%s %s %d] dev %d\n", __FILE__, __FUNCTION__, __LINE__, dev);
-    RTK_TRACE_ALSA("[+] @ %s\n", __func__);
+    pr_debug("rtk-alsa: " "[%s %s %d] dev %d\n", __FILE__, __FUNCTION__, __LINE__, dev);
+    pr_debug("rtk-alsa: " "[+] @ %s\n", __func__);
 
     // create sound card
-    RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+    pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
     err = snd_card_new(
         &devptr->dev,
         -1, /* -1 ; idx == -1 == 0xffff means: take any free slot*/
@@ -4427,7 +4422,7 @@ static int snd_card_probe(struct platform_device *devptr)
         THIS_MODULE,
         sizeof(RTK_snd_card_t), // size of private_data
         &card);
-    RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+    pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
     if (err < 0)
         return err;
 
@@ -4438,18 +4433,18 @@ static int snd_card_probe(struct platform_device *devptr)
     for (idx = 0; idx < MAX_PCM_DEVICES ; idx++)
     {
         // create PCM instance
-        RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
         if ((err = snd_card_create_PCM_instance(pRTKSnd, idx
             , pcm_substreams[dev], pcm_capture_substreams[dev])) < 0)
         {
-            ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
             goto __nodev;
         }
-        RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
 
         // create Compress instance
         if ((err = snd_card_create_compress_instance(pRTKSnd, idx)) < 0) {
-            ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
             goto __nodev;
         }
     }
@@ -4469,26 +4464,26 @@ static int snd_card_probe(struct platform_device *devptr)
 	// create instance ONLY for capture AI audio v3 in
 	snd_card_create_PCM_instance(pRTKSnd, 5, 0, 1);
 
-    RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+    pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
     if ((err = snd_card_mars_new_mixer(pRTKSnd)) < 0)
         goto __nodev;
-    RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+    pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
 
     strcpy(card->driver, SND_REALTEK_DRIVER);
     strcpy(card->shortname, SND_REALTEK_DRIVER);
     sprintf(card->longname, SND_REALTEK_DRIVER);
 
-    RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+    pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
     if ((err = snd_card_register(card)) == 0) {
         snd_RTK_cards[dev] = card;
         platform_set_drvdata(devptr, card);
-        RTK_TRACE_ALSA("[-] @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " "[-] @ %s %d\n", __func__, __LINE__);
         return 0;
     }
 
     // error handling
 __nodev:
-    ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+    pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
     snd_card_free(card);
     return err;
 }
@@ -4497,16 +4492,16 @@ static int snd_card_remove(struct platform_device *devptr)
 {
     struct snd_card *card = platform_get_drvdata(devptr);
 
-    RTK_TRACE_ALSA("[+] @ %s\n", __func__);
+    pr_debug("rtk-alsa: " "[+] @ %s\n", __func__);
     if (card) {
-        RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
         snd_card_free(card);
-        RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
         platform_set_drvdata(devptr, NULL);
-        RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
     }
 
-    RTK_TRACE_ALSA("[-] @ %s\n", __func__);
+    pr_debug("rtk-alsa: " "[-] @ %s\n", __func__);
     return 0;
 }
 
@@ -4518,13 +4513,13 @@ static int rtk_alsa_suspend(struct device *pdev)
     //snd_card_t *card = snd_RTK_cards[0];
     struct RTK_snd_card *pRTKSnd = card->private_data;
 
-    ALSA_VitalPrint("[+]%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[+]%s %d\n", __FUNCTION__, __LINE__);
     snd_power_change_state(card, SNDRV_CTL_POWER_D3hot);
 
     is_suspend = true;
     snd_pcm_suspend_all(pRTKSnd->pcm);
 
-    ALSA_VitalPrint("[-]%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[-]%s %d\n", __FUNCTION__, __LINE__);
     return 0;
 }
 
@@ -4532,11 +4527,11 @@ static int rtk_alsa_resume(struct device *pdev)
 {
     struct snd_card *card = dev_get_drvdata(pdev);
 
-    ALSA_VitalPrint("[+]%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[+]%s %d\n", __FUNCTION__, __LINE__);
     snd_power_change_state(card, SNDRV_CTL_POWER_D0);
     is_suspend = false;
 
-    ALSA_VitalPrint("[-]%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[-]%s %d\n", __FUNCTION__, __LINE__);
     return 0;
 }
 
@@ -4560,7 +4555,7 @@ static void rtk_alsa_unregister_all(void)
 {
     int i;
 
-    ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
 
     for(i = 0; i < ARRAY_SIZE(devices); ++i)
         platform_device_unregister(devices[i]);
@@ -4571,10 +4566,10 @@ static int __init RTK_alsa_card_init(void)
 {
     int i, cards, ret, err;
 
-    RTK_TRACE_ALSA("[+] @ %s\n", __func__);
-//    ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[+] @ %s\n", __func__);
+//    pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
     err = platform_driver_register(&rtk_alsa_driver);
-    RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+    pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
     if (err < 0)
         goto RETURN_ERR;
 
@@ -4585,28 +4580,28 @@ static int __init RTK_alsa_card_init(void)
 #ifdef CONFIG_SYSFS
     ret = alsa_sysfs_init();
     if (ret)
-        ALSA_VitalPrint("%s: unable to create sysfs entry\n", __FUNCTION__);
+        pr_debug("rtk-alsa: " "%s: unable to create sysfs entry\n", __FUNCTION__);
 #endif
 
     cards = 0;
     for (i = 0; i < SNDRV_CARDS && snd_card_enable[i]; i++)
     {
         struct platform_device *device;
-        RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
         device = platform_device_register_simple(SND_REALTEK_DRIVER, i, NULL, 0);
-        RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
 
         if (IS_ERR(device))
         {
             continue;
         }
 
-        RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
         if (!platform_get_drvdata(device)) {
             platform_device_unregister(device);
             continue;
         }
-        RTK_TRACE_ALSA(" @ %s %d\n", __func__, __LINE__);
+        pr_debug("rtk-alsa: " " @ %s %d\n", __func__, __LINE__);
 
         devices[i] = device;
         cards++;
@@ -4614,7 +4609,7 @@ static int __init RTK_alsa_card_init(void)
 
     if (!cards)
     {
-        ALSA_VitalPrint("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_debug("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         rtk_alsa_unregister_all();
         err = -ENODEV;
         goto RETURN_ERR;
@@ -4624,18 +4619,18 @@ static int __init RTK_alsa_card_init(void)
     clk90k_vaddr_lo = ioremap(MIS_CLK90K_TM_LO_reg, 4);
     sys_clk_en2_virt = ioremap(SYS_CLOCK_ENABLE2, 4);
 
-    RTK_TRACE_ALSA("[-] @ %s %d\n", __func__, __LINE__);
+    pr_debug("rtk-alsa: " "[-] @ %s %d\n", __func__, __LINE__);
     return 0;
 
 RETURN_ERR:
-    RTK_TRACE_ALSA("[-] @ %s %d\n", __func__, __LINE__);
+    pr_debug("rtk-alsa: " "[-] @ %s %d\n", __func__, __LINE__);
     return err;
 }
 
 static void __exit RTK_alsa_card_exit(void)
 {
-    //ALSA_VitalPrint("[ALSA %s %d]\n", __FUNCTION__, __LINE__);
-    RTK_TRACE_ALSA("[+] @ %s\n", __func__);
+    //pr_debug("rtk-alsa: " "[ALSA %s %d]\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[+] @ %s\n", __func__);
 
     iounmap(clk90k_vaddr_hi);
     clk90k_vaddr_hi = NULL;
@@ -4653,7 +4648,7 @@ static void __exit RTK_alsa_card_exit(void)
 #endif
 
     rtk_alsa_unregister_all();
-    RTK_TRACE_ALSA("[-] @ %s\n", __func__);
+    pr_debug("rtk-alsa: " "[-] @ %s\n", __func__);
 }
 
 module_init(RTK_alsa_card_init);

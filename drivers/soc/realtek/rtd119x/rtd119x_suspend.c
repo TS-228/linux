@@ -6,6 +6,7 @@
 #include <linux/delay.h>
 #include <linux/clk.h>
 #include <linux/of.h>
+#include <linux/of_address.h>
 #include <linux/of_device.h>
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>
@@ -16,6 +17,7 @@
 #include <linux/vmalloc.h>
 #include <linux/tick.h>
 #include <linux/slab.h>
+#include <linux/serial_reg.h>
 //#include <mach/gpio.h>
 #include <asm/io.h>
 #include <asm/system_misc.h>
@@ -26,9 +28,6 @@
 #include "rtd119x_ip_power.h"
 #include "rtd119x_suspend.h"
 
-__maybe_unused static int   debug               = 1;
-__maybe_unused static int   warning             = 1;
-__maybe_unused static int   info                = 1;
 
 static int                  suspend_version     = 2;
 static enum _suspend_mode   suspend_mode        = SUSPEND_TO_COOLBOOT;
@@ -62,10 +61,6 @@ extern volatile void __iomem *rpc_ringbuf_base;
 extern volatile void __iomem *rpc_common_base;
 #endif
 
-#define dprintk(msg...) if (debug)   { printk(KERN_DEBUG    "D/SUSPEND: " msg); }
-#define eprintk(msg...) if (1)       { printk(KERN_ERR      "E/SUSPEND: " msg); }
-#define wprintk(msg...) if (warning) { printk(KERN_WARNING  "W/SUSPEND: " msg); }
-#define iprintk(msg...) if (info)    { printk(KERN_INFO     "I/SUSPEND: " msg); }
 
 #define SUSPEND_VERSION_MASK(v)     ((v&0xffff) << 16)
 #define BT_WAKEUP_IGPIO(n)	        (0x1 << n)//n:0 to 20
@@ -74,12 +69,8 @@ extern volatile void __iomem *rpc_common_base;
 
 static void hexdump(char *note, unsigned char *buf, unsigned int len)
 {
-	if (debug) {
-		printk(KERN_CRIT "%s\n", note);
-		print_hex_dump(KERN_CONT, "", DUMP_PREFIX_OFFSET,
-				16, 1,
-				buf, len, false);
-	}
+	print_hex_dump(KERN_DEBUG, "rtk-suspend: ", DUMP_PREFIX_OFFSET,
+		       16, 1, buf, len, false);
 }
 
 void acpu_set_flag(uint32_t flag)
@@ -121,7 +112,7 @@ void notify_acpu(enum _notify_flag flag)
 void acpu_set_bt_wakeup_host(int igpio_num,bool active_high)
 {
 	struct rtk_ipc_shm __iomem *ipc = (void __iomem *)IPC_SHM_VIRT;
-	dprintk("%s: igpio_num(%d) active_level(%u)\n",__func__,igpio_num,active_high);
+	pr_debug("rtk-suspend: " "%s: igpio_num(%d) active_level(%u)\n",__func__,igpio_num,active_high);
 	if(active_high)
 		writel(__cpu_to_be32(0xEA800000|BT_WAKEUP_IGPIO(igpio_num)), &(ipc->bt_wakeup_flag));
 	else
@@ -139,7 +130,7 @@ unsigned int rtk_suspend_##_name##_get(void)                                    
 	struct rtk_ipc_shm __iomem *ipc = (void __iomem *)IPC_SHM_VIRT;             \
     unsigned int val = __be32_to_cpu(readl(&(ipc->_offset)));                       \
     if (SUSPEND_MAGIC_GET(val) != SUSPEND_MAGIC_KEY) {                              \
-        eprintk("[%s] Error! val = 0x%08x\n", __func__, val);                       \
+        pr_err("rtk-suspend: " "[%s] Error! val = 0x%08x\n", __func__, val);                       \
         return -1;                                                                  \
     }                                                                               \
     return _def##_GET(val);                                                         \
@@ -277,13 +268,13 @@ int memory_verified_release(struct _memory_verified_handle * handle)
 {
     int ret = 0,i;
     if (!handle) {
-        eprintk("[%s] handle is NULL!!!\n",__func__);
+        pr_err("rtk-suspend: " "[%s] handle is NULL!!!\n",__func__);
         return -1;
     }
 
     if (!handle->memByte) {
         ret = -2;
-        eprintk("[%s] handle %p (memByte = %ld, memAddress = 0x%08x)\n",
+        pr_err("rtk-suspend: " "[%s] handle %p (memByte = %ld, memAddress = 0x%08x)\n",
                 __func__, (void *) handle, (long int) handle->memByte, (unsigned int) handle->memAddress);
         if (handle->memAddress)
             goto free1;
@@ -294,7 +285,7 @@ int memory_verified_release(struct _memory_verified_handle * handle)
     for (i=0; i < handle->memByte; i++) {
         unsigned char data = memory_verified_datagen(i);
         if (handle->memAddress[i] != data) {
-            eprintk("[%s] handle %p memAddress[0x%x] => 0x%x != 0x%x (%ld bytes at 0x%08x)\n",
+            pr_err("rtk-suspend: " "[%s] handle %p memAddress[0x%x] => 0x%x != 0x%x (%ld bytes at 0x%08x)\n",
                     __func__, (void *) handle, i, handle->memAddress[i], data,
                     (long int) handle->memByte, (unsigned int) handle->memAddress);
             ret = -4;
@@ -304,7 +295,7 @@ int memory_verified_release(struct _memory_verified_handle * handle)
                 unsigned int sizeByte = 0xf0;
                 if ((startByte + sizeByte) > handle->memByte)
                     sizeByte = handle->memByte - startByte;
-                eprintk("memory phyAddt 0x%08x\n", virt_to_phys(&handle->memAddress[i]));
+                pr_err("rtk-suspend: " "memory phyAddt 0x%08x\n", virt_to_phys(&handle->memAddress[i]));
                 hexdump("memory verified error\n", &handle->memAddress[startByte], sizeByte);
             }
 #endif
@@ -314,7 +305,7 @@ int memory_verified_release(struct _memory_verified_handle * handle)
 
 #if 1
     if (ret == -4) {
-        eprintk("memory phyAddt 0x%08x\n", virt_to_phys(handle->memAddress))
+        pr_err("rtk-suspend: " "memory phyAddt 0x%08x\n", virt_to_phys(handle->memAddress));
         hexdump("memory verified error\n", handle->memAddress, handle->memByte);
     }
 #endif
@@ -339,36 +330,106 @@ static int notrace rtk_iso_suspend(unsigned long param)
     // TEDTED
     //arch_timer_suspend();
 
-    iprintk("[%s] flush cache...\n", __func__);
+    pr_info("rtk-suspend: " "[%s] flush cache...\n", __func__);
     flush_cache_all();
     outer_flush_all();
     //outer_disable();
 
     dsb_sev();
 
-    iprintk("[%s] Ready to suspend! (mode:%d)", __func__, mode);
+    pr_info("rtk-suspend: " "[%s] Ready to suspend! (mode:%d)", __func__, mode);
     if (mode == SUSPEND_TO_COOLBOOT)
         notify_acpu(NOTIFY_SUSPEND_TO_COOLBOOT);
     else if (mode == SUSPEND_TO_RAM)
         notify_acpu(NOTIFY_SUSPEND_TO_RAM);
     else {
-        eprintk("[%s] Suspend Mode Not Support : %d\n",__func__,mode);
-        BUG();
+        pr_err("rtk-suspend: " "[%s] Suspend Mode Not Support : %d\n",__func__,mode);
+        return -EINVAL;
     }
 
     //v7_exit_coherency_flush(louis);
 
     {
-        int MaxCounter = 100,i = 0;
-        for (i=MaxCounter; i>0; i--) {
+        int MaxCounter = 20, i = 0;
+        for (i = MaxCounter; i > 0; i--) {
             __delay(10000000);
             //asm("WFI");
         }
     }
 
-    BUG();
+    /*
+     * ACPU coolboot/suspend did not cut power (common on boards where the
+     * front-panel PIC owns the PSU). Return so callers can fall back instead
+     * of panicking via BUG().
+     */
+    pr_err("rtk-suspend: " "[%s] ACPU did not power off (mode:%d)\n",
+           __func__, mode);
+    return -ETIMEDOUT;
+}
 
-    return  -EINVAL;
+/*
+ * QNAP TS-228: PSU is cut by the front-panel PIC on UART1. Same opcode as
+ * kirkwood qnap_tsx1x_power_off() / QNAP_PIC_SOFTWARE_SHUTDOWN ('A' == 0x41).
+ * Do this from the built-in power-off path so it works even if the PIC
+ * serdev module was not reloaded.
+ */
+static void rtk_qnap_pic_uart_power_off(void)
+{
+	struct device_node *pic_np, *uart_np;
+	void __iomem *uart;
+	u32 clk = 0, shift = 2;
+	unsigned int divisor;
+	unsigned int lsr;
+	int timeout = 100000;
+
+	pic_np = of_find_compatible_node(NULL, NULL, "qnap,ts228-pic");
+	if (!pic_np)
+		return;
+
+	uart_np = of_get_parent(pic_np);
+	of_node_put(pic_np);
+	if (!uart_np)
+		return;
+
+	of_property_read_u32(uart_np, "clock-frequency", &clk);
+	of_property_read_u32(uart_np, "reg-shift", &shift);
+	uart = of_iomap(uart_np, 0);
+	of_node_put(uart_np);
+	if (!uart || !clk) {
+		if (uart)
+			iounmap(uart);
+		pr_err("[RTD119x_PM] PIC UART map/clk failed\n");
+		return;
+	}
+
+	divisor = (clk + (8 * 19200)) / (16 * 19200);
+
+	writel_relaxed(UART_LCR_DLAB | UART_LCR_WLEN8,
+		       uart + (UART_LCR << shift));
+	writel_relaxed(divisor & 0xff, uart + (UART_DLL << shift));
+	writel_relaxed((divisor >> 8) & 0xff, uart + (UART_DLM << shift));
+	writel_relaxed(UART_LCR_WLEN8, uart + (UART_LCR << shift));
+	writel_relaxed(0, uart + (UART_IER << shift));
+	writel_relaxed(0, uart + (UART_FCR << shift));
+	writel_relaxed(0, uart + (UART_MCR << shift));
+
+	while (timeout--) {
+		lsr = readl_relaxed(uart + (UART_LSR << shift));
+		if (lsr & UART_LSR_THRE)
+			break;
+	}
+	writel_relaxed(0x41, uart + (UART_TX << shift));
+	timeout = 100000;
+	while (timeout--) {
+		lsr = readl_relaxed(uart + (UART_LSR << shift));
+		if (lsr & UART_LSR_TEMT)
+			break;
+	}
+
+	pr_emerg("[RTD119x_PM] PIC software shutdown (UART 0x41) sent\n");
+	/* Allow the PIC to drop the PSU before coolboot runs. */
+	mdelay(2000);
+	iounmap(uart);
 }
 
 enum irq_report_state {
@@ -393,19 +454,19 @@ static void rtk_suspend_irq_report(enum irq_report_state state)
                     *(volatile unsigned int *)(interrupt_state + (i * 4));
                 if (temp != data[i]) {
                     int j,irq = i * 32;
-                    wprintk("[%s] Interrupt Addr:0x%08x State: 0x%08x => 0x%08x\n",
+                    pr_warn("rtk-suspend: " "[%s] Interrupt Addr:0x%08x State: 0x%08x => 0x%08x\n",
                             __func__, (unsigned int)(interrupt_state + (i*4)),
                             data[i], temp);
                     for (j=0; j<32; j++) {
                         unsigned int mask = 0x1U << j;
                         if (mask & temp)
-                            wprintk("[%s] IRQ: %d\n",__func__,(irq+j));
+                            pr_warn("rtk-suspend: " "[%s] IRQ: %d\n",__func__,(irq+j));
                     }
                 }
             }
             break;
         default:
-            eprintk("[%s] Unknow CMD! %d\n", __func__, state);
+            pr_err("rtk-suspend: " "[%s] Unknow CMD! %d\n", __func__, state);
     }
 }
 
@@ -415,7 +476,7 @@ static int rtk_suspend_to_wfi(void)
 
     rtk_suspend_irq_report(IRQ_REPORT_PREPARE);
 
-    iprintk("[%s] wait for interrupt...............\n", __func__);
+    pr_info("rtk-suspend: " "[%s] wait for interrupt...............\n", __func__);
     asm("WFI");
 
     rtk_suspend_irq_report(IRQ_REPORT_PRINT);
@@ -431,7 +492,7 @@ static int rtk_suspend_to_ram(void)
     void __iomem * resumeAddr   = IOMEM(RTK_VIRT_ADDR_MAP(ISO_DUMMY1));
     unsigned int ISODummy1Data  = readl(resumeAddr);
 
-    iprintk("[%s] cpu resume vaddr:0x%08x paddr:0x%08x\n", __func__,
+    pr_info("rtk-suspend: " "[%s] cpu resume vaddr:0x%08x paddr:0x%08x\n", __func__,
             (unsigned int)v7_cpu_resume,(unsigned int)virt_to_phys(v7_cpu_resume));
 
     hexdump("v7_cpu_resume", (unsigned char *) v7_cpu_resume, 0x100);
@@ -490,12 +551,12 @@ static int rtk_suspend_to_ram(void)
     rtk119x_prepare_cpus(NR_CPUS);
     outer_resume();
 
-    iprintk("[%s] resume memory verifying ... state 0\n", __func__);
+    pr_info("rtk-suspend: " "[%s] resume memory verifying ... state 0\n", __func__);
     for (i=0; i<MEM_VERIFIED_CNT; i++)
         memory_verified_release(mem_vhandle[i]);
 
 
-    iprintk("[%s] resume memory verifying ... state 1\n", __func__);
+    pr_info("rtk-suspend: " "[%s] resume memory verifying ... state 1\n", __func__);
     for (i=0; i<MEM_VERIFIED_CNT; i++)
         mem_vhandle[i] = memory_verified_handle_create(0x4000);
 
@@ -523,8 +584,8 @@ void rtk_suspend_gpip_output_change_suspend(void)
         if (!(val & mask))
             continue;
 
-        iprintk("[%s] gpio:%d set ouput =>  %s\n", __func__, i+SUSPEND_ISO_GPIO_BASE,
-                (rtk_suspend_gpio_output_change_act_get() & mask) ? "HIGH" : "LOW")
+        pr_info("rtk-suspend: " "[%s] gpio:%d set ouput =>  %s\n", __func__, i+SUSPEND_ISO_GPIO_BASE,
+                (rtk_suspend_gpio_output_change_act_get() & mask) ? "HIGH" : "LOW");
 
         gpio_direction_output(i+SUSPEND_ISO_GPIO_BASE,
                 (rtk_suspend_gpio_output_change_act_get() & mask) ? 1 : 0 );
@@ -541,8 +602,8 @@ void rtk_suspend_gpip_output_change_resume(void)
         if (!(val & mask))
             continue;
 
-        iprintk("[%s] gpio:%d set ouput =>  %s\n", __func__, i+SUSPEND_ISO_GPIO_BASE,
-                (rtk_suspend_gpio_output_change_act_get() & mask) ? "LOW" : "HIGH")
+        pr_info("rtk-suspend: " "[%s] gpio:%d set ouput =>  %s\n", __func__, i+SUSPEND_ISO_GPIO_BASE,
+                (rtk_suspend_gpio_output_change_act_get() & mask) ? "LOW" : "HIGH");
 
         gpio_direction_output(i+SUSPEND_ISO_GPIO_BASE,
                 (rtk_suspend_gpio_output_change_act_get() & mask) ? 0 : 1 );
@@ -552,23 +613,23 @@ void rtk_suspend_gpip_output_change_resume(void)
 static int rtk_suspend_enter(suspend_state_t suspend_state)
 {
     int ret = 0;
-    iprintk("[%s]\n",__func__);
+    pr_info("rtk-suspend: " "[%s]\n",__func__);
 
     if (!rtk_suspend_valid(suspend_state)) {
-        eprintk("[%s] suspend_state:%d not support!\n", __func__, (int) suspend_state);
+        pr_err("rtk-suspend: " "[%s] suspend_state:%d not support!\n", __func__, (int) suspend_state);
         return  -EINVAL;
     }
 
     switch(suspend_state) {
         case PM_SUSPEND_MEM:
 
-            iprintk("[%s] rtk_ip_power_off() ...\n", __func__);
+            pr_info("rtk-suspend: " "[%s] rtk_ip_power_off() ...\n", __func__);
 
             rtk_ip_power_off();
 
 #if 1 // legacy
             if (wifi_gpio != -1) {
-                iprintk("[%s] wifi gpio : POWER DOWN ...\n", __func__);
+                pr_info("rtk-suspend: " "[%s] wifi gpio : POWER DOWN ...\n", __func__);
                 gpio_direction_output(wifi_gpio, 0);
             }
 #endif
@@ -585,12 +646,12 @@ static int rtk_suspend_enter(suspend_state_t suspend_state)
                 BUG();
 
             if (ret) {
-                eprintk("[%s] ERROR!!!!! to suspend! (%d)\n",__func__,ret);
+                pr_err("rtk-suspend: " "[%s] ERROR!!!!! to suspend! (%d)\n",__func__,ret);
                 BUG();
                 break;
             }
 
-            iprintk("[%s] platform resume ...\n", __func__);
+            pr_info("rtk-suspend: " "[%s] platform resume ...\n", __func__);
             notify_acpu(NOTIFY_RESUME_PLATFORM);
 
 #if 1 // legacy
@@ -611,10 +672,10 @@ static int rtk_suspend_enter(suspend_state_t suspend_state)
 
 static int rtk_suspend_begin(suspend_state_t suspend_state)
 {
-    dprintk("%s\n",__func__);
+    pr_debug("rtk-suspend: " "%s\n",__func__);
 
     if (!rtk_suspend_valid(suspend_state)) {
-        eprintk("[%s] suspend_state:%d not support!\n", __func__, (int) suspend_state);
+        pr_err("rtk-suspend: " "[%s] suspend_state:%d not support!\n", __func__, (int) suspend_state);
         return  -EINVAL;
     }
 
@@ -630,7 +691,7 @@ static int rtk_suspend_begin(suspend_state_t suspend_state)
 
 static void rtk_suspend_end(void)
 {
-    dprintk("%s\n",__func__);
+    pr_debug("rtk-suspend: " "%s\n",__func__);
     notify_acpu(NOTIFY_RESUME_END);
 	cpu_idle_poll_ctrl(false);
 }
@@ -654,7 +715,7 @@ static void rtk_nas_poweroff(void)
             continue;
         gpio_free(i);
         if(gpio_request(i, NULL)){
-            dprintk("[%s]GPIO %d request error\n",__func__, i);
+            pr_debug("rtk-suspend: " "[%s]GPIO %d request error\n",__func__, i);
             continue;
         }
         gpio_direction_output(i, value-1);
@@ -668,28 +729,38 @@ static void rtk_nas_poweroff(void)
     return;
 }
 #else
-static void rtk_poweroff_to_suspend_prepare(void)
+static void rtk_poweroff(void)
 {
-    printk(KERN_INFO "[RTD119x_PM] Power off to Suspend Prepare.\n");
+	printk(KERN_INFO "[RTD119x_PM] Power off to Suspend.\n");
 
-    suspend_mode = SUSPEND_TO_COOLBOOT;
-    pm_suspend(PM_SUSPEND_MEM);
-    return;
-};
+	rtk_qnap_pic_uart_power_off();
 
-static void rtk_poweroff_to_suspend(void)
-{
-    printk(KERN_INFO "[RTD119x_PM] Power off to Suspend.\n");
-    return;
-};
+	suspend_mode = SUSPEND_TO_COOLBOOT;
 
-static int rtk_poweroff_to_suspend_prepare_cb(struct sys_off_data *data)
-{
-	rtk_poweroff_to_suspend_prepare();
-	return NOTIFY_DONE;
+	rtk_ip_power_off();
+
+#if 1 // legacy
+	if (wifi_gpio != -1) {
+		pr_info("rtk-suspend: [%s] wifi gpio : POWER DOWN ...\n", __func__);
+		gpio_direction_output(wifi_gpio, 0);
+	}
+#endif
+
+	rtk_suspend_gpip_output_change_suspend();
+
+	if (rtk_suspend_to_coolboot())
+		pr_err("[RTD119x_PM] coolboot failed, halting\n");
+
+	local_irq_disable();
+	while (1)
+		cpu_relax();
 }
 
-static struct sys_off_handler *rtk_power_off_prep_handler;
+static int rtk_poweroff_cb(struct sys_off_data *data)
+{
+	rtk_poweroff();
+	return NOTIFY_DONE;
+}
 #endif
 
 int __init rtk_suspend_init(void)
@@ -723,7 +794,7 @@ int __init rtk_suspend_init(void)
             cnt_wakeup_gpio_en  /= sizeof(u32);
             cnt_wakeup_gpio_act /= sizeof(u32);
 
-            iprintk("[%s:%d] wakeup-gpio Cnt: en(%d) act(%d) list(%d)\n", __func__, __LINE__,
+            pr_info("rtk-suspend: " "[%s:%d] wakeup-gpio Cnt: en(%d) act(%d) list(%d)\n", __func__, __LINE__,
                     cnt_wakeup_gpio_en,
                     cnt_wakeup_gpio_act,
                     cnt_wakeup_gpio_list);
@@ -741,30 +812,30 @@ int __init rtk_suspend_init(void)
                     int gpio_iso_num = wakeup_gpio - SUSPEND_ISO_GPIO_BASE;
 
                     if (!en) {
-                        wprintk("[%s] wakeup-gpio[%d] States is disable! (en:%d act:%d gpio:%d)\n",
+                        pr_warn("rtk-suspend: " "[%s] wakeup-gpio[%d] States is disable! (en:%d act:%d gpio:%d)\n",
                                 __func__, i, en, act, wakeup_gpio);
                         continue;
                     }
 
                     if (!gpio_is_valid(wakeup_gpio)) {
-                        eprintk("[%s] wakeup-gpio[%d] Validation failed! (en:%d act:%d gpio:%d)\n",
+                        pr_err("rtk-suspend: " "[%s] wakeup-gpio[%d] Validation failed! (en:%d act:%d gpio:%d)\n",
                                 __func__, i, en, act, wakeup_gpio);
                         continue;
                     }
 
                     if(gpio_request(wakeup_gpio, p_suspend_nd->name)) {
-                        eprintk("[%s] wakeup-gpio[%d] Request failed! (en:%d act:%d gpio:%d)\n",
+                        pr_err("rtk-suspend: " "[%s] wakeup-gpio[%d] Request failed! (en:%d act:%d gpio:%d)\n",
                                 __func__, i, en, act, wakeup_gpio);
                         continue;
                     }
 
                     if (gpio_iso_num < 0 || gpio_iso_num >= SUSPEND_ISO_GPIO_SIZE) {
-                        eprintk("[%s] wakeup-gpio[%d] Out of iso range! (en:%d act:%d gpio:%d)\n",
+                        pr_err("rtk-suspend: " "[%s] wakeup-gpio[%d] Out of iso range! (en:%d act:%d gpio:%d)\n",
                                 __func__, i, en, act, wakeup_gpio);
                         continue;
                     }
 
-                    iprintk("[%s] wakeup-gpio[%d] Successful registration! (en:%d act:%d gpio:%d)\n",
+                    pr_info("rtk-suspend: " "[%s] wakeup-gpio[%d] Successful registration! (en:%d act:%d gpio:%d)\n",
                             __func__, i, en, act, wakeup_gpio);
 
                     {
@@ -803,7 +874,7 @@ int __init rtk_suspend_init(void)
             cnt_output_change_gpio_en  /= sizeof(u32);
             cnt_output_change_gpio_act /= sizeof(u32);
 
-            iprintk("[%s:%d] gpio-output-change Cnt: en(%d) act(%d) list(%d)\n", __func__, __LINE__,
+            pr_info("rtk-suspend: " "[%s:%d] gpio-output-change Cnt: en(%d) act(%d) list(%d)\n", __func__, __LINE__,
                     cnt_output_change_gpio_en,
                     cnt_output_change_gpio_act,
                     cnt_output_change_gpio_list);
@@ -820,30 +891,30 @@ int __init rtk_suspend_init(void)
                     int gpio_iso_num = output_change_gpio - SUSPEND_ISO_GPIO_BASE;
 
                     if (!en) {
-                        wprintk("[%s] gpio-output-change[%d] States is disable! (en:%d act:%d gpio:%d)\n",
+                        pr_warn("rtk-suspend: " "[%s] gpio-output-change[%d] States is disable! (en:%d act:%d gpio:%d)\n",
                                 __func__, i, en, act, output_change_gpio);
                         continue;
                     }
 
                     if (!gpio_is_valid(output_change_gpio)) {
-                        eprintk("[%s] gpio-output-change[%d] Validation failed! (en:%d act:%d gpio:%d)\n",
+                        pr_err("rtk-suspend: " "[%s] gpio-output-change[%d] Validation failed! (en:%d act:%d gpio:%d)\n",
                                 __func__, i, en, act, output_change_gpio);
                         continue;
                     }
 
                     if(gpio_request(output_change_gpio, p_suspend_nd->name)) {
-                        eprintk("[%s] gpio-output-change[%d] Request failed! (en:%d act:%d gpio:%d)\n",
+                        pr_err("rtk-suspend: " "[%s] gpio-output-change[%d] Request failed! (en:%d act:%d gpio:%d)\n",
                                 __func__, i, en, act, output_change_gpio);
                         continue;
                     }
 
                     if (gpio_iso_num < 0 || gpio_iso_num >= SUSPEND_ISO_GPIO_SIZE) {
-                        eprintk("[%s] gpio-output-change[%d] Out of iso range! (en:%d act:%d gpio:%d)\n",
+                        pr_err("rtk-suspend: " "[%s] gpio-output-change[%d] Out of iso range! (en:%d act:%d gpio:%d)\n",
                                 __func__, i, en, act, output_change_gpio);
                         continue;
                     }
 
-                    iprintk("[%s] gpio-output-change[%d] Successful registration! (en:%d act:%d gpio:%d)\n",
+                    pr_info("rtk-suspend: " "[%s] gpio-output-change[%d] Successful registration! (en:%d act:%d gpio:%d)\n",
                             __func__, i, en, act, output_change_gpio);
 
                     {
@@ -878,9 +949,9 @@ int __init rtk_suspend_init(void)
         wifi_gpio = of_get_named_gpio(p_suspend_nd, "realtek,wifi-gpio", 0);
         if (gpio_is_valid(wifi_gpio)) {
             if(gpio_request(wifi_gpio, p_suspend_nd->name))
-                eprintk("%s ERROR Request wifi gpio fail\n",__func__);
+                pr_err("rtk-suspend: " "%s ERROR Request wifi gpio fail\n",__func__);
         } else {
-            wprintk("%s ERROR wifi gpio is not valid\n",__func__);
+            pr_warn("rtk-suspend: " "%s ERROR wifi gpio is not valid\n",__func__);
         }
 #endif
 
@@ -891,10 +962,10 @@ int __init rtk_suspend_init(void)
         if (prop) {
             int temp = of_read_number(prop,1);
             if (temp > MAX_SUSPEND_MODE || temp < 0) {
-                eprintk("[%s] set suspend-mode error! %d (default:%d) \n",__func__,temp,(int)suspend_mode);
+                pr_err("rtk-suspend: " "[%s] set suspend-mode error! %d (default:%d) \n",__func__,temp,(int)suspend_mode);
             } else {
                 suspend_mode = temp;
-                iprintk("[%s] set suspend-mode = %s\n",__func__, rtk_suspend_states[suspend_mode]);
+                pr_info("rtk-suspend: " "[%s] set suspend-mode = %s\n",__func__, rtk_suspend_states[suspend_mode]);
             }
         }
 
@@ -905,16 +976,16 @@ int __init rtk_suspend_init(void)
         if (prop) {
             int temp = of_read_number(prop,1);
             if (temp < 0) {
-                eprintk("[%s] set wakeup-flags error! 0x%x\n", __func__, temp);
+                pr_err("rtk-suspend: " "[%s] set wakeup-flags error! 0x%x\n", __func__, temp);
                 rtk_suspend_wakeup_flags_set(fWAKEUP_ON_IR|fWAKEUP_ON_GPIO|fWAKEUP_ON_ALARM|fWAKEUP_ON_CEC);
-                iprintk("[%s] wakeup flags set default : 0x%x\n", __func__, rtk_suspend_wakeup_flags_get());
+                pr_info("rtk-suspend: " "[%s] wakeup flags set default : 0x%x\n", __func__, rtk_suspend_wakeup_flags_get());
             } else {
                 rtk_suspend_wakeup_flags_set(temp);
-                iprintk("[%s] set set wakeup-flags = 0x%x\n",__func__, rtk_suspend_wakeup_flags_get());
+                pr_info("rtk-suspend: " "[%s] set set wakeup-flags = 0x%x\n",__func__, rtk_suspend_wakeup_flags_get());
             }
         } else {
             rtk_suspend_wakeup_flags_set(fWAKEUP_ON_IR|fWAKEUP_ON_GPIO|fWAKEUP_ON_ALARM|fWAKEUP_ON_CEC);
-            iprintk("[%s] wakeup flags set default : 0x%x\n", __func__, rtk_suspend_wakeup_flags_get());
+            pr_info("rtk-suspend: " "[%s] wakeup flags set default : 0x%x\n", __func__, rtk_suspend_wakeup_flags_get());
         }
     }
 
@@ -927,17 +998,17 @@ int __init rtk_suspend_init(void)
         if (!gpio_is_valid(bt_wakeup_gpio))
         {
             //BUG();
-            eprintk("%s ERROR bt_wakeup_host gpio is not valid\n",__func__);
+            pr_err("rtk-suspend: " "%s ERROR bt_wakeup_host gpio is not valid\n",__func__);
         }
         if(gpio_request(bt_wakeup_gpio, p_bt_wakeup_nd->name))
         {
             //BUG();
-            eprintk("%s ERROR Request bt_wakeup_host gpio fail\n",__func__);
+            pr_err("rtk-suspend: " "%s ERROR Request bt_wakeup_host gpio fail\n",__func__);
         }
         if(of_property_read_string(p_bt_wakeup_nd, "activity_level", &activity_level) < 0)
         {
 			//BUG();
-			eprintk("%s ERROR get bt_wakeup_host activity level fail\n",__func__);
+			pr_err("rtk-suspend: " "%s ERROR get bt_wakeup_host activity level fail\n",__func__);
         }
         else
         {
@@ -957,10 +1028,10 @@ int __init rtk_suspend_init(void)
 #ifdef CONFIG_NAS_GPIO_SHUTDOWN
 	pm_power_off = rtk_nas_poweroff;
 #else
-	rtk_power_off_prep_handler = register_sys_off_handler(
-		SYS_OFF_MODE_POWER_OFF_PREPARE, SYS_OFF_PRIO_DEFAULT,
-		rtk_poweroff_to_suspend_prepare_cb, NULL);
-	pm_power_off = rtk_poweroff_to_suspend;
+	if (IS_ERR(register_sys_off_handler(SYS_OFF_MODE_POWER_OFF,
+					    SYS_OFF_PRIO_DEFAULT,
+					    rtk_poweroff_cb, NULL)))
+		pr_err("[RTD119x_PM] failed to register power-off handler\n");
 #endif
 
 	return 0;

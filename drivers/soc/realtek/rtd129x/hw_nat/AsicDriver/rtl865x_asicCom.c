@@ -22,12 +22,6 @@
 
 #if defined(CONFIG_RTD_1295_HWNAT)
 //#define RTL_DEBUG	1
-#ifdef RTL_DEBUG
-#define DBG(fmt, ...) printk(KERN_ERR "%s:%d: " fmt "\n", \
-						__func__, __LINE__, ## __VA_ARGS__)
-#else
-#define DBG(fmt, ...)
-#endif
 #endif //defined(CONFIG_RTD_1295_HWNAT)
 
 

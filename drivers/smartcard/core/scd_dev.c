@@ -25,9 +25,9 @@ void mars_scd_dumpdata(unsigned char* p_data, unsigned int len)
 	int i = 0;
 	for(i=0;i<len;++i)
 	{
-		SC_INFO("data[%d] = 0x%x \n",i,p_data[i]);
+		pr_info("rtk-scd: " "data[%d] = 0x%x \n",i,p_data[i]);
 	}
-	SC_INFO("dump data end ~~   \n");
+	pr_info("rtk-scd: " "dump data end ~~   \n");
 }
 
 
@@ -50,7 +50,7 @@ int create_scd_dev_node(scd_device* device)
         {
             if (cdev_add(&node_list[i].cdev, devno_base + i, 1)<0)
             {
-                SC_WARNING("scd warning : register character dev failed\n");
+                pr_warn("rtk-scd: " "scd warning : register character dev failed\n");
                 return -1;
             }
 
@@ -189,14 +189,14 @@ ssize_t scd_dev_read(
         size = sizeof(tmp);
 
     ret = drv->read(dev, tmp, size);
-	//SC_WARNING("read data~~  size=%d ret=%d \n",size,ret);
+	//pr_warn("rtk-scd: " "read data~~  size=%d ret=%d \n",size,ret);
 
     if (ret > 0)
     {
 		mars_scd_dumpdata(tmp, ret);
         if (copy_to_user((unsigned char __user *) buff, tmp, ret)<0)
         {
-            SC_WARNING("read message failed, copy to user failed\n");
+            pr_warn("rtk-scd: " "read message failed, copy to user failed\n");
             return -EFAULT;
         }
     }
@@ -231,10 +231,10 @@ ssize_t scd_dev_write(
     unsigned char tmp[512];
 
     if (copy_from_user(tmp, (unsigned char __user *)buff, size)) {
-        SC_WARNING("write message failed, copy data from user space failed\n");
+        pr_warn("rtk-scd: " "write message failed, copy data from user space failed\n");
         return -EFAULT;
     }
-	SC_INFO("write data start~~  \n");
+	pr_info("rtk-scd: " "write data start~~  \n");
 	mars_scd_dumpdata(tmp,size);
     return drv->xmit(dev, tmp, size);
 }
@@ -333,7 +333,7 @@ long scd_dev_ioctl(
 
         if (copy_from_user(&buff, (sc_msg_buff __user *)arg, sizeof(sc_msg_buff)))
             return -EFAULT;
-	//SC_WARNING("Read data length = %d  \n",buff.length);
+	//pr_warn("rtk-scd: " "Read data length = %d  \n",buff.length);
         return scd_dev_read(file, buff.p_data, buff.length, 0);
 
     case SCD_WRITE:

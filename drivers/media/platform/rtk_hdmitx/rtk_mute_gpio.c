@@ -30,9 +30,9 @@ static int i2s_ctrl_gpio = -1;
 void set_mute_gpio(int gpio_number, int gpio_value)
 {
 	if (gpio_request(gpio_number, hdmitx_dev_node->name)) {
-		HDMI_ERROR("[%s] Request gpio(%d) fail", __func__, gpio_number);
+		pr_err("rtk-hdmitx: " "[%s] Request gpio(%d) fail", __func__, gpio_number);
 	} else {
-		HDMI_INFO("Set audio mute GPIO (%u)", gpio_value);
+		pr_info("rtk-hdmitx: " "Set audio mute GPIO (%u)", gpio_value);
 		gpio_direction_output(gpio_number, gpio_value);
 		gpio_free(gpio_number);
 	}
@@ -66,9 +66,9 @@ void set_i2s_output(int gpio_value)
 
 	gpio_number = i2s_ctrl_gpio;
 	if (gpio_request(gpio_number, hdmitx_dev_node->name)) {
-		HDMI_ERROR("[%s] Request gpio(%d) fail", __func__, gpio_number);
+		pr_err("rtk-hdmitx: " "[%s] Request gpio(%d) fail", __func__, gpio_number);
 	} else {
-		HDMI_INFO("Set i2s_ctrl_gpio=%u", gpio_value);
+		pr_info("rtk-hdmitx: " "Set i2s_ctrl_gpio=%u", gpio_value);
 		gpio_direction_output(gpio_number, gpio_value);
 		gpio_free(gpio_number);
 	}
@@ -79,7 +79,7 @@ void set_i2s_output(int gpio_value)
  */
 void setup_mute_gpio(struct device_node *dev_node)
 {
-	HDMI_INFO("[%s]", __func__);
+	pr_info("rtk-hdmitx: " "[%s]", __func__);
 
 	hdmitx_dev_node = dev_node;
 
@@ -87,10 +87,10 @@ void setup_mute_gpio(struct device_node *dev_node)
 						"gpio-audio-mute", 0);
 
 	if (audio_mute_gpio < 0) {
-		HDMI_INFO("Undefined gpio-audio-mute, sikp");
+		pr_info("rtk-hdmitx: " "Undefined gpio-audio-mute, sikp");
 		goto i2s;
 	} else {
-		HDMI_INFO("audio mute gpio(%d)", audio_mute_gpio);
+		pr_info("rtk-hdmitx: " "audio mute gpio(%d)", audio_mute_gpio);
 	}
 
 	set_mute_gpio(audio_mute_gpio, AUDIO_MUTE_OFF);
@@ -99,17 +99,17 @@ void setup_mute_gpio(struct device_node *dev_node)
 	if (mute_gpio_timer != NULL)
 		setup_timer(mute_gpio_timer, mute_gpio_timer_callback, 0);
 	else
-		HDMI_ERROR("[%s] kmalloc fail", __func__);
+		pr_err("rtk-hdmitx: " "[%s] kmalloc fail", __func__);
 
 i2s:
 	i2s_ctrl_gpio = of_get_named_gpio(hdmitx_dev_node,
 						"gpio-i2s-ctrl", 0);
 
 	if (i2s_ctrl_gpio < 0) {
-		HDMI_INFO("Undefined gpio-i2s-ctrl, sikp");
+		pr_info("rtk-hdmitx: " "Undefined gpio-i2s-ctrl, sikp");
 		goto end;
 	} else {
-		HDMI_INFO("i2s control gpio(%d)", i2s_ctrl_gpio);
+		pr_info("rtk-hdmitx: " "i2s control gpio(%d)", i2s_ctrl_gpio);
 	}
 
 end:

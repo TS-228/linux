@@ -326,7 +326,7 @@ unsigned char hdmi_detect_mode(void)
 		if (hdmi_display_on()) {
 
 			if (lib_hdmi_get_avmute() && !lib_hdmi_get_bch_2bit_error()) {
-				HDMI_PRINTF("[WARNING] AVMUTE...\n");
+				pr_debug("rtk-hdmirx: " "[WARNING] AVMUTE...\n");
 				SET_H_VIDEO_FSM(MAIN_FSM_HDMI_SETUP_VEDIO_PLL);
 				goto exit;
 			}
@@ -342,7 +342,7 @@ unsigned char hdmi_detect_mode(void)
 			}
 
 			lib_hdmi_char_err_rst(0);
-			HDMI_PRINTF("FSM_HDMI_DISPLAY_ON OK\n");
+			pr_debug("rtk-hdmirx: " "FSM_HDMI_DISPLAY_ON OK\n");
 			SET_H_VIDEO_FSM(MAIN_FSM_HDMI_VIDEO_READY);
 			ret_val = _MODE_SUCCESS;
 
@@ -389,24 +389,24 @@ unsigned char hdmi_check_condition_change(void)
 	phy_clk = rxphy_get_clk();
 
 	if (phy_clk < VALID_MIN_CLOCK) {
-		HDMI_PRINTF("invalid clock\n");
+		pr_debug("rtk-hdmirx: " "invalid clock\n");
 		return TRUE;
 	}
 
 	if (HDMI_ABS(phy_clk, hdmi_rx.timing_t.tmds_clk_b) > TMDS_CLOCK_TOLERANCE()) {
-		HDMI_PRINTF("clock change\n");
+		pr_debug("rtk-hdmirx: " "clock change\n");
 		return TRUE;
 	}
 
 	if (GET_H_MODE() == MODE_HDMI) {
 		if (GET_H_COLOR_SPACE() != hdmi_get_colorspace_reg()) {
-			HDMI_PRINTF("colorspace chg from %d to %d\n",
+			pr_debug("rtk-hdmirx: " "colorspace chg from %d to %d\n",
 				GET_H_COLOR_SPACE(), hdmi_get_colorspace_reg());
 			return TRUE;
 		}
 
 		if (GET_H_COLOR_DEPTH() != lib_hdmi_get_color_depth()) {
-			HDMI_PRINTF("color depth chage\n");
+			pr_debug("rtk-hdmirx: " "color depth chage\n");
 			return TRUE;
 		}
 
@@ -414,7 +414,7 @@ unsigned char hdmi_check_condition_change(void)
 	}
 
 	if (GET_H_MODE() != hdmi_get_hdmi_mode_reg()) {
-		HDMI_PRINTF("HDMI/DVI chg from %d to %d\n", GET_H_MODE(), (!GET_H_MODE()));
+		pr_debug("rtk-hdmirx: " "HDMI/DVI chg from %d to %d\n", GET_H_MODE(), (!GET_H_MODE()));
 		return TRUE;
 	}
 
@@ -450,7 +450,7 @@ unsigned char hdmi_wait_sync(void)
 	hdmi_rx.timing_t.tmds_clk_b = curr_clk;
 
 	if (!rxphy_get_setphy_done()) {
-		/* HDMI_PRINTF("Wait for set_phy(p%d)\n", port); */
+		/* pr_debug("rtk-hdmirx: " "Wait for set_phy(p%d)\n", port); */
 		return FALSE;
 	}
 
@@ -474,7 +474,7 @@ unsigned char hdmi_wait_sync(void)
 
 unsigned char hdmi_setup_video_pll(void)
 {
-	HDMI_PRINTF("FSM_HDMI_SETUP_VEDIO_PLL\n");
+	pr_debug("rtk-hdmirx: " "FSM_HDMI_SETUP_VEDIO_PLL\n");
 
 	hdmi_port_select();
 
@@ -510,7 +510,7 @@ unsigned char hdmi_setup_video_pll(void)
 
 unsigned char hdmi_measure(void)
 {
-	HDMI_PRINTF("FSM_HDMI_MEASURE\n");
+	pr_debug("rtk-hdmirx: " "FSM_HDMI_MEASURE\n");
 
 	lib_hdmi_meas_select_port();
 	lib_hdmi_video_output(1);
@@ -535,7 +535,7 @@ unsigned char hdmi_measure(void)
 			if (lib_hdmi_get_str_toggle_hpd_state() == HDMI_STR_HPD_TOGGLE_READY) {
 				Hdmi_SetHPD(0);
 				HDMI_DELAYMS(HDMI_STR_TOGGLE_HPD_MS);
-				HDMI_PRINTF("STR on HPD Toggle\n");
+				pr_debug("rtk-hdmirx: " "STR on HPD Toggle\n");
 				Hdmi_SetHPD(1);
 				lib_hdmi_set_str_toggle_hpd_state(HDMI_STR_HPD_TOGGLE_NONE);
 			}
@@ -552,22 +552,22 @@ unsigned char hdmi_measure(void)
 unsigned char hdmi_display_on(void)
 {
 	if (GET_H_COLOR_SPACE() != hdmi_get_colorspace_reg()) {
-		HDMI_PRINTF("D-CS chg from %d to %d\n",
+		pr_debug("rtk-hdmirx: " "D-CS chg from %d to %d\n",
 			GET_H_COLOR_SPACE(), hdmi_get_colorspace_reg());
 		return FALSE;
 	}
 	if (GET_H_COLOR_DEPTH() != lib_hdmi_get_color_depth()) {
-		HDMI_PRINTF("D-CD chg from %d to %d\n",
+		pr_debug("rtk-hdmirx: " "D-CD chg from %d to %d\n",
 			GET_H_COLOR_DEPTH(), lib_hdmi_get_color_depth());
 		return FALSE;
 	}
 	if (GET_H_PIXEL_REPEAT() != lib_hdmi_get_pixelrepeat()) {
-		HDMI_PRINTF("D-PR chg from %d to %d\n",
+		pr_debug("rtk-hdmirx: " "D-PR chg from %d to %d\n",
 			GET_H_PIXEL_REPEAT(), lib_hdmi_get_pixelrepeat());
 		return FALSE;
 	}
 	if (GET_H_INTERLACE() != lib_hdmi_get_is_interlace(HDMI_MS_DIRECT)) {
-		HDMI_PRINTF("D-IP chg from %d to %d\n",
+		pr_debug("rtk-hdmirx: " "D-IP chg from %d to %d\n",
 			GET_H_INTERLACE(), (!GET_H_INTERLACE()));
 		return FALSE;
 	}
@@ -583,15 +583,15 @@ unsigned char hdmi_display_on(void)
 		SET_H_3DFORMAT((HDMI_3D_T)hdmi_get_3d_structure_reg());
 	}
 
-	HDMI_PRINTF("bHDMIColorSpace = %s\n",
+	pr_debug("rtk-hdmirx: " "bHDMIColorSpace = %s\n",
 		GET_H_COLOR_SPACE() < (sizeof(colorspace_name)/4)  ? colorspace_name[GET_H_COLOR_SPACE()] : "UNDEFINED");
-	HDMI_PRINTF("IsInterlaced = %d\n", GET_H_INTERLACE());
-	HDMI_PRINTF("bIsHDMIDVI = %d\n", GET_H_MODE());
-	HDMI_PRINTF("PixelRepeat = %d\n", GET_H_PIXEL_REPEAT());
-	HDMI_PRINTF("ColorDepth = %s\n", GET_H_COLOR_DEPTH() < (sizeof(depth_name)/4)  ? depth_name[GET_H_COLOR_DEPTH()] : "UNDEFINED");
-	HDMI_PRINTF("ColorMetry = %s\n",
+	pr_debug("rtk-hdmirx: " "IsInterlaced = %d\n", GET_H_INTERLACE());
+	pr_debug("rtk-hdmirx: " "bIsHDMIDVI = %d\n", GET_H_MODE());
+	pr_debug("rtk-hdmirx: " "PixelRepeat = %d\n", GET_H_PIXEL_REPEAT());
+	pr_debug("rtk-hdmirx: " "ColorDepth = %s\n", GET_H_COLOR_DEPTH() < (sizeof(depth_name)/4)  ? depth_name[GET_H_COLOR_DEPTH()] : "UNDEFINED");
+	pr_debug("rtk-hdmirx: " "ColorMetry = %s\n",
 		hdmi_get_colorimetry() < (sizeof(colormetry_name)/4)  ? colormetry_name[hdmi_get_colorimetry()]: "UNDEFINED");
-	HDMI_PRINTF("3D Format  = %s\n", GET_H_3DFORMAT() < (sizeof(hdmi_3d_name)/4) ? hdmi_3d_name[GET_H_3DFORMAT()] : "UNDEFINED");
+	pr_debug("rtk-hdmirx: " "3D Format  = %s\n", GET_H_3DFORMAT() < (sizeof(hdmi_3d_name)/4) ? hdmi_3d_name[GET_H_3DFORMAT()] : "UNDEFINED");
 
 	return TRUE;
 }
@@ -600,7 +600,7 @@ unsigned char hdmi_video_ready(void)
 {
 	/* To prevent picture have short time garbage before display */
 	if (lib_hdmi_get_avmute() && !lib_hdmi_get_bch_2bit_error()) {
-		HDMI_PRINTF("[WARNING] AVMUTE 2...\n");
+		pr_debug("rtk-hdmirx: " "[WARNING] AVMUTE 2...\n");
 		SET_H_VIDEO_FSM(MAIN_FSM_HDMI_WAIT_SYNC);
 		return FALSE;
 	}
@@ -614,30 +614,30 @@ unsigned char hdmi_check_mode(void)
 	if (lib_hdmi_get_avmute() && (lib_hdmi_is_wdm_enable() || !lib_hdmi_get_bch_2bit_error())) {
 		lib_hdmi_video_output(0);
 		lib_hdmi_audio_output(0);
-		HDMI_PRINTF("check_mode: [WARNING] AVMUTE 3...\n");
+		pr_debug("rtk-hdmirx: " "check_mode: [WARNING] AVMUTE 3...\n");
 		return FALSE;
 	}
 
 	if (GET_H_VIDEO_FSM() != MAIN_FSM_HDMI_VIDEO_READY) {
-		HDMI_PRINTF("check_mode: changed_1\n");
+		pr_debug("rtk-hdmirx: " "check_mode: changed_1\n");
 		return FALSE;
 	}
 
 	if (hdmi_check_condition_change()) {
 		lib_hdmi_video_output(0);
 		lib_hdmi_audio_output(0);
-		HDMI_PRINTF("check_mode: changed_2\n");
+		pr_debug("rtk-hdmirx: " "check_mode: changed_2\n");
 		return FALSE;
 	}
 
 #if HDMI_INT_PRO_CHG_FLAG_ENABLE
 	if (lib_hdmi_get_is_interlace_change() == TRUE) {
-		HDMI_PRINTF("interlace chg\n");
+		pr_debug("rtk-hdmirx: " "interlace chg\n");
 		return FALSE;
 	}
 #else //#if HDMI_INT_PRO_CHG_FLAG_ENABLE
 	if (GET_H_INTERLACE() != hdmi_get_interlace_conti_mode()) {
-		HDMI_PRINTF("check_mode: interlace chg from %d to %d\n", GET_H_INTERLACE(), (!GET_H_INTERLACE()));
+		pr_debug("rtk-hdmirx: " "check_mode: interlace chg from %d to %d\n", GET_H_INTERLACE(), (!GET_H_INTERLACE()));
 		return FALSE;
 	}
 #endif //#if HDMI_INT_PRO_CHG_FLAG_ENABLE
@@ -689,7 +689,7 @@ void hdmi_check_crc_0(void)
 	if (lib_hdmi_read_crc())
 		return;
 
-	HDMI_PRINTF("CRC=00000000000, cs=%d\n", GET_H_COLOR_SPACE());
+	pr_debug("rtk-hdmirx: " "CRC=00000000000, cs=%d\n", GET_H_COLOR_SPACE());
 
 	if (GET_H_COLOR_SPACE() == COLOR_YUV420) {
 		lib_hdmi_420_en(0);
@@ -715,14 +715,14 @@ void hdmi2p0_check_tmds_config(void)
 	} else if (hdmi_rx.hdmi2p0_tmds_toggle_flag > 2) {
 		hdmi_rx.scramble_flag = ((cfg&_BIT0) == 0);
 		hdmi_rx.clock40x_flag = ((cfg&_BIT1) == 0);
-		//HDMI_PRINTF("HDMI2.0 swap\n");
+		//pr_debug("rtk-hdmirx: " "HDMI2.0 swap\n");
 	} else {
 		hdmi_rx.scramble_flag = ((cfg&_BIT0) != 0);
 		hdmi_rx.clock40x_flag = ((cfg&_BIT1) != 0);
 	}
 
 	if (!hail_hydra && (hdmi_rx.scramble_flag||hdmi_rx.clock40x_flag)) {
-		HDMI_PRINTF("HDMI2.0 SCDC: got it\n");
+		pr_debug("rtk-hdmirx: " "HDMI2.0 SCDC: got it\n");
 	}
 
 }
@@ -778,7 +778,7 @@ void hdmi2p0_align_flush(void)
 			flush_timeout++;
 
 			if (flush_timeout >= 10) {
-				HDMI_PRINTF("[HDMI] Align Flush flush_timeout\n");
+				pr_debug("rtk-hdmirx: " "[HDMI] Align Flush flush_timeout\n");
 				break;
 			}
 		}
@@ -786,7 +786,7 @@ void hdmi2p0_align_flush(void)
 		hdmi_rx_reg_mask32(HDMI_CH_SR, ~_ZERO, 0, HDMI_RX_MAC); /* write 1 clear */
 
 		if (flush_count >= 50) {
-			HDMI_PRINTF("[HDMI] Align Flush Fail\n");
+			pr_debug("rtk-hdmirx: " "[HDMI] Align Flush Fail\n");
 			break;
 		}
 
@@ -977,7 +977,7 @@ unsigned char hdmi_audio_is_pll_ready(void)
 		lib_hdmi_audio_wclr_fifo_underflow();
 	}
 
-	HDMI_PRINTF("[ERR] FIFO Unstable = %x\n", hdmi_rx_reg_read32(HDMI_SR, HDMI_RX_MAC));
+	pr_debug("rtk-hdmirx: " "[ERR] FIFO Unstable = %x\n", hdmi_rx_reg_read32(HDMI_SR, HDMI_RX_MAC));
 	return FALSE;
 
 }
@@ -993,7 +993,7 @@ unsigned char hdmi_audio_set_pll(unsigned int freq, unsigned char ucACR_N,HDMI_A
 		if (hdmi_audiopll_param[i].freq == freq)
 			goto PLL_SETTING;
 	}
-	HDMI_PRINTF( "Unsupport audio freq = %d\n", freq);
+	pr_debug("rtk-hdmirx: "  "Unsupport audio freq = %d\n", freq);
 	return FALSE;
 
 PLL_SETTING:
@@ -1088,7 +1088,7 @@ PLL_SETTING:
 	hdmi_rx_reg_mask32(HDMI_APLLCR1,
 		~(HDMI_APLLCR1_dpll_vcorstb_mask), (HDMI_APLLCR1_dpll_vcorstb_mask), HDMI_RX_MAC);
 
-	HDMI_PRINTF(" m = %x\n o = %x\n s = %x\n ",
+	pr_debug("rtk-hdmirx: " " m = %x\n o = %x\n s = %x\n ",
 		hdmi_audiopll_param[i].M, hdmi_audiopll_param[i].O, hdmi_audiopll_param[i].S);
 	/* Wait PLL Stable */
 	HDMI_DELAYUS(1);
@@ -1106,7 +1106,7 @@ PLL_SETTING:
 	HDMI_DELAYUS(1);
 
 	if (track_mode == HDMI_AUDIO_N_CTS_TREND_BOUND) {
-		HDMI_PRINTF("\n *****N/CTS Trend& Boundary Tracking*****\n");
+		pr_debug("rtk-hdmirx: " "\n *****N/CTS Trend& Boundary Tracking*****\n");
 		/*
 		 * (12)Enable N/CTS tracking
 		 * Modify N/CTS tracking parameter  USER:kistlin DATE:2011/08/04
@@ -1124,7 +1124,7 @@ PLL_SETTING:
 		else
 			S = hdmi_audiopll_param[i].S;
 
-		HDMI_PRINTF("S = %d , ACR_N=%d, hdmi_audiopll_param[i].O = %d\n",
+		pr_debug("rtk-hdmirx: " "S = %d , ACR_N=%d, hdmi_audiopll_param[i].O = %d\n",
 			S, ucACR_N, hdmi_audiopll_param[i].O );
 
 		if (ucACR_N) {
@@ -1132,8 +1132,8 @@ PLL_SETTING:
 		} else
 			I_Code = 0x02;
 
-		/* HDMI_PRINTF( "I Code = %d\n", I_Code); */
-		/* HDMI_PRINTF( "tmp1 = %d\n", tmp1); */
+		/* pr_debug("rtk-hdmirx: "  "I Code = %d\n", I_Code); */
+		/* pr_debug("rtk-hdmirx: "  "tmp1 = %d\n", tmp1); */
 
 		/* Set I code of Ncts[15:8] */
 		hdmi_rx_reg_write32(HDMI_ICPSNCR0, I_Code, HDMI_RX_MAC);
@@ -1159,9 +1159,9 @@ PLL_SETTING:
 		}
 
 		if (timeout == 25)
-			HDMI_PRINTF("PLL 1st check not lock = %x\n", hdmi_rx_reg_read32(HDMI_NCPER, HDMI_RX_MAC));
+			pr_debug("rtk-hdmirx: " "PLL 1st check not lock = %x\n", hdmi_rx_reg_read32(HDMI_NCPER, HDMI_RX_MAC));
 		else
-			HDMI_PRINTF("PLL 1st check lock count = %d\n", timeout);
+			pr_debug("rtk-hdmirx: " "PLL 1st check lock count = %d\n", timeout);
 
 		/* Sisable N_CTS tracking */
 		hdmi_rx_reg_mask32(HDMI_PSCR, ~HDMI_PSCR_etcn_mask, 0, HDMI_RX_MAC);
@@ -1203,9 +1203,9 @@ PLL_SETTING:
 		}
 
 		if (timeout == 25)
-			HDMI_PRINTF("PLL not lock = %x\n", hdmi_rx_reg_read32(HDMI_NCPER, HDMI_RX_MAC));
+			pr_debug("rtk-hdmirx: " "PLL not lock = %x\n", hdmi_rx_reg_read32(HDMI_NCPER, HDMI_RX_MAC));
 		else
-			HDMI_PRINTF("PLL lock count = %d\n", timeout);
+			pr_debug("rtk-hdmirx: " "PLL lock count = %d\n", timeout);
 
 		/*(14)FSM Initial*/
 		hdmi_rx_reg_write32(HDMI_FBR, 0x74, HDMI_RX_MAC);
@@ -1237,7 +1237,7 @@ PLL_SETTING:
 			~HDMI_WDCR0_bt_track_en_mask,
 			HDMI_WDCR0_bt_track_en_mask, HDMI_RX_MAC);
 	} else if(track_mode == HDMI_AUDIO_TREND_BOUND) {
-		HDMI_PRINTF("\n ***** TREND_BOUND Tracking*****\n");
+		pr_debug("rtk-hdmirx: " "\n ***** TREND_BOUND Tracking*****\n");
 		/* (14)FSM Initial */
 		hdmi_rx_reg_write32(HDMI_FBR, 0x74, HDMI_RX_MAC);
 		/* FSM entry Pre-mode (AOC=1) */
@@ -1274,14 +1274,14 @@ PLL_SETTING:
 
 	} else {
 		/*  H/W N/CTS Tracking */
-		HDMI_PRINTF("\n ***** N/CTS Tracking*****\n");
+		pr_debug("rtk-hdmirx: " "\n ***** N/CTS Tracking*****\n");
 		/*(12)Enable N/CTS tracking*/
 		if (hdmi_audiopll_param[i].S1)
 			S = hdmi_audiopll_param[i].S*2;
 		else
 			S = hdmi_audiopll_param[i].S;
 
-		HDMI_PRINTF("S = %d , ACR_N=%d, hdmi_audiopll_param[i].O = %d\n",
+		pr_debug("rtk-hdmirx: " "S = %d , ACR_N=%d, hdmi_audiopll_param[i].O = %d\n",
 			S, ucACR_N, hdmi_audiopll_param[i].O);
 
 		if (ucACR_N)
@@ -1289,8 +1289,8 @@ PLL_SETTING:
 		else
 			I_Code = 0x02;
 
-		/* HDMI_PRINTF("I Code = %d\n", I_Code); */
-		/* HDMI_PRINTF("tmp1 = %d\n", tmp1); */
+		/* pr_debug("rtk-hdmirx: " "I Code = %d\n", I_Code); */
+		/* pr_debug("rtk-hdmirx: " "tmp1 = %d\n", tmp1); */
 
 		/* Set I code of Ncts[15:8] */
 		hdmi_rx_reg_write32(HDMI_ICPSNCR0, I_Code, HDMI_RX_MAC);
@@ -1316,9 +1316,9 @@ PLL_SETTING:
 		}
 
 		if (timeout == 25)
-			HDMI_PRINTF("PLL 1st check not lock = %x\n", hdmi_rx_reg_read32(HDMI_NCPER, HDMI_RX_MAC));
+			pr_debug("rtk-hdmirx: " "PLL 1st check not lock = %x\n", hdmi_rx_reg_read32(HDMI_NCPER, HDMI_RX_MAC));
 		else
-			HDMI_PRINTF("PLL 1st check lock count = %d\n", timeout);
+			pr_debug("rtk-hdmirx: " "PLL 1st check lock count = %d\n", timeout);
 
 		/* Disable N_CTS tracking */
 		hdmi_rx_reg_mask32(HDMI_PSCR, ~_BIT4, 0, HDMI_RX_MAC);
@@ -1357,9 +1357,9 @@ PLL_SETTING:
 		}
 
 		if (timeout == 25)
-			HDMI_PRINTF("PLL not lock = %x\n", hdmi_rx_reg_read32(HDMI_NCPER, HDMI_RX_MAC));
+			pr_debug("rtk-hdmirx: " "PLL not lock = %x\n", hdmi_rx_reg_read32(HDMI_NCPER, HDMI_RX_MAC));
 		else
-			HDMI_PRINTF("PLL lock count = %d\n", timeout);
+			pr_debug("rtk-hdmirx: " "PLL lock count = %d\n", timeout);
 
 		/* (14)FSM Initial */
 		/* Target FIFO depth = 14 ,Boundary address distance = 7 */
@@ -1383,11 +1383,11 @@ PLL_SETTING:
 	}
 
 	if (timeout == 5)
-		HDMI_PRINTF("FIFO Unstable = %x \n", hdmi_rx_reg_read32(HDMI_SR, HDMI_RX_MAC));
+		pr_debug("rtk-hdmirx: " "FIFO Unstable = %x \n", hdmi_rx_reg_read32(HDMI_SR, HDMI_RX_MAC));
 	else
-		HDMI_PRINTF("FIFO timeout count = %d\n", timeout);
+		pr_debug("rtk-hdmirx: " "FIFO timeout count = %d\n", timeout);
 
-	HDMI_PRINTF("HDMI_AVMCR_reg = %x\n", hdmi_rx_reg_read32(HDMI_AVMCR, HDMI_RX_MAC));
+	pr_debug("rtk-hdmirx: " "HDMI_AVMCR_reg = %x\n", hdmi_rx_reg_read32(HDMI_AVMCR, HDMI_RX_MAC));
 #endif
 	return TRUE;
 
@@ -1453,7 +1453,7 @@ void hdmi_audio_get_freq(HDMI_AUDIO_FREQ_T *freq, HDMI_AUDIO_TRACK_MODE *track_m
 	lib_hdmi_audio_clear_fs();
 
 	if (!hdmi_audio_wait_acr())
-		HDMI_PRINTF("No N/CTS packet\n");
+		pr_debug("rtk-hdmirx: " "No N/CTS packet\n");
 
 	for (count = 0; count < 15; count++) {
 		if (lib_hdmi_audio_pop_n_cts_done() && lib_hdmi_audio_fs_from_cs())
@@ -1463,15 +1463,15 @@ void hdmi_audio_get_freq(HDMI_AUDIO_FREQ_T *freq, HDMI_AUDIO_TRACK_MODE *track_m
 	}
 
 	if (count >= 15)
-		HDMI_PRINTF("[ERR] POP UP TIME OUT\n");
+		pr_debug("rtk-hdmirx: " "[ERR] POP UP TIME OUT\n");
 
-	HDMI_PRINTF("POP UP TIME %d\n",count);
+	pr_debug("rtk-hdmirx: " "POP UP TIME %d\n",count);
 
 	/* debug options: bit0 or bit1 */
 	if (lib_hdmi_audio_fs_from_cs())
 		freq->SPDIF_freq = AUDIO_CHANNEL_STATUS[lib_hdmi_audio_get_freq_from_cs()];
 
-	HDMI_PRINTF("*************** SPDIF freq=%ld\n", freq->SPDIF_freq);
+	pr_debug("rtk-hdmirx: " "*************** SPDIF freq=%ld\n", freq->SPDIF_freq);
 
 	/* Get Audio Frequency from CTS&N */
 
@@ -1480,7 +1480,7 @@ void hdmi_audio_get_freq(HDMI_AUDIO_FREQ_T *freq, HDMI_AUDIO_TRACK_MODE *track_m
 	b = hdmi_rx.timing_t.tmds_clk_b;
 	freq->ACR_N = n;
 
-	HDMI_PRINTF("(cts=%ld)(n=%ld)(b=%ld)\n", cts, n, b);
+	pr_debug("rtk-hdmirx: " "(cts=%ld)(n=%ld)(b=%ld)\n", cts, n, b);
 
 	if (cts == 0 || n == 0 || b == 0)
 		return;
@@ -1497,7 +1497,7 @@ void hdmi_audio_get_freq(HDMI_AUDIO_FREQ_T *freq, HDMI_AUDIO_TRACK_MODE *track_m
 	/* HBR mode */
 	if (lib_hdmi_audio_get_hbr_manual_mode()) {
 		if (freq->ACR_freq != 192000) {
-			HDMI_PRINTF("WARNING!!! HBR need to equal 192K(%ld)\n", freq->ACR_freq);
+			pr_debug("rtk-hdmirx: " "WARNING!!! HBR need to equal 192K(%ld)\n", freq->ACR_freq);
 			freq->ACR_freq = 192000;
 		}
 	}
@@ -1525,7 +1525,7 @@ unsigned char hdmi_audio_detect(void)
 
 	switch (GET_H_AUDIO_FSM()) {
 	case AUDIO_FSM_AUDIO_START:
-		/* HDMI_PRINTF("AUDIO_FSM_AUDIO_START\n"); */
+		/* pr_debug("rtk-hdmirx: " "AUDIO_FSM_AUDIO_START\n"); */
 		SET_H_AUDIO_FSM(AUDIO_FSM_AUDIO_START);
 		lib_hdmi_audio_init();
 
@@ -1545,7 +1545,7 @@ unsigned char hdmi_audio_detect(void)
 
 		break;
 	case AUDIO_FSM_FREQ_DETECT:
-		HDMI_PRINTF("AUDIO_FSM_FREQ_DETECT\n");
+		pr_debug("rtk-hdmirx: " "AUDIO_FSM_FREQ_DETECT\n");
 
 #ifdef HDMI_VIDEO_WD_ENABLE
 		hdmi_watchdog_apply(_DISABLE, HDMI_WD_AUDIO_COND);
@@ -1553,18 +1553,18 @@ unsigned char hdmi_audio_detect(void)
 
 		hdmi_audio_get_freq(&t, &track_mode);
 		hdmi_audio_get_freq(&t2, &track_mode);
-		HDMI_PRINTF("Hdmi_GetAudioFreq t=%ld\n", t.ACR_freq);
-		HDMI_PRINTF("Hdmi_GetAudioFreq t2=%ld\n", t2.ACR_freq);
+		pr_debug("rtk-hdmirx: " "Hdmi_GetAudioFreq t=%ld\n", t.ACR_freq);
+		pr_debug("rtk-hdmirx: " "Hdmi_GetAudioFreq t2=%ld\n", t2.ACR_freq);
 
 		if ((t.ACR_freq != 0) && (t.ACR_freq == t2.ACR_freq)) {
 			if (HDMI_ABS(t.ACR_freq, t.SPDIF_freq) > (t.ACR_freq/20)) {
 
-				HDMI_PRINTF("[HDMI] Freq in N/CTS and CS are not match!!(cnt=%d)\n",
+				pr_debug("rtk-hdmirx: " "[HDMI] Freq in N/CTS and CS are not match!!(cnt=%d)\n",
 					hdmi_rx.audio_t.sr_mismatch_cnt);
 
 				if (lib_hdmi_audio_get_hbr_manual_mode()) {
 					/* HBRr mode */
-					HDMI_PRINTF("Audio HBR mode\n");
+					pr_debug("rtk-hdmirx: " "Audio HBR mode\n");
 				} else{
 					if (hdmi_rx.audio_t.sr_mismatch_cnt < MATCH_THRD) {
 						hdmi_rx.audio_t.sr_mismatch_cnt++;
@@ -1604,7 +1604,7 @@ unsigned char hdmi_audio_detect(void)
 		}
 		break;
 	case AUDIO_FSM_AUDIO_WAIT_PLL_READY:
-		HDMI_PRINTF("AUDIO_FSM_AUDIO_WAIT_PLL_READY\n");
+		pr_debug("rtk-hdmirx: " "AUDIO_FSM_AUDIO_WAIT_PLL_READY\n");
 
 		if (!hdmi_audio_is_pll_ready()) {
 			SET_H_AUDIO_FSM(AUDIO_FSM_AUDIO_START);
@@ -1614,7 +1614,7 @@ unsigned char hdmi_audio_detect(void)
 		SET_H_AUDIO_FSM(AUDIO_FSM_AUDIO_START_OUT);
 		break;
 	case AUDIO_FSM_AUDIO_START_OUT:
-		HDMI_PRINTF("AUDIO_FSM_AUDIO_START_OUT\n");
+		pr_debug("rtk-hdmirx: " "AUDIO_FSM_AUDIO_START_OUT\n");
 
 		lib_hdmi_audio_generate();
 		lib_hdmi_audio_output(1);
@@ -1647,7 +1647,7 @@ unsigned char hdmi_audio_detect(void)
 		if (hdmi_rx.audio_t.coding_type != lib_hdmi_audio_get_format()) {
 			lib_hdmi_audio_output(0);
 			SET_H_AUDIO_FSM(AUDIO_FSM_AUDIO_START);
-			HDMI_PRINTF("Audio Type change=%d\n", lib_hdmi_audio_get_format());
+			pr_debug("rtk-hdmirx: " "Audio Type change=%d\n", lib_hdmi_audio_get_format());
 		}
 
 		if (GET_H_AUDIO_FSM() == AUDIO_FSM_AUDIO_START)
@@ -1735,7 +1735,7 @@ unsigned char hdmi_audio_wait_2_samples(void)
 	for (i = 0; i < 5; i++) {
 		if (hdmi_update_rsv1_packet(9, buf) || lib_hdmi_audio_get_hbr_mode()) {
 			lib_hdmi_audio_set_hbr_manual_mode(1, 1);
-			HDMI_PRINTF("Got HBR packet\n");
+			pr_debug("rtk-hdmirx: " "Got HBR packet\n");
 			return TRUE;
 		}
 		HDMI_DELAYMS(10);
@@ -1876,19 +1876,19 @@ void hdmi_update_infoframe(void)
 	}
 
 	if (is_drm_here != hdmi_rx.drm_t.type_code) {
-		HDMI_PRINTF("DRM INFO=%d\n", hdmi_rx.drm_t.type_code);
+		pr_debug("rtk-hdmirx: " "DRM INFO=%d\n", hdmi_rx.drm_t.type_code);
 	}
 	if (is_avi_here != hdmi_rx.avi_t.type_code) {
-		HDMI_PRINTF("AVI INFO=%d\n", hdmi_rx.avi_t.type_code);
+		pr_debug("rtk-hdmirx: " "AVI INFO=%d\n", hdmi_rx.avi_t.type_code);
 	}
 	if (is_spd_here != hdmi_rx.spd_t.type_code) {
-		HDMI_PRINTF("SPD INFO=%d\n", hdmi_rx.spd_t.type_code);
+		pr_debug("rtk-hdmirx: " "SPD INFO=%d\n", hdmi_rx.spd_t.type_code);
 	}
 	if (is_audio_here != hdmi_rx.audiopkt_t.type_code) {
-		HDMI_PRINTF("AUD INFO=%d\n", hdmi_rx.audiopkt_t.type_code);
+		pr_debug("rtk-hdmirx: " "AUD INFO=%d\n", hdmi_rx.audiopkt_t.type_code);
 	}
 	if (is_vsi_here != hdmi_rx.vsi_t.VSIF_Version) {
-		HDMI_PRINTF("VSI INFO=%d (%x,%x,%x)\n",
+		pr_debug("rtk-hdmirx: " "VSI INFO=%d (%x,%x,%x)\n",
 			hdmi_rx.vsi_t.VSIF_Version, hdmi_rx.vsi_t.Reg_ID[0],
 			hdmi_rx.vsi_t.Reg_ID[1], hdmi_rx.vsi_t.Reg_ID[2]);
 		/*
@@ -2179,7 +2179,7 @@ unsigned char hdmi_check_spd_name(unsigned char *vendor_name)
 		return 0;
 
 #if 0
-	HDMI_PRINTF("VendorName [%x, %x, %x, %x, %x, %x, %x, %x]\n",
+	pr_debug("rtk-hdmirx: " "VendorName [%x, %x, %x, %x, %x, %x, %x, %x]\n",
 		hdmi_rx.spd_t.VendorName[0], hdmi_rx.spd_t.VendorName[1],
 		hdmi_rx.spd_t.VendorName[2], hdmi_rx.spd_t.VendorName[3],
 		hdmi_rx.spd_t.VendorName[4], hdmi_rx.spd_t.VendorName[5],
@@ -2202,7 +2202,7 @@ unsigned char hdmi_check_spd_prod(unsigned char *prod_desc)
 		return 0;
 
 #if 0
-	HDMI_PRINTF("ProductDesc [%x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x]\n",
+	pr_debug("rtk-hdmirx: " "ProductDesc [%x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x]\n",
 		hdmi_rx.spd_t.ProductDesc[0], hdmi_rx.spd_t.ProductDesc[1],
 		hdmi_rx.spd_t.ProductDesc[2], hdmi_rx.spd_t.ProductDesc[3],
 		hdmi_rx.spd_t.ProductDesc[4], hdmi_rx.spd_t.ProductDesc[5],
@@ -2268,14 +2268,14 @@ unsigned char hdmi_compatibility_check(void)
 
 	if (hdmi_check_spd_name(btv_stb.spd_vn_name) && hdmi_check_spd_prod(btv_stb.psd_pd_desc)) {
 		/* SKbox transient garbage */
-		HDMI_PRINTF("This is SKBOX!!!!!!!\n");
+		pr_debug("rtk-hdmirx: " "This is SKBOX!!!!!!!\n");
 		/* lib_hdmi_hdcp_port_write(0xC4, 0x8); */
 		lib_hdmi_set_specific_device(HDMI_SPECIFIC_DEVICE_SK_STB);
 	}
 #if HDMI_TOGGLE_HPD_Z0_ENABLE
 	else if (hdmi_check_spd_name(kt_stb_IC1000.spd_vn_name) && hdmi_check_spd_prod(kt_stb_IC1000.psd_pd_desc)) {
 		/* SKbox transient garbage */
-		HDMI_PRINTF("This is KT STB IC1000 !!!!!!!\n");
+		pr_debug("rtk-hdmirx: " "This is KT STB IC1000 !!!!!!!\n");
 		lib_hdmi_set_toggle_hpd_z0_flag(TRUE);
 		lib_hdmi_dc_on_delay_check(TRUE);
 		lib_hdmi_set_specific_device(HDMI_SPECIFIC_DEVICE_KT_STB_IC1000);
@@ -2284,12 +2284,12 @@ unsigned char hdmi_compatibility_check(void)
 #if HDMI_STR_TOGGLE_HPD_ENABLE
 	else if (hdmi_check_spd_name(kt_stb_IC1100.spd_vn_name) && hdmi_check_spd_prod(kt_stb_IC1100.psd_pd_desc)) {
 		/* KT STB and TV STR off/on, can not display */
-		HDMI_PRINTF("This is KT STB IC1100 !!!!!!!\n");
+		pr_debug("rtk-hdmirx: " "This is KT STB IC1100 !!!!!!!\n");
 		lib_hdmi_set_str_toggle_hpd_state(HDMI_STR_HPD_TOGGLE_ENTER);
 		lib_hdmi_set_specific_device(HDMI_SPECIFIC_DEVICE_KT_STB_IC1100);
 	} else if (hdmi_check_spd_name(kt_stb_GX_KT600EJ.spd_vn_name) && hdmi_check_spd_prod(kt_stb_GX_KT600EJ.psd_pd_desc)) {
 		/* KT STB and TV STR off/on, no signal */
-		HDMI_PRINTF("This is KT STB kt_stb_GX_KT600EJ !!!!!!!\n");
+		pr_debug("rtk-hdmirx: " "This is KT STB kt_stb_GX_KT600EJ !!!!!!!\n");
 		lib_hdmi_set_str_toggle_hpd_state(HDMI_STR_HPD_TOGGLE_ENTER);
 		lib_hdmi_set_specific_device(HDMI_SPECIFIC_DEVICE_KT_STB_KT600EJ);
 	}
@@ -2297,7 +2297,7 @@ unsigned char hdmi_compatibility_check(void)
 #if HDMI_DISPLAY_DELAY_ENABLE
 	else if (hdmi_check_spd_name(LHB755.spd_vn_name) && hdmi_check_spd_prod(LHB755.psd_pd_desc)) {
 		/* LHB755 - LG, change timing flicker */
-		HDMI_PRINTF("This is DVD LHB755 !!!!!!!\n");
+		pr_debug("rtk-hdmirx: " "This is DVD LHB755 !!!!!!!\n");
 		lib_hdmi_set_delay_display_enable(_ENABLE);
 		lib_hdmi_set_specific_device(HDMI_SPECIFIC_DEVICE_LHB_755);
 
@@ -2308,7 +2308,7 @@ unsigned char hdmi_compatibility_check(void)
 	}
 	else if (hdmi_check_spd_name(Samsung_GX_HC630CH.spd_vn_name) && hdmi_check_spd_prod(Samsung_GX_HC630CH.psd_pd_desc)) {
 		/* HDMI_SPECIFIC_DEVICE_SAMSUNG_GX_HC630CH change resolution flicker */
-		HDMI_PRINTF("This is SAMSUNG_GX_HC630CH !!!!!!!\n");
+		pr_debug("rtk-hdmirx: " "This is SAMSUNG_GX_HC630CH !!!!!!!\n");
 		lib_hdmi_set_delay_display_enable(_ENABLE);
 		lib_hdmi_set_specific_device(HDMI_SPECIFIC_DEVICE_SAMSUNG_GX_HC630CH);
 
@@ -2326,7 +2326,7 @@ unsigned char hdmi_compatibility_check(void)
 
 				if (lib_hdmi_hdcp14_is_onoff() == _ENABLE) {
 					if ((GET_H_COLOR_SPACE() == COLOR_YUV420) && (GET_H_COLOR_DEPTH() == HDMI_COLOR_DEPTH_10B)) {
-						HDMI_PRINTF("This is GiGa_Genie_KAO_CT1100_LB @ 4K2K !!!!!!!\n");
+						pr_debug("rtk-hdmirx: " "This is GiGa_Genie_KAO_CT1100_LB @ 4K2K !!!!!!!\n");
 						lib_hdmi_set_delay_display_enable(_ENABLE);
 						lib_hdmi_set_specific_device(HDMI_SPECIFIC_DEVICE_KT_STB_KAO_CT1100);
 
@@ -2368,7 +2368,7 @@ unsigned char hdmi_check_stable_before_display(void)
 {
 	if (bNeedDebBeforeDisp == 1) {
 		if( DispDebCnt > 0 ) {
-			HDMI_PRINTF("------>debouncing =%d, %d\n", bNeedDebBeforeDisp, DispDebCnt);
+			pr_debug("rtk-hdmirx: " "------>debouncing =%d, %d\n", bNeedDebBeforeDisp, DispDebCnt);
 			DispDebCnt--;
 			return FALSE;
 		}
@@ -2382,7 +2382,7 @@ unsigned char hdmi_check_stable_before_display(void)
 #endif
 
 	if (GET_H_VIDEO_FSM() != MAIN_FSM_HDMI_VIDEO_READY) {
-		HDMI_PRINTF("B-check_mode_changed_1\n");
+		pr_debug("rtk-hdmirx: " "B-check_mode_changed_1\n");
 		return FALSE;
 	}
 
@@ -2394,18 +2394,18 @@ unsigned char hdmi_check_stable_before_display(void)
 	if (hdmi_check_condition_change()) {
 		lib_hdmi_video_output(0);
 		lib_hdmi_audio_output(0);
-		HDMI_PRINTF("B-check_mode_changed_2\n");
+		pr_debug("rtk-hdmirx: " "B-check_mode_changed_2\n");
 		return FALSE;
 	}
 
 #if HDMI_INT_PRO_CHG_FLAG_ENABLE
 	if (lib_hdmi_get_is_interlace_change() == TRUE) {
-		HDMI_PRINTF("B-interlace chg\n");
+		pr_debug("rtk-hdmirx: " "B-interlace chg\n");
 		return FALSE;
 	}
 #else
 	if (GET_H_INTERLACE() != hdmi_get_interlace_conti_mode()) {
-		HDMI_PRINTF("B-interlace chg from %d to %d\n", GET_H_INTERLACE(), (!GET_H_INTERLACE()));
+		pr_debug("rtk-hdmirx: " "B-interlace chg from %d to %d\n", GET_H_INTERLACE(), (!GET_H_INTERLACE()));
 		return FALSE;
 	}
 #endif
@@ -2474,17 +2474,17 @@ unsigned char hdmi_check_avi_colorimetry_info(unsigned char ucInit)
 						&& (hdmi_rx.spd_t.VendorName[6] == 0x00) && (hdmi_rx.spd_t.VendorName[7]) == 0x00) {
 
 						avi_debounce--;
-						HDMI_PRINTF("EC /C avi_debounce1=%x\n", avi_debounce);
+						pr_debug("rtk-hdmirx: " "EC /C avi_debounce1=%x\n", avi_debounce);
 						return FALSE;
 					}
 #if 0
-					HDMI_PRINTF("VendorName [%x, %x, %x, %x, %x, %x, %x, %x]\n", hdmi_rx.spd_t.VendorName[0],
+					pr_debug("rtk-hdmirx: " "VendorName [%x, %x, %x, %x, %x, %x, %x, %x]\n", hdmi_rx.spd_t.VendorName[0],
 						hdmi_rx.spd_t.VendorName[1], hdmi_rx.spd_t.VendorName[2],
 						hdmi_rx.spd_t.VendorName[3], hdmi_rx.spd_t.VendorName[4],
 						hdmi_rx.spd_t.VendorName[5], hdmi_rx.spd_t.VendorName[6],
 						hdmi_rx.spd_t.VendorName[7]);
 
-					HDMI_PRINTF("EC /C avi_debounce1 exit\n");
+					pr_debug("rtk-hdmirx: " "EC /C avi_debounce1 exit\n");
 #endif
 				}
 			}
@@ -2534,7 +2534,7 @@ unsigned char hdmi_check_deb_condition_beforeDisp(unsigned char ucInit)
 		&& (lib_hdmi_hdcp14_is_onoff() == _ENABLE)
 		&& (hdmi_no_SPD_packetInfo() == TRUE)) {
 
-		HDMI_PRINTF("...............checking h/v= (%d, %d) [%d-%d], c=%d, vic=%d\n",
+		pr_debug("rtk-hdmirx: " "...............checking h/v= (%d, %d) [%d-%d], c=%d, vic=%d\n",
 			cur_h_act_len, cur_v_act_len, bNeedDebBeforeDisp, DispDebCondition, DispDebCnt, hdmi_rx.avi_t.VIC);
 
 		//deb start point: condition1
@@ -2544,7 +2544,7 @@ unsigned char hdmi_check_deb_condition_beforeDisp(unsigned char ucInit)
 			DispDebCnt = DISP_DEB_CNT_APPLETV;
 			DispDebCondition = 1;
 
-			HDMI_PRINTF("**************************** disp deb start1!!\n");
+			pr_debug("rtk-hdmirx: " "**************************** disp deb start1!!\n");
 		}
 
 		//deb again: condition2 =1360x768->1280x720
@@ -2553,7 +2553,7 @@ unsigned char hdmi_check_deb_condition_beforeDisp(unsigned char ucInit)
 			DispDebCnt = DISP_DEB_CNT_APPLETV;
 			DispDebCondition = 2;
 
-			HDMI_PRINTF("**************************** disp deb start2!!\n");
+			pr_debug("rtk-hdmirx: " "**************************** disp deb start2!!\n");
 		}
 
 		//LewisLee DATE:2016/12/22
@@ -2565,7 +2565,7 @@ unsigned char hdmi_check_deb_condition_beforeDisp(unsigned char ucInit)
 			DispDebCnt = DISP_DEB_CNT_PC40000;
 			DispDebCondition = 3;
 
-			HDMI_PRINTF("**************************** disp deb start3!!\n");
+			pr_debug("rtk-hdmirx: " "**************************** disp deb start3!!\n");
 		}
 	}
 	else {
@@ -2601,13 +2601,13 @@ unsigned char hdmi_check_hdcp_condition(unsigned char ucInit)
 		return TRUE;
 
 #if 0
-	HDMI_PRINTF("VendorName [%x, %x, %x, %x, %x, %x, %x, %x]\n", hdmi_rx.spd_t.VendorName[0],
+	pr_debug("rtk-hdmirx: " "VendorName [%x, %x, %x, %x, %x, %x, %x, %x]\n", hdmi_rx.spd_t.VendorName[0],
 		hdmi_rx.spd_t.VendorName[1], hdmi_rx.spd_t.VendorName[2],
 		hdmi_rx.spd_t.VendorName[3], hdmi_rx.spd_t.VendorName[4],
 		hdmi_rx.spd_t.VendorName[5], hdmi_rx.spd_t.VendorName[6],
 		hdmi_rx.spd_t.VendorName[7]);
 
-	HDMI_PRINTF("ProductDesc [%x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x]\n",
+	pr_debug("rtk-hdmirx: " "ProductDesc [%x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x, %x]\n",
 		hdmi_rx.spd_t.ProductDesc[0], hdmi_rx.spd_t.ProductDesc[1],
 		hdmi_rx.spd_t.ProductDesc[2], hdmi_rx.spd_t.ProductDesc[3],
 		hdmi_rx.spd_t.ProductDesc[4], hdmi_rx.spd_t.ProductDesc[5],
@@ -2641,7 +2641,7 @@ unsigned char hdmi_check_hdcp_condition(unsigned char ucInit)
 					//Need check HDCP 1.4 or 2.2
 					HDCP_debounce--;
 
-					HDMI_PRINTF("[HDCP] HDCP_debounce=%x\n", HDCP_debounce);
+					pr_debug("rtk-hdmirx: " "[HDCP] HDCP_debounce=%x\n", HDCP_debounce);
 					if (lib_hdmi_hdcp14_is_onoff() == _ENABLE)
 						return FALSE;
 				}
@@ -2650,7 +2650,7 @@ unsigned char hdmi_check_hdcp_condition(unsigned char ucInit)
 
 	HDCP_debounce = 0; // need check it can clear in here or not
 
-//	HDMI_PRINTF("[HDCP] HDCP_debounce exit\n");
+//	pr_debug("rtk-hdmirx: " "[HDCP] HDCP_debounce exit\n");
 #endif //#if HDMI_CHECK_HDCP_ENABLE
 
 	return TRUE;
@@ -2661,7 +2661,7 @@ unsigned char hdmi_get_avmute(void)
 {
 	if (GET_H_VIDEO_FSM() == MAIN_FSM_HDMI_VIDEO_READY) {
 		if (lib_hdmi_get_avmute() && !lib_hdmi_get_bch_2bit_error()) {
-			HDMI_PRINTF("This is AVMUTE\n");
+			pr_debug("rtk-hdmirx: " "This is AVMUTE\n");
 			return TRUE;
 		}
 	}
@@ -2855,7 +2855,7 @@ unsigned char lib_hdmi_vsync_checked(void)
 		HDMI_DELAYUS(5000);
 	}
 
-	HDMI_PRINTF("[WARNING] Vsync cannot seen?\n");
+	pr_debug("rtk-hdmirx: " "[WARNING] Vsync cannot seen?\n");
 	return FALSE;
 }
 
@@ -3154,9 +3154,9 @@ unsigned char lib_hdmi_set_video_pll(unsigned int b_clk, unsigned char cd, unsig
 	 * pixel clock * 1024 = b * 27 * M * 1024 / (N * 256)
 	 */
 	pixel_clockx1024 = ((unsigned long)b_clk * 27 * dpll_ratio[cd].SM * 1024) / (dpll_ratio[cd].SN * 256);
-	HDMI_PRINTF("pixel_clock = %ld\n", pixel_clockx1024);
+	pr_debug("rtk-hdmirx: " "pixel_clock = %ld\n", pixel_clockx1024);
 	if (pixel_clockx1024 == 0) {
-		HDMI_PRINTF("[ERR] pixel_clockx1024 is zero=%d,%d\n", b_clk, cd);
+		pr_debug("rtk-hdmirx: " "[ERR] pixel_clockx1024 is zero=%d,%d\n", b_clk, cd);
 		return FALSE;
 	}
 
@@ -3241,7 +3241,7 @@ unsigned char lib_hdmi_set_video_pll(unsigned int b_clk, unsigned char cd, unsig
 		Smean = 4;
 	}
 
-	HDMI_PRINTF("Smean =  %d\n", Smean);
+	pr_debug("rtk-hdmirx: " "Smean =  %d\n", Smean);
 
 	if (Smean == 0)
 		Stest = 1;
@@ -3264,14 +3264,14 @@ unsigned char lib_hdmi_set_video_pll(unsigned int b_clk, unsigned char cd, unsig
 	do {
 		n += dpll_ratio[cd].RatioN;
 		m = ((dpll_ratio[cd].RatioM * Stest * n * large_ratio)<<o) / dpll_ratio[cd].RatioN;
-		/* HDMI_PRINTF( "step1%d %d\n", m, n); */
+		/* pr_debug("rtk-hdmirx: "  "step1%d %d\n", m, n); */
 	} while (n < 2);
 
 	/* M code must >= 6 */
 	while (m < 8) {
 		n += dpll_ratio[cd].RatioN;
 		m = ((dpll_ratio[cd].RatioM * Stest * n * large_ratio)<<o) / dpll_ratio[cd].RatioN;
-		/* HDMI_PRINTF( "step2:%d %d\n", m, n); */
+		/* pr_debug("rtk-hdmirx: "  "step2:%d %d\n", m, n); */
 	}
 
 
@@ -3280,7 +3280,7 @@ unsigned char lib_hdmi_set_video_pll(unsigned int b_clk, unsigned char cd, unsig
 		do {
 			n += dpll_ratio[cd].RatioN;
 			m = ((dpll_ratio[cd].RatioM * Stest * n * large_ratio)<<o) / dpll_ratio[cd].RatioN;
-			/* HDMI_PRINTF( "step3:%d %d\n", m, n); */
+			/* pr_debug("rtk-hdmirx: "  "step3:%d %d\n", m, n); */
 		} while (n < 2);
 	}
 
@@ -3294,20 +3294,20 @@ unsigned char lib_hdmi_set_video_pll(unsigned int b_clk, unsigned char cd, unsig
 		m <<= 1;
 	}
 	if (n > 9)
-		HDMI_PRINTF("[ERR] m=%d, n=%d > 9\n", m, n);
+		pr_debug("rtk-hdmirx: " "[ERR] m=%d, n=%d > 9\n", m, n);
 
-	/* HDMI_PRINTF("***************TMDS=%d\n", b_clk); */
-	/* HDMI_PRINTF("***************cd=%d\n", cd); */
-	/* HDMI_PRINTF("***************m=%d\n", m); */
-	/* HDMI_PRINTF("***************n=%d\n", n); */
-	/* HDMI_PRINTF("***************o=%d\n", o); */
-	/* HDMI_PRINTF("***************s=%d\n", Smean); */
-	/* HDMI_PRINTF("***************fraction1=%d\n", fraction1); */
-	/* HDMI_PRINTF("***************fraction2=%d\n", fraction2); */
-	/* HDMI_PRINTF("***************pixel_clockx1024=%ld\n", pixel_clockx1024); */
-	/* HDMI_PRINTF("***************fvco=%d MHz\n", fvco); */
-	/* HDMI_PRINTF("***************larget=%d\n", large_ratio); */
-	HDMI_PRINTF("fvco=%d MHz\n", fvco);
+	/* pr_debug("rtk-hdmirx: " "***************TMDS=%d\n", b_clk); */
+	/* pr_debug("rtk-hdmirx: " "***************cd=%d\n", cd); */
+	/* pr_debug("rtk-hdmirx: " "***************m=%d\n", m); */
+	/* pr_debug("rtk-hdmirx: " "***************n=%d\n", n); */
+	/* pr_debug("rtk-hdmirx: " "***************o=%d\n", o); */
+	/* pr_debug("rtk-hdmirx: " "***************s=%d\n", Smean); */
+	/* pr_debug("rtk-hdmirx: " "***************fraction1=%d\n", fraction1); */
+	/* pr_debug("rtk-hdmirx: " "***************fraction2=%d\n", fraction2); */
+	/* pr_debug("rtk-hdmirx: " "***************pixel_clockx1024=%ld\n", pixel_clockx1024); */
+	/* pr_debug("rtk-hdmirx: " "***************fvco=%d MHz\n", fvco); */
+	/* pr_debug("rtk-hdmirx: " "***************larget=%d\n", large_ratio); */
+	pr_debug("rtk-hdmirx: " "fvco=%d MHz\n", fvco);
 
 
 
@@ -3323,7 +3323,7 @@ unsigned char lib_hdmi_set_video_pll(unsigned int b_clk, unsigned char cd, unsig
 
 	fraction1 = ((unsigned long)m*95*4*b_clk / (n*256*100));/* 2bit fractional part */
 	fraction2 = 0x00;
-	/* HDMI_PRINTF("***************fraction1=%d\n", fraction1); */
+	/* pr_debug("rtk-hdmirx: " "***************fraction1=%d\n", fraction1); */
 
 	if (fraction1 >= 10)
 		fraction1 -= 10;
@@ -3345,7 +3345,7 @@ unsigned char lib_hdmi_set_video_pll(unsigned int b_clk, unsigned char cd, unsig
 		fraction1 -= 10;
 		fraction2 |= 0x01;
 	}
-	/* HDMI_PRINTF("***************fraction2=%d\n", fraction2); */
+	/* pr_debug("rtk-hdmirx: " "***************fraction2=%d\n", fraction2); */
 	/* fraction2 |= 0x18; */
 
 #else
@@ -3370,7 +3370,7 @@ unsigned char lib_hdmi_set_video_pll(unsigned int b_clk, unsigned char cd, unsig
 
 		/* (13.5 - 0.3) * 1024 = 13516  ,  (40+0.3) * 1024 = 41267  (margin +- 0.3M) */
 		if ((fpfd1024 < 13516) || (fpfd1024 > 41267))/* margin +- 0.3M */
-			HDMI_PRINTF("[WARNING] fpfd is not correct range %d \n", fpfd1024);
+			pr_debug("rtk-hdmirx: " "[WARNING] fpfd is not correct range %d \n", fpfd1024);
 
 		for (j = 0; j < 4; ++j) {
 			if (((m - 2) >= video_pll_others_param[j].min_M) &&
@@ -3385,13 +3385,13 @@ unsigned char lib_hdmi_set_video_pll(unsigned int b_clk, unsigned char cd, unsig
 		if (j == 4) {
 			dpll_ip = 2;
 			dpll_rs = 3;
-			HDMI_PRINTF("[ERROR] video pll table not find\n");
+			pr_debug("rtk-hdmirx: " "[ERROR] video pll table not find\n");
 		}
 	}
 
 
-	/* HDMI_PRINTF("***************ip=%d\n", dpll_ip); */
-	/* HDMI_PRINTF("***************rs=%d\n", dpll_rs); */
+	/* pr_debug("rtk-hdmirx: " "***************ip=%d\n", dpll_ip); */
+	/* pr_debug("rtk-hdmirx: " "***************rs=%d\n", dpll_rs); */
 
 #endif
 
@@ -3595,7 +3595,7 @@ void lib_hdmi2p0_reset_scdc(void)
 		HDMI_SCDC_CR_scdc_reset_mask, HDMI_RX_MAC);
 	hdmi_rx_reg_mask32(HDMI_SCDC_CR,
 		~HDMI_SCDC_CR_scdc_reset_mask, 0, HDMI_RX_MAC);
-	HDMI_PRINTF("HDMI2.0 SCDC: clear\n");
+	pr_debug("rtk-hdmirx: " "HDMI2.0 SCDC: clear\n");
 }
 
 void lib_hdmi2p0_scdc_update_flag(void)
@@ -3610,7 +3610,7 @@ void lib_hdmi2p0_scdc_update_flag(void)
 void lib_hdmi2p0_scramble_enable(unsigned char on_off)
 {
 	if (on_off) {
-		/* HDMI_PRINTF("HDMI2.0 Scramble Enable\n"); */
+		/* pr_debug("rtk-hdmirx: " "HDMI2.0 Scramble Enable\n"); */
 		/* For RGB bug */
 		hdmi_rx_reg_mask32(HDMI_SCR,
 			~(HDMI_SCR_dvi_reset_ds_cm_en_mask), 0, HDMI_RX_MAC);
@@ -3623,7 +3623,7 @@ void lib_hdmi2p0_scramble_enable(unsigned char on_off)
 			~(HDMI_SCR_mode_mask|HDMI_SCR_msmode_mask),
 			(HDMI_SCR_mode_mask|HDMI_SCR_msmode_mask), HDMI_RX_MAC);
 	} else {
-		/* HDMI_PRINTF("HDMI2.0 Scramble disable\n"); */
+		/* pr_debug("rtk-hdmirx: " "HDMI2.0 Scramble disable\n"); */
 		hdmi_rx_reg_mask32(HDMI_SCR,
 			~(HDMI_SCR_dvi_reset_ds_cm_en_mask),
 			HDMI_SCR_dvi_reset_ds_cm_en_mask, HDMI_RX_MAC);
@@ -3959,7 +3959,7 @@ void lib_hdmi_audio_n_bound(unsigned int freq)
 		~HDMI_AUDIO_N_LOW_BOUND_n_low_bound_mask,
 		HDMI_AUDIO_N_LOW_BOUND_n_low_bound(N_low), HDMI_RX_MAC);
 
-	HDMI_PRINTF("freq = %d Audio_N_Bound H = %d , L =%d\n", freq, N_up, N_low);
+	pr_debug("rtk-hdmirx: " "freq = %d Audio_N_Bound H = %d , L =%d\n", freq, N_up, N_low);
 }
 
 
@@ -4132,7 +4132,7 @@ unsigned char lib_hdmi_audio_get_channel_status39_16(unsigned int bitmask, unsig
 void lib_hdmi_set_toggle_hpd_z0_flag(unsigned char uc_flag)
 {
 #if HDMI_TOGGLE_HPD_Z0_ENABLE
-	/* HDMI_PRINTF("lib_hdmi_set_toggle_hpd_z0_flag=%d\n", uc_flag); */
+	/* pr_debug("rtk-hdmirx: " "lib_hdmi_set_toggle_hpd_z0_flag=%d\n", uc_flag); */
 	hdmi_toggle_hpd_z0_flag = uc_flag;
 #endif
 }
@@ -4159,7 +4159,7 @@ unsigned char lib_hdmi_toggle_hpd_z0_check(unsigned char ucInit)
 		/* Need to think, if start time almost overflow */
 		start_time = hdmi_rx_reg_read32(MIS_SCPU_CLK90K_LO ,HDMI_RX_CLK90K)/90;
 		current_time = start_time;
-		HDMI_PRINTF("lib_hdmi_toggle_hpd_z0_check, start=%d\n", start_time);
+		pr_debug("rtk-hdmirx: " "lib_hdmi_toggle_hpd_z0_check, start=%d\n", start_time);
 		return TRUE;
 	}
 
@@ -4172,13 +4172,13 @@ unsigned char lib_hdmi_toggle_hpd_z0_check(unsigned char ucInit)
 			HDMI_DELAYMS(HDMI_TOGGLE_HPD_Z0_MS);
 			lib_hdmi_z0_set(LN_ALL, 1);
 			Hdmi_SetHPD(1);
-			HDMI_PRINTF("lib_hdmi_toggle_hpd_z0_check, time=%d\n", current_time);
+			pr_debug("rtk-hdmirx: " "lib_hdmi_toggle_hpd_z0_check, time=%d\n", current_time);
 			lib_hdmi_set_dc_on_delay_state(HDMI_DC_ON_ENABLE_DELAY);
 			lib_hdmi_set_toggle_hpd_z0_flag(FALSE);
 		}
 	} else {
 		/* current_time <= start_time */
-		HDMI_PRINTF("lib_hdmi_toggle_hpd_z0_check over, start_time=%d, current_time=%d\n", start_time, current_time);
+		pr_debug("rtk-hdmirx: " "lib_hdmi_toggle_hpd_z0_check over, start_time=%d, current_time=%d\n", start_time, current_time);
 		lib_hdmi_set_toggle_hpd_z0_flag(FALSE);
 	}
 #endif /* End of #if HDMI_TOGGLE_HPD_Z0_ENABLE */
@@ -4189,7 +4189,7 @@ unsigned char lib_hdmi_toggle_hpd_z0_check(unsigned char ucInit)
 void lib_hdmi_set_dc_on_delay_state(HDMI_DC_ON_STATE_E state)
 {
 #if HDMI_TOGGLE_HPD_Z0_ENABLE
-	/* HDMI_PRINTF("lib_hdmi_set_dc_on_delay_state=%d\n", state); */
+	/* pr_debug("rtk-hdmirx: " "lib_hdmi_set_dc_on_delay_state=%d\n", state); */
 	hdmi_dc_on_delay_state = state;
 #endif
 }
@@ -4220,7 +4220,7 @@ unsigned char lib_hdmi_dc_on_delay_check(unsigned char ucInit)
 		/* Need to think, if start time almost overflow */
 		start_time = hdmi_rx_reg_read32(MIS_SCPU_CLK90K_LO ,HDMI_RX_CLK90K)/90;
 		current_time = start_time;
-		HDMI_PRINTF("lib_hdmi_dc_on_delay_check, start=%d\n", start_time);
+		pr_debug("rtk-hdmirx: " "lib_hdmi_dc_on_delay_check, start=%d\n", start_time);
 		return TRUE;
 	}
 
@@ -4231,13 +4231,13 @@ unsigned char lib_hdmi_dc_on_delay_check(unsigned char ucInit)
 
 	if (current_time >= start_time) {
 		if (current_time - start_time >= HDMI_DC_ON_DELAY_MS) {
-			HDMI_PRINTF("lib_hdmi_dc_on_delay_check, time=%d\n", current_time);
+			pr_debug("rtk-hdmirx: " "lib_hdmi_dc_on_delay_check, time=%d\n", current_time);
 			lib_hdmi_set_dc_on_delay_state(HDMI_DC_ON_FINISH);
 			return TRUE;
 		}
 	} else {
 		/* current_time <= start_time */
-		HDMI_PRINTF("lib_hdmi_dc_on_delay_check over, start_time=%d, current_time=%d\n", start_time, current_time);
+		pr_debug("rtk-hdmirx: " "lib_hdmi_dc_on_delay_check over, start_time=%d, current_time=%d\n", start_time, current_time);
 		lib_hdmi_set_dc_on_delay_state(HDMI_DC_ON_NONE);
 		return TRUE;
 	}
@@ -4251,7 +4251,7 @@ unsigned char lib_hdmi_dc_on_delay_check(unsigned char ucInit)
 void lib_hdmi_set_str_toggle_hpd_state(HDMI_STR_HPD_TOGGLE_STATE_E state)
 {
 #if HDMI_STR_TOGGLE_HPD_ENABLE
-	/* HDMI_PRINTF("lib_hdmi_set_str_toggle_hpd_state=%d\n", state); */
+	/* pr_debug("rtk-hdmirx: " "lib_hdmi_set_str_toggle_hpd_state=%d\n", state); */
 	hdmi_str_toggle_hpd_state = state;
 #endif
 }
@@ -4268,7 +4268,7 @@ HDMI_STR_HPD_TOGGLE_STATE_E lib_hdmi_get_str_toggle_hpd_state(void)
 void lib_hdmi_set_delay_display_enable(unsigned char ucEnable)
 {
 #if HDMI_DISPLAY_DELAY_ENABLE
-	/* HDMI_PRINTF("lib_hdmi_set_delay_display_enable=%d\n", ucEnable); */
+	/* pr_debug("rtk-hdmirx: " "lib_hdmi_set_delay_display_enable=%d\n", ucEnable); */
 	hdmi_delay_display_enable = ucEnable;
 #endif
 }
@@ -4285,7 +4285,7 @@ unsigned char lib_hdmi_get_delay_display_enable(void)
 void lib_hdmi_set_delay_display_state(HDMI_DISPLAY_DELAY_STATE_STATE_E state)
 {
 #if HDMI_DISPLAY_DELAY_ENABLE
-	/* HDMI_PRINTF("lib_hdmi_set_delay_display_state=%d\n", state); */
+	/* pr_debug("rtk-hdmirx: " "lib_hdmi_set_delay_display_state=%d\n", state); */
 	hdmi_delay_display_state = state;
 #endif
 }
@@ -4315,7 +4315,7 @@ unsigned char lib_hdmi_delay_check_before_display(unsigned char ucInit)
 			/* Need to think, if start time almost overflow */
 			start_time = hdmi_rx_reg_read32(MIS_SCPU_CLK90K_LO ,HDMI_RX_CLK90K)/90;
 			current_time = start_time;
-			HDMI_PRINTF("lib_hdmi_delay_check_before_display, start=%d\n", start_time);
+			pr_debug("rtk-hdmirx: " "lib_hdmi_delay_check_before_display, start=%d\n", start_time);
 		}
 		return TRUE;
 	}
@@ -4328,13 +4328,13 @@ unsigned char lib_hdmi_delay_check_before_display(unsigned char ucInit)
 
 	if (current_time >= start_time) {
 		if (current_time - start_time >= Delay_Time) {
-			HDMI_PRINTF("lib_hdmi_delay_check_before_display, time=%d\n", current_time);
+			pr_debug("rtk-hdmirx: " "lib_hdmi_delay_check_before_display, time=%d\n", current_time);
 			lib_hdmi_set_delay_display_state(HDMI_DISPLAY_DELAY_FINISH);
 			return TRUE;
 		}
 	} else {
 		/* current_time <= start_time */
-		HDMI_PRINTF("lib_hdmi_delay_check_before_display over, start_time=%d, current_time=%d\n", start_time, current_time);
+		pr_debug("rtk-hdmirx: " "lib_hdmi_delay_check_before_display over, start_time=%d, current_time=%d\n", start_time, current_time);
 		lib_hdmi_set_delay_display_state(HDMI_DISPLAY_DELAY_FINISH);
 		return TRUE;
 	}
@@ -4377,7 +4377,7 @@ unsigned int lib_hdmi_get_delay_display_time(void)
 
 void lib_hdmi_set_specific_device(HDMI_SPECIFIC_DEVICE_E device)
 {
-	/* HDMI_PRINTF("lib_hdmi_set_specific_device=%d\n", device); */
+	/* pr_debug("rtk-hdmirx: " "lib_hdmi_set_specific_device=%d\n", device); */
 	hdmi_specific_device = device;
 }
 
@@ -4412,143 +4412,143 @@ void lib_hdmi_dbg_reg_dump(void)
 	#define AUDIO_REG_DBG 1
 	#define VIDEO_REG_DBG 1
 
-	HDMI_PRINTF("===================Dump Reg Start===================\n");
+	pr_debug("rtk-hdmirx: " "===================Dump Reg Start===================\n");
 #if AUDIO_REG_DBG
-	HDMI_PRINTF("###################Audio Part Begin###################\n");
-	HDMI_PRINTF("SR=%x AFCR=%x\n",
+	pr_debug("rtk-hdmirx: " "###################Audio Part Begin###################\n");
+	pr_debug("rtk-hdmirx: " "SR=%x AFCR=%x\n",
 		hdmi_rx_reg_read32(HDMI_SR, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_AFCR, HDMI_RX_MAC));
 
-	HDMI_PRINTF("ASR0=%x ASR1=%x\n",
+	pr_debug("rtk-hdmirx: " "ASR0=%x ASR1=%x\n",
 		hdmi_rx_reg_read32(HDMI_ASR0, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_ASR1, HDMI_RX_MAC));
 
-	HDMI_PRINTF("APLLCR0=%x APLLCR1=%x APLLCR2=%x APLLCR3=%x\n",
+	pr_debug("rtk-hdmirx: " "APLLCR0=%x APLLCR1=%x APLLCR2=%x APLLCR3=%x\n",
 		hdmi_rx_reg_read32(HDMI_APLLCR0, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_APLLCR1, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_APLLCR2, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_APLLCR3, HDMI_RX_MAC));
 
-	HDMI_PRINTF("ACRCR= %x ACRSR0=%x ACRSR1=%x\n",
+	pr_debug("rtk-hdmirx: " "ACRCR= %x ACRSR0=%x ACRSR1=%x\n",
 		hdmi_rx_reg_read32(HDMI_ACRCR, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_ACRSR0, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_ACRSR1, HDMI_RX_MAC));
 
-	HDMI_PRINTF("CTS_UP_BOUND=%x  CTS_LOW_BOUND=%x\n",
+	pr_debug("rtk-hdmirx: " "CTS_UP_BOUND=%x  CTS_LOW_BOUND=%x\n",
 		hdmi_rx_reg_read32(HDMI_AUDIO_CTS_UP_BOUND, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_AUDIO_CTS_LOW_BOUND, HDMI_RX_MAC));
 
-	HDMI_PRINTF("N_UP_BOUND=%x  N_LOW_BOUND=%x\n",
+	pr_debug("rtk-hdmirx: " "N_UP_BOUND=%x  N_LOW_BOUND=%x\n",
 		hdmi_rx_reg_read32(HDMI_AUDIO_N_UP_BOUND, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_AUDIO_N_LOW_BOUND, HDMI_RX_MAC));
 
-	HDMI_PRINTF("INTCR=%x SR_CHG=%x AOCR=%x\n",
+	pr_debug("rtk-hdmirx: " "INTCR=%x SR_CHG=%x AOCR=%x\n",
 		hdmi_rx_reg_read32(HDMI_INTCR, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_AUDIO_SAMPLE_RATE_CHANGE_IRQ, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_AOCR, HDMI_RX_MAC));
 
-	HDMI_PRINTF("###################Audio Part End###################\n");
+	pr_debug("rtk-hdmirx: " "###################Audio Part End###################\n");
 #endif
 
 #if VIDEO_REG_DBG
-	HDMI_PRINTF("###################TMDS Channel Status Begin###################\n");
-	HDMI_PRINTF("TMDS_CTRL=%x TMDS_OUTCTL=%x\n",
+	pr_debug("rtk-hdmirx: " "###################TMDS Channel Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "TMDS_CTRL=%x TMDS_OUTCTL=%x\n",
 		hdmi_rx_reg_read32(HDMI_TMDS_CTRL, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_TMDS_OUTCTL, HDMI_RX_MAC));
-	HDMI_PRINTF("###################TMDS Channel Status End###################\n");
+	pr_debug("rtk-hdmirx: " "###################TMDS Channel Status End###################\n");
 
 
-	HDMI_PRINTF("###################Deep Color Status Begin###################\n");
-	HDMI_PRINTF("DPC_SET2=%x DPC_SET3=%x\n",
+	pr_debug("rtk-hdmirx: " "###################Deep Color Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "DPC_SET2=%x DPC_SET3=%x\n",
 		hdmi_rx_reg_read32(HDMI_TMDS_DPC_SET2, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_TMDS_DPC_SET3, HDMI_RX_MAC));
-	HDMI_PRINTF("###################Deep Color Status End###################\n");
+	pr_debug("rtk-hdmirx: " "###################Deep Color Status End###################\n");
 
 
-	HDMI_PRINTF("###################Data Enable Error Status Begin###################\n");
-	HDMI_PRINTF("DET_STS=%x\n",
+	pr_debug("rtk-hdmirx: " "###################Data Enable Error Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "DET_STS=%x\n",
 		hdmi_rx_reg_read32(HDMI_TMDS_DET_STS, HDMI_RX_MAC));
-	HDMI_PRINTF("###################Data Enable Error Status End###################\n");
+	pr_debug("rtk-hdmirx: " "###################Data Enable Error Status End###################\n");
 
-	HDMI_PRINTF("###################Video Data Error Detect Begin###################\n");
-	HDMI_PRINTF("BIT_ERR_B=%x BIT_ERR_G=%x BIT_ERR_R=%x\n",
+	pr_debug("rtk-hdmirx: " "###################Video Data Error Detect Begin###################\n");
+	pr_debug("rtk-hdmirx: " "BIT_ERR_B=%x BIT_ERR_G=%x BIT_ERR_R=%x\n",
 		hdmi_rx_reg_read32(HDMI_VIDEO_BIT_ERR_STATUS_B, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_VIDEO_BIT_ERR_STATUS_G, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_VIDEO_BIT_ERR_STATUS_R, HDMI_RX_MAC));
-	HDMI_PRINTF("TREC4_ERR_B=%x TREC4_ERR_G=%x TREC4_ERR_R=%x\n",
+	pr_debug("rtk-hdmirx: " "TREC4_ERR_B=%x TREC4_ERR_G=%x TREC4_ERR_R=%x\n",
 		hdmi_rx_reg_read32(HDMI_TERC4_ERR_STATUS_B, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_TERC4_ERR_STATUS_G, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_TERC4_ERR_STATUS_R, HDMI_RX_MAC));
-	HDMI_PRINTF("BCH_ERR=%x\n", hdmi_rx_reg_read32(HDMI_BCHCR, HDMI_RX_MAC));
-	HDMI_PRINTF("###################Video Data Error Detect End###################\n");
+	pr_debug("rtk-hdmirx: " "BCH_ERR=%x\n", hdmi_rx_reg_read32(HDMI_BCHCR, HDMI_RX_MAC));
+	pr_debug("rtk-hdmirx: " "###################Video Data Error Detect End###################\n");
 
 
-	HDMI_PRINTF("################### Video Control Register Begin###################\n");
-	HDMI_PRINTF("VCR=%x\n", hdmi_rx_reg_read32(HDMI_VCR, HDMI_RX_MAC));
-	HDMI_PRINTF("###################Video Control Register End###################\n");
+	pr_debug("rtk-hdmirx: " "################### Video Control Register Begin###################\n");
+	pr_debug("rtk-hdmirx: " "VCR=%x\n", hdmi_rx_reg_read32(HDMI_VCR, HDMI_RX_MAC));
+	pr_debug("rtk-hdmirx: " "###################Video Control Register End###################\n");
 
-	HDMI_PRINTF("###################Guard Band Error Status Begin###################\n");
-	HDMI_PRINTF("BCSR=%x\n", hdmi_rx_reg_read32(HDMI_BCSR, HDMI_RX_MAC));
-	HDMI_PRINTF("###################Guard Band Error Status End###################\n");
+	pr_debug("rtk-hdmirx: " "###################Guard Band Error Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "BCSR=%x\n", hdmi_rx_reg_read32(HDMI_BCSR, HDMI_RX_MAC));
+	pr_debug("rtk-hdmirx: " "###################Guard Band Error Status End###################\n");
 
 
-	HDMI_PRINTF("###################PRBS Status Begin###################\n");
-	HDMI_PRINTF("PRBS_R=%x PRBS_G=%x PRBS_B=%x\n",
+	pr_debug("rtk-hdmirx: " "###################PRBS Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "PRBS_R=%x PRBS_G=%x PRBS_B=%x\n",
 		hdmi_rx_reg_read32(HDMI_PRBS_R_CTRL, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_PRBS_G_CTRL, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_PRBS_B_CTRL, HDMI_RX_MAC));
-	HDMI_PRINTF("###################PRBS Status End###################\n");
+	pr_debug("rtk-hdmirx: " "###################PRBS Status End###################\n");
 
 
-	HDMI_PRINTF("###################Asynchronous Fifo Status Begin###################\n");
-	HDMI_PRINTF("FIFO_SR0=%x FIFO_SR1=%x\n",
+	pr_debug("rtk-hdmirx: " "###################Asynchronous Fifo Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "FIFO_SR0=%x FIFO_SR1=%x\n",
 		hdmi_rx_reg_read32(HDMI_PHY_FIFO_SR0, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_PHY_FIFO_SR1, HDMI_RX_MAC));
 
-	HDMI_PRINTF("CHSR=%x\n", hdmi_rx_reg_read32(HDMI_CH_SR, HDMI_RX_MAC));
-	HDMI_PRINTF("###################PHY Asynchronous Fifo Status End###################\n");
+	pr_debug("rtk-hdmirx: " "CHSR=%x\n", hdmi_rx_reg_read32(HDMI_CH_SR, HDMI_RX_MAC));
+	pr_debug("rtk-hdmirx: " "###################PHY Asynchronous Fifo Status End###################\n");
 
 
-	HDMI_PRINTF("###################Asynchronous Fifo Status Begin###################\n");
-	HDMI_PRINTF("FIFO_SR0=%x FIFO_SR1=%x\n",
+	pr_debug("rtk-hdmirx: " "###################Asynchronous Fifo Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "FIFO_SR0=%x FIFO_SR1=%x\n",
 		hdmi_rx_reg_read32(HDMI_PHY_FIFO_SR0, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_PHY_FIFO_SR1, HDMI_RX_MAC));
 
-	HDMI_PRINTF("CHSR=%x\n", hdmi_rx_reg_read32(HDMI_CH_SR, HDMI_RX_MAC));
-	HDMI_PRINTF("###################PHY Asynchronous Fifo Status End###################\n");
+	pr_debug("rtk-hdmirx: " "CHSR=%x\n", hdmi_rx_reg_read32(HDMI_CH_SR, HDMI_RX_MAC));
+	pr_debug("rtk-hdmirx: " "###################PHY Asynchronous Fifo Status End###################\n");
 
 #if HDMI2p0
-	HDMI_PRINTF("###################Scramble Status Begin###################\n");
-	HDMI_PRINTF("SCR_CR=%x\n", hdmi_rx_reg_read32(HDMI_SCR_CR, HDMI_RX_MAC));
-	HDMI_PRINTF("###################Scramble Status End###################\n");
+	pr_debug("rtk-hdmirx: " "###################Scramble Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "SCR_CR=%x\n", hdmi_rx_reg_read32(HDMI_SCR_CR, HDMI_RX_MAC));
+	pr_debug("rtk-hdmirx: " "###################Scramble Status End###################\n");
 
 
-	HDMI_PRINTF("###################CED Status Begin###################\n");
-	HDMI_PRINTF("CER_SR0=%x CER_SR1=%x CER_SR2=%x\n",
+	pr_debug("rtk-hdmirx: " "###################CED Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "CER_SR0=%x CER_SR1=%x CER_SR2=%x\n",
 		hdmi_rx_reg_read32(HDMI_CERSR0, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_CERSR1, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_CERSR2, HDMI_RX_MAC));
 
-	HDMI_PRINTF("CER_SR3=%x CER_SR4=%x\n",
+	pr_debug("rtk-hdmirx: " "CER_SR3=%x CER_SR4=%x\n",
 		hdmi_rx_reg_read32(HDMI_CERSR3, HDMI_RX_MAC),
 		hdmi_rx_reg_read32(HDMI_CERSR4, HDMI_RX_MAC));
-	HDMI_PRINTF("###################CED Statuss End###################\n");
+	pr_debug("rtk-hdmirx: " "###################CED Statuss End###################\n");
 
 
-	HDMI_PRINTF("###################YUV420 FIFO Status Begin###################\n");
-	HDMI_PRINTF("YUV420_CR=%x\n",
+	pr_debug("rtk-hdmirx: " "###################YUV420 FIFO Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "YUV420_CR=%x\n",
 		hdmi_rx_reg_read32(HDMI_YUV420_CR, HDMI_RX_MAC));
-	HDMI_PRINTF("###################YUV420 FIFO Status End###################\n");
+	pr_debug("rtk-hdmirx: " "###################YUV420 FIFO Status End###################\n");
 
 
-	HDMI_PRINTF("###################PMM CLK Status Begin###################\n");
-	HDMI_PRINTF("CLK_DET_SR=%x\n",
+	pr_debug("rtk-hdmirx: " "###################PMM CLK Status Begin###################\n");
+	pr_debug("rtk-hdmirx: " "CLK_DET_SR=%x\n",
 		hdmi_rx_reg_read32(HDMI_ACDRCLKDETSR, HDMI_RX_MAC));
-	HDMI_PRINTF("###################PMM CLK Status End###################\n");
+	pr_debug("rtk-hdmirx: " "###################PMM CLK Status End###################\n");
 #endif
 
 #endif
 
-	HDMI_PRINTF("===================Dump Reg End===================\n");
+	pr_debug("rtk-hdmirx: " "===================Dump Reg End===================\n");
 
 }

@@ -51,15 +51,15 @@ hdmitx_device_t tx_dev;
  */
 int hdmitx_get_raw_edid(unsigned char *edid)
 {
-	HDMI_DEBUG("%s", __func__);
+	pr_debug("rtk-hdmitx: " "%s", __func__);
 
 	if (!(hdmi_data.sink_cap_available)) {
-		HDMI_INFO("%s:EDID not ready", __func__);
+		pr_info("rtk-hdmitx: " "%s:EDID not ready", __func__);
 		return -ENOMSG;
 	}
 
 	if (memcpy(edid, hdmi_data.edid_ptr, sizeof(struct raw_edid)) == NULL) {
-		HDMI_INFO("%s:failed to copy EDID", __func__);
+		pr_info("rtk-hdmitx: " "%s:failed to copy EDID", __func__);
 		return -EFAULT;
 	}
 
@@ -163,7 +163,7 @@ static long hdmitx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		return ops_get_config_tv_system((void __user *)arg);
 
 	default:
-		HDMI_DEBUG(" Unknown ioctl cmd %08x", cmd);
+		pr_debug("rtk-hdmitx: " " Unknown ioctl cmd %08x", cmd);
 		return -EFAULT;
 	}
 }
@@ -208,7 +208,7 @@ static int rtk_hdmitx_suspend(struct device *dev)
 	int ret_val;
 	int hpd_state;
 
-	HDMI_INFO("Enter %s", __func__);
+	pr_info("rtk-hdmitx: " "Enter %s", __func__);
 
 	ret_val = rtk_hdmitx_switch_suspend();
 	hdmitx_scdcrr_suspend();
@@ -218,7 +218,7 @@ static int rtk_hdmitx_suspend(struct device *dev)
 	if (hpd_state == 1)
 		hdmitx_send_scdc_TmdsConfig(0, 0, 0);
 
-	HDMI_INFO("Exit %s", __func__);
+	pr_info("rtk-hdmitx: " "Exit %s", __func__);
 	return ret_val;
 }
 
@@ -226,12 +226,12 @@ static int rtk_hdmitx_resume(struct device *dev)
 {
 	int ret_val;
 
-	HDMI_INFO("Enter %s", __func__);
+	pr_info("rtk-hdmitx: " "Enter %s", __func__);
 
 	hdmitx_scdcrr_resume();
 	ret_val = rtk_hdmitx_switch_resume();
 
-	HDMI_INFO("Exit %s", __func__);
+	pr_info("rtk-hdmitx: " "Exit %s", __func__);
 	return ret_val;
 }
 
@@ -239,21 +239,21 @@ static void rtk_hdmitx_shutdown(struct platform_device *pdev)
 {
 	int hpd_state;
 
-	HDMI_INFO("Enter %s", __func__);
+	pr_info("rtk-hdmitx: " "Enter %s", __func__);
 
 	/* Send no scramble for prevent HDMI 5V still exist */
 	hpd_state = hdmitx_switch_get_state();
 	if (hpd_state == 1)
 		hdmitx_send_scdc_TmdsConfig(0, 0, 0);
 
-	HDMI_INFO("Exit %s", __func__);
+	pr_info("rtk-hdmitx: " "Exit %s", __func__);
 }
 
 static int rtk_hdmi_probe(struct platform_device *pdev)
 {
 	struct device_node *dptx_np;
 
-	HDMI_INFO("Driver init");
+	pr_info("rtk-hdmitx: " "Driver init");
 
 	if (check_hdmi_mhl_mode())
 		goto end;
@@ -261,24 +261,24 @@ static int rtk_hdmi_probe(struct platform_device *pdev)
 	tx_dev.reg_base = of_iomap(pdev->dev.of_node, 0);
 
 	if (!tx_dev.reg_base) {
-		HDMI_ERROR("Can't map HDMI Tx registers");
+		pr_err("rtk-hdmitx: " "Can't map HDMI Tx registers");
 		goto end;
 	}
 
 	tx_dev.reset_hdmi = reset_control_get(&pdev->dev, "rstn_hdmi");
 	if (IS_ERR(tx_dev.reset_hdmi)) {
-		HDMI_ERROR("Can't get reset_control reset_hdmi");
+		pr_err("rtk-hdmitx: " "Can't get reset_control reset_hdmi");
 		goto end;
 	}
 
 	tx_dev.clk_hdmi = clk_get(&pdev->dev, "clk_en_hdmi");
 	if (IS_ERR(tx_dev.clk_hdmi)) {
-		HDMI_ERROR("Can't get clk clk_hdmi");
+		pr_err("rtk-hdmitx: " "Can't get clk clk_hdmi");
 		goto end;
 	}
 
 	if (register_hdmitx_miscdev(&tx_dev)) {
-		HDMI_ERROR("Could not register_hdmitx_miscdev");
+		pr_err("rtk-hdmitx: " "Could not register_hdmitx_miscdev");
 		goto end;
 	}
 
@@ -291,26 +291,26 @@ static int rtk_hdmi_probe(struct platform_device *pdev)
 		"gpio-hpd-detect", 0);
 
 	if (tx_dev.hpd_gpio < 0) {
-		HDMI_ERROR("Could not get gpio from of");
+		pr_err("rtk-hdmitx: " "Could not get gpio from of");
 		goto end;
 	} else {
-		HDMI_INFO("hotplug gpio(%d)", tx_dev.hpd_gpio);
+		pr_info("rtk-hdmitx: " "hotplug gpio(%d)", tx_dev.hpd_gpio);
 	}
 
 	if (gpio_request(tx_dev.hpd_gpio, pdev->dev.of_node->name))
-		HDMI_ERROR("Request gpio(%d) fail", tx_dev.hpd_gpio);
+		pr_err("rtk-hdmitx: " "Request gpio(%d) fail", tx_dev.hpd_gpio);
 
 	/* Get hotplug gpio irq */
 	tx_dev.hpd_irq = gpio_to_irq(tx_dev.hpd_gpio);
 	if (!tx_dev.hpd_irq) {
-		HDMI_ERROR("Fail to get hpd_irq");
+		pr_err("rtk-hdmitx: " "Fail to get hpd_irq");
 		goto end;
 	} else {
-		HDMI_DEBUG("irq_num(%u)\n", tx_dev.hpd_irq);
+		pr_debug("rtk-hdmitx: " "irq_num(%u)\n", tx_dev.hpd_irq);
 	}
 
 	if (register_hdmitx_switchdev(&tx_dev)) {
-		HDMI_ERROR("Could not register_hdmitx_switchdev");
+		pr_err("rtk-hdmitx: " "Could not register_hdmitx_switchdev");
 		goto err_register;
 	}
 
@@ -333,12 +333,12 @@ static int rtk_hdmi_probe(struct platform_device *pdev)
 	dptx_np = of_find_compatible_node(NULL, NULL, "Realtek,rtk-dptx");
 	if (dptx_np) {
 		if (of_device_is_available(dptx_np)) {
-			HDMI_INFO("Found DP TX node");
+			pr_info("rtk-hdmitx: " "Found DP TX node");
 			displayport_exist = 1;
 		}
 	}
 
-	HDMI_INFO("Driver init done");
+	pr_info("rtk-hdmitx: " "Driver init done");
 	return 0;
 
 err_register:
@@ -379,7 +379,7 @@ static struct platform_driver rtk_hdmi_driver = {
 static int __init rtk_hdmi_init(void)
 {
 	if (platform_driver_register(&rtk_hdmi_driver)) {
-		HDMI_ERROR("Could not add character driver");
+		pr_err("rtk-hdmitx: " "Could not add character driver");
 		goto err_register;
 	}
 

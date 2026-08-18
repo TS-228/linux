@@ -29,7 +29,7 @@
 	cpu-supply = <&cpu_supp>;
 	#cooling-cells = <2>;
 	cooling-min-level = <0>;
-	cooling-max-level = <7>;
+	cooling-max-level = <10>;
 };
 
 &cpu1 {
@@ -38,7 +38,7 @@
 	cpu-supply = <&cpu_supp>;
 	#cooling-cells = <2>;
 	cooling-min-level = <0>;
-	cooling-max-level = <7>;
+	cooling-max-level = <10>;
 };
 
 /* cpu opp table */
@@ -95,6 +95,27 @@
 			opp-microvolt = <1050000>;
 			clock-latency-ns = <500000>;
 			opp-suspend;
+			status = "okay";
+		};
+		/* Stock QNAP table tops out at 1.1 GHz @ 1.2 V; pll_scpu also
+		 * supports 1.16 / 1.2 GHz (verified on TS-228 hardware).
+		 */
+		opp1000: opp-1000mhz {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <1200000>;
+			clock-latency-ns = <500000>;
+			status = "okay";
+		};
+		opp1160: opp-1160mhz {
+			opp-hz = /bits/ 64 <1160000000>;
+			opp-microvolt = <1200000>;
+			clock-latency-ns = <500000>;
+			status = "okay";
+		};
+		opp1200: opp-1200mhz {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <1200000>;
+			clock-latency-ns = <500000>;
 			status = "okay";
 		};
 	};

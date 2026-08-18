@@ -1803,6 +1803,21 @@ config SENSORS_PWM_FAN
 	  This driver can also be built as a module. If so, the module
 	  will be called pwm-fan.
 
+config SENSORS_QNAP_MCU_HWMON
+	tristate "QNAP MCU hardware monitoring"
+	depends on MFD_QNAP_MCU
+	depends on THERMAL || THERMAL=n
+	help
+	  Fan and temperature sensor on QNAP NAS devices via the onboard MCU.
+
+config SENSORS_QNAP_TS228_PIC
+	tristate "QNAP TS-228 PIC hardware monitoring and LEDs"
+	depends on SERIAL_DEV_BUS
+	depends on THERMAL || THERMAL=n
+	help
+	  Fan, temperature, and front-panel LEDs on the QNAP TS-228 PIC
+	  connected to UART1.
+
 config SENSORS_RASPBERRYPI_HWMON
 	tristate "Raspberry Pi voltage monitor"
 	depends on RASPBERRYPI_FIRMWARE || (COMPILE_TEST && !RASPBERRYPI_FIRMWARE)

@@ -37,12 +37,6 @@
 #if defined(CONFIG_RTD_1295_HWNAT)
 #include <soc/realtek/rtk_cpu.h>
 //#define RTL_DEBUG	1
-#ifdef RTL_DEBUG
-#define DBG(fmt, ...) printk(KERN_ERR "%s:%d: " fmt "\n", \
-						__func__, __LINE__, ## __VA_ARGS__)
-#else
-#define DBG(fmt, ...)
-#endif
 #endif //defined(CONFIG_RTD_1295_HWNAT)
 
 static uint8 fidHashTable[]={0x00,0x0f,0xf0,0xff};
@@ -6739,10 +6733,10 @@ void initAsic_PHY(void)
 				Port1_TypeCfg_UTP |
 				p0_type_cfg);
 
-	//DBG("PITCR = 0x%x", READ_MEM32(PITCR));
+	//pr_debug("rtk-hwnat: " "PITCR = 0x%x", READ_MEM32(PITCR));
 
 	//arrange PHY ID for MAC0=PHY1, MAC4=PHY3, MAC1=PHY8, MAC2=PHY9, MAC3=PHYa
-	//DBG("old EPIDR = 0x%x", READ_MEM32(EPIDR));
+	//pr_debug("rtk-hwnat: " "old EPIDR = 0x%x", READ_MEM32(EPIDR));
 	if ((get_rtd129x_cpu_revision() != RTD129x_CHIP_REVISION_A00) &&
 			(hwnat_mac0_mode == 1 /*SGMII*/))
 		p0_phyId = rtl8651AsicEthernetTable[0].phyId;
@@ -6753,7 +6747,7 @@ void initAsic_PHY(void)
 				Port_embPhyID(rtl8651AsicEthernetTable[2].phyId, 2) |
 				Port_embPhyID(rtl8651AsicEthernetTable[1].phyId, 1) |
 				Port_embPhyID(p0_phyId, 0)));
-	//DBG("EPIDR = 0x%x", READ_MEM32(EPIDR));
+	//pr_debug("rtk-hwnat: " "EPIDR = 0x%x", READ_MEM32(EPIDR));
 
 #if defined(CONFIG_FPGA_V6_HWNAT)
 	//enable auto negotiation,
@@ -6815,7 +6809,7 @@ void initAsic_PHY(void)
 				EnablePHYIf)));
 
 	//set PHY regs
-	DBG("Disable 1000M for FPGA v6");
+	pr_debug("rtk-hwnat: " "Disable 1000M for FPGA v6");
 	phyId = rtl8651AsicEthernetTable[0].phyId;
 	rtl8651_getAsicEthernetPHYReg( phyId, 9, &phyData);
 	phyData &= ~(CAPABLE_1000BASE_TX_FD | CAPABLE_1000BASE_TX_HD);
@@ -6832,17 +6826,17 @@ void initAsic_PHY(void)
 	rtl8651_setAsicEthernetPHYReg(phyId, 9, phyData);
 
 	//enhance GMII TX pad driving
-	DBG("enhance GMII TX pad driving for FPGA v6");
+	pr_debug("rtk-hwnat: " "enhance GMII TX pad driving for FPGA v6");
 	rtl8651_setAsicEthernetPHYTxPadDriving(0);
 	rtl8651_setAsicEthernetPHYTxPadDriving(4);
 	rtl8651_setAsicEthernetPHYTxPadDriving(5);
 
 	//restart all PHYs
-	DBG("restart all PHYs");
+	pr_debug("rtk-hwnat: " "restart all PHYs");
 	rtl8651_restartAsicEthernetPHYNway(0);
 	rtl8651_restartAsicEthernetPHYNway(4);
 	rtl8651_restartAsicEthernetPHYNway(5);
-	DBG("finish to restart all PHYs");
+	pr_debug("rtk-hwnat: " "finish to restart all PHYs");
 #else //!defined(CONFIG_FPGA_V6_HWNAT)
 	#if defined(CONFIG_RTL_CPU_TAG)
 	#if 0 /* use CPU tag on both MAC0 and MAC5 */
@@ -6958,7 +6952,7 @@ void initAsic_PHY(void)
 				STP_PortST_MASK |
 				MacSwReset);
 	}
-	//DBG("PCRP0 = 0x%x", READ_MEM32(PCRP0));
+	//pr_debug("rtk-hwnat: " "PCRP0 = 0x%x", READ_MEM32(PCRP0));
 
 	//enable auto negotiation,
 	//turn on all advertise abilities,
@@ -6977,7 +6971,7 @@ void initAsic_PHY(void)
 				AcptMaxLen_9K |
 #endif /* CONFIG_RTL_JUMBO_FRAME */
 				EnablePHYIf);
-	//DBG("PCRP4 = 0x%x", READ_MEM32(PCRP4));
+	//pr_debug("rtk-hwnat: " "PCRP4 = 0x%x", READ_MEM32(PCRP4));
 
 	if (hwnat_mac5_conn_to == 0 /* PHY */) {
 		//arrange PHY ID for MAC5,
@@ -6999,7 +6993,7 @@ void initAsic_PHY(void)
 				AcptMaxLen_9K |
 #endif /* CONFIG_RTL_JUMBO_FRAME */
 				EnablePHYIf);
-		//DBG("PCRP5 = 0x%x", READ_MEM32(PCRP5));
+		//pr_debug("rtk-hwnat: " "PCRP5 = 0x%x", READ_MEM32(PCRP5));
 	} else {
 		//arrange PHY ID for MAC5,
 		//enable force link up,
@@ -7022,7 +7016,7 @@ void initAsic_PHY(void)
 				AcptMaxLen_9K |
 #endif /* CONFIG_RTL_JUMBO_FRAME */
 				MacSwReset);
-		//DBG("PCRP5 = 0x%x", READ_MEM32(PCRP5));
+		//pr_debug("rtk-hwnat: " "PCRP5 = 0x%x", READ_MEM32(PCRP5));
 
 		/* set tx and rx delay */
 		WRITE_MEM32(P5GMIICR, (READ_MEM32(P5GMIICR) & ~((3 << 18) | (1 << 4) | (7 << 0))) |

@@ -394,7 +394,7 @@ static scd_driver gpio_scd_driver =
  *------------------------------------------------------------------*/
 static int __init gpio_scd_module_init(void)
 {
-    SC_INFO("gpio scd module init\n");
+    pr_info("rtk-scd: " "gpio scd module init\n");
 
     if (register_scd_driver(&gpio_scd_driver)!=0)
         return -EFAULT;

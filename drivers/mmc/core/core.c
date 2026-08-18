@@ -7,6 +7,7 @@
  *  Copyright (C) 2005-2008 Pierre Ossman, All Rights Reserved.
  *  MMCv4 support Copyright (C) 2006 Philip Langdale, All Rights Reserved.
  */
+#include <linux/kconfig.h>
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
@@ -1005,7 +1006,7 @@ int mmc_execute_tuning(struct mmc_card *card)
 	else
 		opcode = MMC_SEND_TUNING_BLOCK;
 
-#ifdef CONFIG_MMC_RTK_EMMC
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
 	host->card = card;
 #endif
 

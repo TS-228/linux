@@ -171,7 +171,7 @@ static struct clk_fixed_factor clk_sysh = {
 	.hw.init = &(struct clk_init_data) {
 		.name         = "clk_sysh",
 		.ops          = &clk_fixed_factor_ops,
-		.parent_names = (const char *[]){ "pll_dscb" },
+		.parent_names = (const char *[]){ "pll_dcsb" },
 		.num_parents  = 1,
 		.flags        = CLK_SET_RATE_PARENT,
 	},

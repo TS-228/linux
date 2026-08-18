@@ -1,6 +1,3 @@
-config RTK_REGISTER_TRACKER
-	bool
-
 config RTK_POWER_TRACKER
 	bool
 

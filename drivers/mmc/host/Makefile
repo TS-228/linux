@@ -3,6 +3,11 @@
 # Makefile for MMC/SD host controller drivers
 #
 
+include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
+CFLAGS_rtkemmc_rtd119x.o += $(rtk_vendor-ccflags)
+CFLAGS_rtk-sdmmc.o += $(rtk_vendor-ccflags)
+CFLAGS_sdmmc_export.o += $(rtk_vendor-ccflags)
+
 ifeq ($(CONFIG_ARCH_RTD119X),y)
 obj-$(CONFIG_MMC_RTK_EMMC)              += rtkemmc_rtd119x.o
 else ifeq ($(CONFIG_ARCH_RTD13xx),y)

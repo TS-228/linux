@@ -7,16 +7,6 @@
 
 #undef PDEBUG
 //#define MEMALLOC_DEBUG
-#ifdef MEMALLOC_DEBUG
-#ifdef __KERNEL__
-#define PDEBUG(fmt, args...) printk(KERN_INFO "memalloc: " fmt, ##args)
-#else
-#define PDEBUG(fmt, args...) fprintf(stderr, fmt, ##args)
-#endif
-#else
-#define PDEBUG(fmt, args...)
-#endif
-
 typedef struct {
     unsigned bus_address;
     unsigned size;

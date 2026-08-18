@@ -15,13 +15,13 @@
 			device_type = "cpu";
 			compatible = "arm,cortex-a7";
 			reg = <0x0>;
-			clock-frequency = <1000000000>;
+			clock-frequency = <1200000000>;
 		};
 		cpu1: cpu@1 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a7";
 			reg = <0x1>;
-			clock-frequency = <1000000000>;
+			clock-frequency = <1200000000>;
 		};
 	};
 	timer {
@@ -767,12 +767,10 @@
 		resets = <&rst_1 RSTN_GSPI>;
 		status = "disabled";
 	};
-	rtd1195-pwm@pwm {
-		compatible = "Realtek,rtd1195-pwm";
+	rtd1195_pwm: rtd1195-pwm@180070d0 {
+		compatible = "realtek,rtd1195-pwm", "Realtek,rtd1195-pwm";
+		reg = <0x180070D0 0xC>;
 		#pwm-cells = <2>;
-		pwm_idx = <0>;
-		enable = <0>;
-		duty_rate = <80>;
 		clksrc_div = <8>;
 		status = "disabled";
 	};
@@ -822,9 +820,9 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		nvmem-cells = <&tcal0>, <&tcal1>;
-		nvmem-cell-names = "tc0", "tc1";
-
+		/* Do not put nvmem-cells on the provider itself — that creates a
+		 * dependency cycle and prevents cell registration.
+		 */
 		tcal1: thermal-calibration@1 {
 			reg = <0x1CA 0x2>;
 			bits = <2 7>;

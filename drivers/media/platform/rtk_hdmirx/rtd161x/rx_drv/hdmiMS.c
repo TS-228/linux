@@ -38,7 +38,7 @@ int Hdmi_CRC_check(void)
 	while (!(hdmi_rx_reg_read32(TMDS_CRCC, HDMI_RX_MAC)&TMDS_CRCC_crc_done_mask)) {
 		usleep_range(10000, 15000);/* 10~15ms */
 		if (!tmo--) {
-			/* HDMI_PRINTF("[HDMI] WARNING: FAIL: Wait CRC Timeout !!!\n"); */
+			/* pr_debug("rtk-hdmirx: " "[HDMI] WARNING: FAIL: Wait CRC Timeout !!!\n"); */
 			HDMIRX_INFO("CRC check timeout");
 			return FALSE;
 		}
@@ -69,7 +69,7 @@ unsigned char Hdmi_WaitVsync(int num)
 		usleep_range(10000, 15000);/* 10~15ms */
 	}
 
-	HDMI_PRINTF("Wait vsync timeout\n");
+	pr_debug("rtk-hdmirx: " "Wait vsync timeout\n");
 	return 0;
 }
 

@@ -574,15 +574,20 @@ static inline unsigned int _ohci_readl (const struct ohci_hcd *ohci,
 					__hc32 __iomem * regs)
 {
 #ifdef CONFIG_USB_PATCH_ON_RTK
+#if defined(CONFIG_ARCH_RTD129x)
 	unsigned long flags;
-	rtk_lockapi_lock(flags, __FUNCTION__); /* Add global lock for emmc issue*/
+
+	rtk_lockapi_lock(flags, __func__); /* Add global lock for emmc issue */
+#endif
 	if (ohci->wrap_reg && readl(ohci->wrap_reg) == 0x0) {
 		ohci_err(ohci, "%s [USB Workaround] fixed force to enable "
 			    "ohci clock \n", __func__);
 		writel(0x40, ohci->wrap_reg);
 		mdelay(1);
 	}
-	rtk_lockapi_unlock(flags,__FUNCTION__); /* Add global lock for emmc issue*/
+#if defined(CONFIG_ARCH_RTD129x)
+	rtk_lockapi_unlock(flags, __func__); /* Add global lock for emmc issue */
+#endif
 #endif
 
 #ifdef CONFIG_USB_OHCI_BIG_ENDIAN_MMIO
@@ -598,14 +603,19 @@ static inline void _ohci_writel (const struct ohci_hcd *ohci,
 				 const unsigned int val, __hc32 __iomem *regs)
 {
 #ifdef CONFIG_USB_PATCH_ON_RTK
+#if defined(CONFIG_ARCH_RTD129x)
 	unsigned long flags;
-	rtk_lockapi_lock(flags, __FUNCTION__); /* Add global lock for emmc issue*/
+
+	rtk_lockapi_lock(flags, __func__); /* Add global lock for emmc issue */
+#endif
 	if (ohci->wrap_reg && readl(ohci->wrap_reg) == 0x0) {
 		ohci_err(ohci, "%s [USB Workaround] fixed force to enable ohci clock \n", __func__);
 		writel(0x40, ohci->wrap_reg);
 		mdelay(1);
 	}
-	rtk_lockapi_unlock(flags,__FUNCTION__); /* Add global lock for emmc issue*/
+#if defined(CONFIG_ARCH_RTD129x)
+	rtk_lockapi_unlock(flags, __func__); /* Add global lock for emmc issue */
+#endif
 #endif
 
 #ifdef CONFIG_USB_OHCI_BIG_ENDIAN_MMIO

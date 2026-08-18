@@ -18,15 +18,6 @@
 #define P_CRT_BASE	0
 #define P_ISO_BASE	64
 
-
-//#define RTK_DEBUG
-#ifdef RTK_DEBUG
-#define RTK_debug(fmt, ...) printk(fmt, ##__VA_ARGS__)
-#else
-#define RTK_debug(fmt, ...) do {} while(0)
-#endif
-
-
 //////////////////////////////muxpad0////////////////////////////
 /*hole:0*/
 #define RTK_PINCTRL_PIN_PCRT_nf_rdy 				PINCTRL_PIN(P_CRT_BASE + 17,  	"nf_rdy")
@@ -133,9 +124,6 @@
 #define RTK_PINCTRL_PIN_PISO_ai_loc					PINCTRL_PIN(P_ISO_BASE + 25,  	"ai_loc")
 #define RTK_PINCTRL_PIN_PISO_iso_gpio0					PINCTRL_PIN(P_ISO_BASE + 0,  	"iso_gpio0")
 #define RTK_PINCTRL_PIN_PISO_iso_gpio1					PINCTRL_PIN(P_ISO_BASE + 1,  	"iso_gpio1")
-
-
-
 
 struct rtk119x_pin_regmap{
 	u16 pmux_regoff;
@@ -247,7 +235,6 @@ static const struct rtk119x_pin_regmap pin_regmap[] = {
 	{.pmux_regoff=0x314, 	.pmux_regbit=30, .pmux_regbitmsk=0x3,	.pcof_regoff=PCOF_UNSUPPORT, .pcof_regbit=0, .pcof_cur_strgh = 0}, //(P_ISO_BASE + 25,  	"ai_loc")
 };
 
-
 #define RTK119X_PCONF_SCHM 3
 #define RTK119X_PCONF_CURR 2
 #define RTK119X_PCONF_PULEN 1
@@ -271,9 +258,6 @@ static const struct rtk119x_pin_regmap pin_regmap[] = {
 #define MUX_REG_BITNUM_MASK			0x0000ff00
 #define MUX_REG_BITNUM_MASK_OFF			8
 #define MUX_REG_BITOFF_MASK			0x000000ff
-
-
-
 
 /*
 #define MUX_PINS_BITS		4
@@ -342,7 +326,6 @@ struct RTK119X_pinctrl {
 		.name = _name,					\
 		.muxval = _val,					\
 	}
-
 
 static const struct RTK119X_desc_pin rtk119x_pins[] = {
 	 RTK119X_PIN(RTK_PINCTRL_PIN_PCRT_gpio_0,

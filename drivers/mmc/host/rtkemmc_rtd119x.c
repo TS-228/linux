@@ -121,6 +121,8 @@ static void rtkcr_set_speed(struct rtksd_host *sdport,u8 level);
 static int mmc_Tuning_DDR50(struct rtksd_host *sdport);
 static int mmc_Tuning_HS200(struct rtksd_host *sdport);
 static int rtksd_execute_tuning(struct mmc_host *host, u32 opcode);
+static int mmc_Select_SDR50_Push_Sample(struct rtksd_host *sdport);
+static u32 rtkemmc_backup_registers(struct rtksd_host *sdport);
 
 typedef void (*set_gpio_func_t)(u32 gpio_num,u8 dir,u8 level);
 
@@ -995,11 +997,12 @@ static int rtksd_get_next_block() {
 }
 #endif
 
-static int rtksd_get_buffer_start_addr(void){
-    if (pRSP_org)
-	return (int)pRSP_org;
-    else
-	return -1;
+static unsigned char *rtksd_get_buffer_start_addr(void)
+{
+	if (pRSP_org)
+		return pRSP_org;
+
+	return NULL;
 }
 
 static void rtksd_set_rspparam(struct rtksd_host *sdport, struct sd_cmd_pkt *cmd_info)
@@ -1100,6 +1103,15 @@ static void rtksd_set_rspparam(struct rtksd_host *sdport, struct sd_cmd_pkt *cmd
             cmd_info->rsp_para1 = -1;
             cmd_info->rsp_para3 = (SD_CMD_RSP_TO|ADDR_BYTE_MODE);
             break;
+        case MMC_WRITE_BLOCK:
+            cmd_info->rsp_para1 = -1;
+            cmd_info->rsp_para3 = (SD_CMD_RSP_TO|ADDR_BYTE_MODE);
+            break;
+        case MMC_SET_BLOCK_COUNT:
+            cmd_info->rsp_para1 = -1;
+            cmd_info->rsp_para2 = SD_R1|CRC16_CAL_DIS;
+            cmd_info->rsp_para3 = SD_CMD_RSP_TO;
+            break;
         case MMC_WRITE_MULTIPLE_BLOCK:
             cmd_info->rsp_para1 = -1;
             cmd_info->rsp_para3 = (SD_CMD_RSP_TO|ADDR_BYTE_MODE);
@@ -1128,7 +1140,7 @@ static int SD_SendCMDGetRSP_Cmd(struct sd_cmd_pkt *cmd_info,int bIgnore)
     u32 dma_val=0;
     u32 byte_count = 0x200, block_count = 1, cpu_mode=0, sa=0;
     u8 tmp9_buf[1024]={0};
-    u32 buf_ptr=NULL;
+    u32 buf_ptr = 0;
     u16 state = 0;
 
     rtksd_set_rspparam(sdport,cmd_info);   //for 119x
@@ -1223,10 +1235,10 @@ RET_CMD:
 
     if(err == CR_TRANS_OK){
 	sync();
-        if(buf_ptr != NULL)
+        if(buf_ptr)
         {
             //ignore start pattern
-	    pRSP = (u32)pRSP&~0xff;
+	    pRSP = (unsigned char *)((uintptr_t)pRSP & ~0xff);
 	    *(((unsigned int *)pRSP)+4) = cr_readb(iobase+SD_CMD5);
 	    pRSP++;
             rtksd_read_rsp(sdport,(u32*)pRSP, rsp_len);
@@ -1446,7 +1458,7 @@ static int SD_Stream_Cmd(u16 cmdcode,struct sd_cmd_pkt *cmd_info, unsigned int b
                 DRIVER_NAME,cmd_idx,rsp,sd_arg,rsp_para1,rsp_para2,rsp_para3,rsp_len,cr_readb(sdport->base_io+SD_CONFIGURE1),cr_readb(sdport->base_io+SD_CONFIGURE2),cr_readb(sdport->base_io+SD_CONFIGURE3));
     }
 
-    if((u32)data == NULL) {
+    if (!data) {
         BUG_ON(1);
     }
     if(rsp == NULL) {
@@ -1707,6 +1719,9 @@ static int SD_Stream(struct sd_cmd_pkt *cmd_info)
     cmd_info->data->bytes_xfered=0;
     dma_nents = dma_map_sg( mmc_dev(host), cmd_info->data->sg,
                             cmd_info->data->sg_len,  dir);
+    if (dir == DMA_TO_DEVICE)
+        dma_sync_sg_for_device(mmc_dev(host), cmd_info->data->sg,
+                               cmd_info->data->sg_len, dir);
     sg = cmd_info->data->sg;
 
 #ifdef SHOW_MMC_PRD
@@ -1859,14 +1874,19 @@ static int SD_Stream(struct sd_cmd_pkt *cmd_info)
                             goto ERR_HANDLE;
                         }
                     }
+                    if (dir == DMA_TO_DEVICE &&
+                        rtksd_wait_status(host->card, STATE_TRAN, 0, 0))
+                        err = -1;
                 }
 
-                if(host->card && mmc_card_blockaddr(host->card))
-                    cmd_info->cmd->arg += cmd_info->block_count;
-                else
-                    cmd_info->cmd->arg += dma_leng;
+                if (!err) {
+                    if(host->card && mmc_card_blockaddr(host->card))
+                        cmd_info->cmd->arg += cmd_info->block_count;
+                    else
+                        cmd_info->cmd->arg += dma_leng;
 
-                cmd_info->data->bytes_xfered += dma_leng;
+                    cmd_info->data->bytes_xfered += dma_leng;
+                }
 
             }else{
 ERR_HANDLE:
@@ -1996,14 +2016,12 @@ static void rtksd_send_command(struct rtksd_host *sdport, struct mmc_command *cm
          }
     }
     MMCPRINTF("%s: cmd->opcode=0x%02x\n",__func__,cmd->opcode);
-#if 0
     if (cmd->opcode == MMC_SELECT_CARD)
     {
 	MMCPRINTF("to DIV_none, then tuning at this speed\n");
-	//rtkcr_set_div(sdport,EMMC_CLOCK_DIV_NON);
-	mmc_Select_SDR50_Push_Sample(&cmd_info);
+	rtkcr_set_div(sdport, EMMC_CLOCK_DIV_NON);
+	mmc_Select_SDR50_Push_Sample(sdport);
     }
-#endif
 
 err_out:
     if (rc){
@@ -2099,7 +2117,9 @@ static int rtksd_execute_tuning(struct mmc_host *host, u32 opcode)
 	switch(host->mode)
 	{
 	case MODE_SD20:
+		down_write(&cr_rw_sem);
 		mmc_Select_SDR50_Push_Sample(sdport);
+		up_write(&cr_rw_sem);
 		break;
 	case MODE_DDR:
 		mmc_Tuning_DDR50(sdport);
@@ -2108,7 +2128,10 @@ static int rtksd_execute_tuning(struct mmc_host *host, u32 opcode)
 		mmc_Tuning_HS200(sdport);
 		break;
 	default:
+		down_write(&cr_rw_sem);
 		mmc_Select_SDR50_Push_Sample(sdport);
+		up_write(&cr_rw_sem);
+		break;
 	}
 
 	return 0;
@@ -3025,7 +3048,6 @@ static int mmc_Select_SDR50_Push_Sample(struct rtksd_host *sdport){
 	u32 iobase = sdport->base_io;
 	unsigned long flags=0;
 
-	down_write(&cr_rw_sem);
 	g_bTuning = 1;
 	if (!g_bResuming)
 		gCurrentBootMode = MODE_SD20;
@@ -3056,7 +3078,6 @@ static int mmc_Select_SDR50_Push_Sample(struct rtksd_host *sdport){
 		{
 			printk(KERN_ERR "sdr tuning : No good push point \n");
 			g_bTuning = 0;
-			up_write(&cr_rw_sem);
 			return -1;
 		}
 	}
@@ -3076,14 +3097,13 @@ static int mmc_Select_SDR50_Push_Sample(struct rtksd_host *sdport){
 		else {
 			printk(KERN_ERR "sdr tuning : No good Sample point \n");
 			g_bTuning = 0;
-			up_write(&cr_rw_sem);
 			return -2;
 		}
 	}
 	sync();
 	printk(KERN_INFO "SDR select (sample/push) : 0x%02x/0x%02x\n", cr_readb(sdport->base_io+SD_SAMPLE_POINT_CTL), cr_readb(sdport->base_io+SD_PUSH_POINT_CTL));
+	rtkemmc_backup_registers(sdport);
 	g_bTuning = 0;
-	up_write(&cr_rw_sem);
 
 	return 0;
 }
@@ -3188,6 +3208,7 @@ int error_handling(struct rtksd_host *sdport, unsigned int cmd_idx, unsigned int
 	struct mmc_host *host = sdport->mmc;
         extern unsigned char g_ext_csd[];
 
+                sts1_val = cr_readb(iobase+SD_STATUS1);
                 printk(KERN_INFO "%s : status1 val=%02x, cmd_idx=0x%02x, gCurrentBootMode=0x%02x\n", __func__, sts1_val,cmd_idx,gCurrentBootMode);
                 host_card_stop(sdport);
 		if (cmd_idx > MMC_SET_RELATIVE_ADDR)
@@ -3456,8 +3477,8 @@ int rtkcr_send_cmd25(struct rtksd_host *sdport)
 		return -5;
 	}
 
-	for (i=0;i<0x400;i++)
-		crd_tmp_buffer[i] = i++;
+	for (i = 0; i < 0x400; i++)
+		crd_tmp_buffer[i] = i;
 
         //spin_lock_irqsave(&sdport->lock,flags);
 	if (cmd_info.cmd == NULL)
@@ -4775,6 +4796,7 @@ static const struct of_device_id rtk_rtkemmc_ids[] = {
 	{ .compatible = "Realtek,rtk119x-emmc" },
 	{ /* Sentinel */ },
 };
+MODULE_DEVICE_TABLE(of, rtk_rtkemmc_ids);
 
 static int rtkemmc_probe(struct platform_device *pdev)
 {
@@ -4898,8 +4920,7 @@ static int rtkemmc_probe(struct platform_device *pdev)
                 | MMC_CAP_8_BIT_DATA
                 | MMC_CAP_SD_HIGHSPEED
                 | MMC_CAP_MMC_HIGHSPEED
-                | MMC_CAP_NONREMOVABLE
-                | MMC_CAP_CMD23;
+                | MMC_CAP_NONREMOVABLE;
 
 	mmc->caps2 = MMC_CAP2_NO_SDIO | MMC_CAP2_NO_SD | MMC_CAP2_HS200_1_8V_SDR;
 
@@ -5071,8 +5092,8 @@ AC_DET_OUT:
 	cr_writeb( 0x2, sdport->base_io+CARD_SELECT );            //for emmc, select SD ip
 	rtkcr_set_pad_driving(sdport,MMC_IOS_GET_PAD_DRV, 0x66,0x64,0x66);
 	sync();
-	memset(g_cmd,0x00,6);
-	memset((struct backupRegs*)&gRegTbl, 0x00, sizeof(struct backupRegs));
+	memset((void *)g_cmd, 0, 6);
+	memset((void *)&gRegTbl, 0, sizeof(gRegTbl));
 	gCurrentBootMode = MODE_SD20;
 	MMCPRINTF("\ncard sample ctl : 0x%08x\n", cr_readb(sdport->base_io+SD_SAMPLE_POINT_CTL));
 	MMCPRINTF("\ncard push point ctl : 0x%08x\n",cr_readb(sdport->base_io+SD_PUSH_POINT_CTL));
@@ -5101,7 +5122,7 @@ out:
 	return ret;
 }
 
-static int __exit rtksd_remove(struct platform_device *pdev)
+static void rtksd_remove(struct platform_device *pdev)
 {
     struct mmc_host *mmc = platform_get_drvdata(pdev);
     MMCPRINTF("\n");
@@ -5117,8 +5138,6 @@ static int __exit rtksd_remove(struct platform_device *pdev)
 
     if (mmc) {
         struct rtksd_host *sdport = mmc_priv(mmc);
-
-        flush_scheduled_work();
 
         rtksd_free_dma_buf(sdport);
 
@@ -5136,7 +5155,6 @@ static int __exit rtksd_remove(struct platform_device *pdev)
         mmc_free_host(mmc);
     }
     platform_set_drvdata(pdev, NULL);
-    return 0;
 }
 
 #ifdef CONFIG_PM
@@ -5211,7 +5229,7 @@ const struct dev_pm_ops rtk_emmc_pm_ops = {
 
 static struct platform_driver rtkemmc_driver = {
     .probe      = rtkemmc_probe,
-    .remove     = __exit_p(rtksd_remove),
+    .remove     = rtksd_remove,
     .driver     =
     {
             .name   = "rtkemmc",
@@ -5224,19 +5242,9 @@ static struct platform_driver rtkemmc_driver = {
     },
 };
 
-static void rtkcr_display_version (void)
+static void rtkcr_display_version(void)
 {
-    const __u8 *revision;
-    const __u8 *date;
-    const __u8 *time;
-    char *running = (__u8 *)VERSION;
-
-    strsep(&running, " ");
-    strsep(&running, " ");
-    revision = strsep(&running, " ");
-    date = strsep(&running, " ");
-    time = strsep(&running, " ");
-    printk(BANNER " Rev:%s (%s %s)\n", revision, date, time);
+	printk(BANNER " %s\n", VERSION);
 
 #ifdef CONFIG_MMC_BLOCK_BOUNCE
     printk("%s: CONFIG_MMC_BLOCK_BOUNCE enable\n",DRIVER_NAME);

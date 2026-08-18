@@ -61,12 +61,12 @@ static void RTK_pmx_set(struct pinctrl_dev *pctldev,
 		addr = pctl->iso_membase + pin_regmap[pin].pmux_regoff;
 		break;
 	default:
-		RTK_PINCTRL_ERR("[%s] Unknow pmux_base", __func__);
+		pr_err("rtk-pinctrl: " "[%s] Unknow pmux_base", __func__);
 		return;
 	}
 
 
-	RTK_PINCTRL_DBG("[%s] Addr(0x%08llx), bit=%u, config=%u",
+	pr_debug("rtk-pinctrl: " "[%s] Addr(0x%08llx), bit=%u, config=%u",
 			__func__, (u64)addr, pin_regmap[pin].pmux_regbit,
 			config);
 
@@ -75,7 +75,7 @@ static void RTK_pmx_set(struct pinctrl_dev *pctldev,
 	writel(((val & ~mask) |
 		(config << pin_regmap[pin].pmux_regbit)),  addr);
 
-	RTK_PINCTRL_DBG("[%s] Addr(0x%08llx) final_val=0x%08x",
+	pr_debug("rtk-pinctrl: " "[%s] Addr(0x%08llx) final_val=0x%08x",
 			__func__, (u64)addr, readl(addr));
 
 }
@@ -85,7 +85,7 @@ RTK_pinctrl_find_group_by_name(struct RTK_pinctrl *pctl, const char *group)
 {
 	int i;
 
-	RTK_PINCTRL_DBG("[%s] name = %s", __func__, group);
+	pr_debug("rtk-pinctrl: " "[%s] name = %s", __func__, group);
 	for (i = 0; i < pctl->ngroups; i++) {
 		struct RTK_pinctrl_group *grp = pctl->groups + i;
 
@@ -102,7 +102,7 @@ RTK_pinctrl_find_function_by_name(struct RTK_pinctrl *pctl,
 {
 	struct RTK_pinctrl_function *func = pctl->functions;
 	int i;
-//	RTK_PINCTRL_DBG("[%s]", __func__);
+//	pr_debug("rtk-pinctrl: " "[%s]", __func__);
 	for (i = 0; i < pctl->nfunctions; i++) {
 		if (!func[i].name)
 			break;
@@ -121,7 +121,7 @@ RTK_pinctrl_desc_find_function_by_name(struct RTK_pinctrl *pctl,
 {
 	int i;
 
-	RTK_PINCTRL_DBG("[%s] pin_name=%s, func_name=%s",
+	pr_debug("rtk-pinctrl: " "[%s] pin_name=%s, func_name=%s",
 			__func__, pin_name, func_name);
 	for (i = 0; i < pctl->desc->npins; i++) {
 		const struct RTK_desc_pin *pin = pctl->desc->pins + i;
@@ -145,7 +145,7 @@ static int RTK_pctrl_get_groups_count(struct pinctrl_dev *pctldev)
 {
 	struct RTK_pinctrl *pctl = pinctrl_dev_get_drvdata(pctldev);
 
-	RTK_PINCTRL_DBG("[%s] pctl->ngroups=%d", __func__, pctl->ngroups);
+	pr_debug("rtk-pinctrl: " "[%s] pctl->ngroups=%d", __func__, pctl->ngroups);
 	return pctl->ngroups;
 }
 
@@ -153,7 +153,7 @@ static const char *RTK_pctrl_get_group_name(struct pinctrl_dev *pctldev,
 					      unsigned int group)
 {
 	struct RTK_pinctrl *pctl = pinctrl_dev_get_drvdata(pctldev);
-	//RTK_PINCTRL_DBG("[%s] group.name=%s",
+	//pr_debug("rtk-pinctrl: " "[%s] group.name=%s",
 	//	__func__, pctl->groups[group].name);
 	return pctl->groups[group].name;
 }
@@ -165,7 +165,7 @@ static int RTK_pctrl_get_group_pins(struct pinctrl_dev *pctldev,
 {
 	struct RTK_pinctrl *pctl = pinctrl_dev_get_drvdata(pctldev);
 
-	RTK_PINCTRL_DBG("[%s]", __func__);
+	pr_debug("rtk-pinctrl: " "[%s]", __func__);
 	*pins = (unsigned int *)&pctl->groups[group].pin;
 	*num_pins = 1;
 
@@ -185,7 +185,7 @@ static int RTK_pctrl_dt_node_to_map(struct pinctrl_dev *pctldev,
 	int ret, nmaps, i = 0;
 	u32 val;
 
-	RTK_PINCTRL_DBG("[%s]", __func__);
+	pr_debug("rtk-pinctrl: " "[%s]", __func__);
 
 	*map = NULL;
 	*num_maps = 0;
@@ -245,7 +245,7 @@ static int RTK_pctrl_dt_node_to_map(struct pinctrl_dev *pctldev,
 		if (of_find_property(node, "realtek,pull_sel", NULL))
 			configlen++;
 
-		RTK_PINCTRL_DBG("[%s] configlen %d", __func__, configlen);
+		pr_debug("rtk-pinctrl: " "[%s] configlen %d", __func__, configlen);
 
 		if (configlen) {
 			pinconfig = kcalloc(configlen, sizeof(*pinconfig),
@@ -312,7 +312,7 @@ static void RTK_pctrl_dt_free_map(struct pinctrl_dev *pctldev,
 {
 	int i;
 
-	RTK_PINCTRL_DBG("[%s]", __func__);
+	pr_debug("rtk-pinctrl: " "[%s]", __func__);
 	for (i = 0; i < num_maps; i++) {
 		if (map[i].type == PIN_MAP_TYPE_CONFIGS_GROUP)
 			kfree(map[i].data.configs.configs);
@@ -339,7 +339,7 @@ static int RTK_pconf_parse_conf(struct pinctrl_dev *pctldev,
 	u32 val, mask;
 	struct RTK_pinctrl *pctl = pinctrl_dev_get_drvdata(pctldev);
 
-	RTK_PINCTRL_DBG("[%s] pin=%u, config_param=%u, config_argument=%u",
+	pr_debug("rtk-pinctrl: " "[%s] pin=%u, config_param=%u, config_argument=%u",
 			__func__, pin, param, arg);
 
 	if (pin_regmap[pin].pcof_regoff == PCOF_UNSUPPORT)
@@ -359,7 +359,7 @@ static int RTK_pconf_parse_conf(struct pinctrl_dev *pctldev,
 		addr = pctl->iso_membase + pin_regmap[pin].pcof_regoff;
 		break;
 	default:
-		RTK_PINCTRL_ERR("[%s] Unknow pmux_base\n", __func__);
+		pr_err("rtk-pinctrl: " "[%s] Unknow pmux_base\n", __func__);
 		return -EINVAL;
 	}
 
@@ -452,7 +452,7 @@ static int RTK_pconf_group_get(struct pinctrl_dev *pctldev,
 {
 	struct RTK_pinctrl *pctl = pinctrl_dev_get_drvdata(pctldev);
 
-	RTK_PINCTRL_DBG("[%s]", __func__);
+	pr_debug("rtk-pinctrl: " "[%s]", __func__);
 	*config = pctl->groups[group].config;
 
 	return 0;
@@ -467,11 +467,11 @@ static int RTK_pconf_group_set(struct pinctrl_dev *pctldev,
 	struct RTK_pinctrl *pctl = pinctrl_dev_get_drvdata(pctldev);
 	struct RTK_pinctrl_group *g = &pctl->groups[group];
 
-	RTK_PINCTRL_DBG("[%s] g->pin=%d, g->name =%s, num_configs = %u",
+	pr_debug("rtk-pinctrl: " "[%s] g->pin=%d, g->name =%s, num_configs = %u",
 				__func__, g->pin, g->name, num_configs);
 
 	if (pin_regmap[g->pin].pcof_regoff == PCOF_UNSUPPORT) {
-		RTK_PINCTRL_DBG(
+		pr_debug("rtk-pinctrl: " 
 			"[%s] g->pin(%d) g->name(%s) not support pin config"
 				, __func__, g->pin, g->name);
 		g->config = configs[num_configs-1];
@@ -498,7 +498,7 @@ static int RTK_pmx_get_funcs_cnt(struct pinctrl_dev *pctldev)
 {
 	struct RTK_pinctrl *pctl = pinctrl_dev_get_drvdata(pctldev);
 
-	RTK_PINCTRL_DBG("[%s] pctl->nfunctions =%d",
+	pr_debug("rtk-pinctrl: " "[%s] pctl->nfunctions =%d",
 			__func__, pctl->nfunctions);
 	return pctl->nfunctions;
 }
@@ -508,7 +508,7 @@ static const char *RTK_pmx_get_func_name(struct pinctrl_dev *pctldev,
 {
 	struct RTK_pinctrl *pctl = pinctrl_dev_get_drvdata(pctldev);
 
-	RTK_PINCTRL_DBG("[%s] function[%d] = %s", __func__,
+	pr_debug("rtk-pinctrl: " "[%s] function[%d] = %s", __func__,
 			function, pctl->functions[function].name);
 	return pctl->functions[function].name;
 }
@@ -520,7 +520,7 @@ static int RTK_pmx_get_func_groups(struct pinctrl_dev *pctldev,
 {
 	struct RTK_pinctrl *pctl = pinctrl_dev_get_drvdata(pctldev);
 
-	RTK_PINCTRL_DBG("[%s]", __func__);
+	pr_debug("rtk-pinctrl: " "[%s]", __func__);
 	*groups = pctl->functions[function].groups;
 	*num_groups = pctl->functions[function].ngroups;
 
@@ -538,7 +538,7 @@ static int RTK_pmx_enable(struct pinctrl_dev *pctldev,
 		RTK_pinctrl_desc_find_function_by_name(pctl,
 							 g->name,
 							 func->name);
-	RTK_PINCTRL_DBG("[%s] g->name=%s ,func->name=%s",
+	pr_debug("rtk-pinctrl: " "[%s] g->name=%s ,func->name=%s",
 				__func__, g->name, func->name);
 	if (!desc)
 		return -EINVAL;
@@ -561,13 +561,13 @@ RTK_pmx_gpio_request_enable(struct pinctrl_dev *pctldev,
 	int ret;
 
 	func = "gpio";
-	RTK_PINCTRL_DBG("[%s] gpio_offset=%u", __func__, offset);
+	pr_debug("rtk-pinctrl: " "[%s] gpio_offset=%u", __func__, offset);
 	desc = RTK_pinctrl_desc_find_function_by_name(pctl,
 							g->name,
 							func);
 	if (!desc) {
 		ret = -EINVAL;
-		RTK_PINCTRL_ERR("Set gpio pinmux fail, Pin(%s) offset=%u\n",
+		pr_err("rtk-pinctrl: " "Set gpio pinmux fail, Pin(%s) offset=%u\n",
 					g->name, offset);
 		goto error;
 	}
@@ -588,7 +588,7 @@ RTK_pmx_gpio_disable_free(struct pinctrl_dev *pctldev,
 				    struct pinctrl_gpio_range *range,
 				    unsigned int offset)
 {
-	RTK_PINCTRL_DBG("[%s]", __func__);
+	pr_debug("rtk-pinctrl: " "[%s]", __func__);
 /*TODO : need to add gpio related api*/
 }
 
@@ -644,7 +644,7 @@ static int RTK_pinctrl_build_state(struct platform_device *pdev)
 	struct RTK_pinctrl *pctl = platform_get_drvdata(pdev);
 	int i;
 
-	RTK_PINCTRL_DBG("[%s]", __func__);
+	pr_debug("rtk-pinctrl: " "[%s]", __func__);
 	pctl->ngroups = pctl->desc->npins;
 
 	/* Allocate groups */
@@ -730,7 +730,7 @@ static int RTK_pinctrl_probe(struct platform_device *pdev)
 	struct RTK_pinctrl *pctl;
 	int i, ret;
 
-	RTK_PINCTRL_INF("driver init");
+	pr_info("rtk-pinctrl: " "driver init");
 
 	pctl = devm_kzalloc(&pdev->dev, sizeof(*pctl), GFP_KERNEL);
 	if (!pctl)
@@ -739,35 +739,35 @@ static int RTK_pinctrl_probe(struct platform_device *pdev)
 
 	pctl->sb2_membase = of_iomap(node, 0);
 	if (!pctl->sb2_membase) {
-		RTK_PINCTRL_ERR("of_iomap sb2_membase fail");
+		pr_err("rtk-pinctrl: " "of_iomap sb2_membase fail");
 		return -ENOMEM;
 	}
 
 	pctl->disp_membase = of_iomap(node, 1);
 	if (!pctl->disp_membase) {
-		RTK_PINCTRL_ERR("of_iomap disp_membase fail");
+		pr_err("rtk-pinctrl: " "of_iomap disp_membase fail");
 		return -ENOMEM;
 	}
 
 	pctl->cr_membase = of_iomap(node, 2);
 	if (!pctl->cr_membase) {
-		RTK_PINCTRL_ERR("of_iomap cr_membase fail");
+		pr_err("rtk-pinctrl: " "of_iomap cr_membase fail");
 		return -ENOMEM;
 	}
 
 	pctl->iso_membase = of_iomap(node, 3);
 	if (!pctl->iso_membase) {
-		RTK_PINCTRL_ERR("of_iomap iso_membase fail");
+		pr_err("rtk-pinctrl: " "of_iomap iso_membase fail");
 		return -ENOMEM;
 	}
-	RTK_PINCTRL_DBG("sb2_membase(0x%p) disp_membase(0x%p) ",
+	pr_debug("rtk-pinctrl: " "sb2_membase(0x%p) disp_membase(0x%p) ",
 			pctl->sb2_membase, pctl->disp_membase);
-	RTK_PINCTRL_DBG("cr_membase(0x%p) iso_membase(0x%p)",
+	pr_debug("rtk-pinctrl: " "cr_membase(0x%p) iso_membase(0x%p)",
 			pctl->cr_membase, pctl->iso_membase);
 
 	device = of_match_device(RTK_pinctrl_match, &pdev->dev);
 	if (!device) {
-		RTK_PINCTRL_ERR("of_match_device fail");
+		pr_err("rtk-pinctrl: " "of_match_device fail");
 		return -ENODEV;
 	}
 
@@ -775,7 +775,7 @@ static int RTK_pinctrl_probe(struct platform_device *pdev)
 
 	ret = RTK_pinctrl_build_state(pdev);
 	if (ret) {
-		RTK_PINCTRL_ERR("RTK_pinctrl_build_state fail");
+		pr_err("rtk-pinctrl: " "RTK_pinctrl_build_state fail");
 		return ret;
 	}
 
@@ -783,7 +783,7 @@ static int RTK_pinctrl_probe(struct platform_device *pdev)
 			    pctl->desc->npins * sizeof(*pins),
 			    GFP_KERNEL);
 	if (!pins) {
-		RTK_PINCTRL_ERR("[%s]devm_kzalloc fail", __func__);
+		pr_err("rtk-pinctrl: " "[%s]devm_kzalloc fail", __func__);
 		return -ENOMEM;
 	}
 
@@ -798,11 +798,11 @@ static int RTK_pinctrl_probe(struct platform_device *pdev)
 	pctl->pctl_dev = pinctrl_register(&RTK_pctrl_desc,
 					  &pdev->dev, pctl);
 	if (!pctl->pctl_dev) {
-		RTK_PINCTRL_ERR("register pinctrl driver fail");
+		pr_err("rtk-pinctrl: " "register pinctrl driver fail");
 		return -EINVAL;
 	}
 
-	RTK_PINCTRL_INF("init done");
+	pr_info("rtk-pinctrl: " "init done");
 
 	return 0;
 }
@@ -813,7 +813,7 @@ int RTK_pinctrl_suspend(struct platform_device *pdev, pm_message_t state)
 	void __iomem *addr;
 	unsigned int i;
 
-	RTK_PINCTRL_INF("Enter %s", __func__);
+	pr_info("rtk-pinctrl: " "Enter %s", __func__);
 
 	pctl = platform_get_drvdata(pdev);
 
@@ -839,7 +839,7 @@ int RTK_pinctrl_suspend(struct platform_device *pdev, pm_message_t state)
 				pinmux_reg_list[i].reg_offset;
 			break;
 		default:
-			RTK_PINCTRL_ERR("[%s] Unknow reg_base\n",
+			pr_err("rtk-pinctrl: " "[%s] Unknow reg_base\n",
 					__func__);
 			return -EINVAL;
 		}
@@ -847,7 +847,7 @@ int RTK_pinctrl_suspend(struct platform_device *pdev, pm_message_t state)
 		pinctrl_reg_values[i] = readl(addr);
 	}
 
-	RTK_PINCTRL_INF("Exit %s", __func__);
+	pr_info("rtk-pinctrl: " "Exit %s", __func__);
 	return 0;
 }
 
@@ -857,7 +857,7 @@ int RTK_pinctrl_resume(struct platform_device *pdev)
 	void __iomem *addr;
 	unsigned int i;
 
-	RTK_PINCTRL_INF("Enter %s", __func__);
+	pr_info("rtk-pinctrl: " "Enter %s", __func__);
 
 	pctl = platform_get_drvdata(pdev);
 
@@ -880,7 +880,7 @@ int RTK_pinctrl_resume(struct platform_device *pdev)
 				pinmux_reg_list[i].reg_offset;
 			break;
 		default:
-			RTK_PINCTRL_ERR("[%s] Unknow reg_base\n",
+			pr_err("rtk-pinctrl: " "[%s] Unknow reg_base\n",
 					__func__);
 			return -EINVAL;
 		}
@@ -890,7 +890,7 @@ int RTK_pinctrl_resume(struct platform_device *pdev)
 
 	kfree(pinctrl_reg_values);
 
-	RTK_PINCTRL_INF("Exit %s", __func__);
+	pr_info("rtk-pinctrl: " "Exit %s", __func__);
 	return 0;
 }
 

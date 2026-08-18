@@ -12,13 +12,7 @@
 #ifndef DRIVERS_MMC_HOST_RTK_SDMMC_H_
 #define DRIVERS_MMC_HOST_RTK_SDMMC_H_
 
-
-
-#ifdef CONFIG_MMC_RTK_SDMMC_DEBUG
-#define rtk_sdmmc_debug(fmt, args...)        printk(KERN_DEBUG fmt, ##args)
-#else
-#define rtk_sdmmc_debug(fmt, args...)
-#endif
+#include <linux/printk.h>
 
 struct rtk_sdmmc_host {
 

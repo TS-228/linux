@@ -68,10 +68,10 @@ int rtk_filter_specific_profuct_vic(struct edid *edid, struct sink_capabilities_
 			sink_cap->extended_vic = sink_cap->extended_vic&product_info[i].extended_vic_mask;
 			sink_cap->vic2_420 = sink_cap->vic2_420&product_info[i].vic2_420_mask;
 
-			HDMI_INFO("Filter vic_mask=0x%llx", product_info[i].vic_mask);
-			HDMI_INFO("Filter extended_vic_mask=%u", product_info[i].extended_vic_mask);
-			HDMI_INFO("Filter vic2_mask=0x%llx", product_info[i].vic2_mask);
-			HDMI_INFO("Filter vic2_420_mask=0x%llx", product_info[i].vic2_420_mask);
+			pr_info("rtk-hdmitx: " "Filter vic_mask=0x%llx", product_info[i].vic_mask);
+			pr_info("rtk-hdmitx: " "Filter extended_vic_mask=%u", product_info[i].extended_vic_mask);
+			pr_info("rtk-hdmitx: " "Filter vic2_mask=0x%llx", product_info[i].vic2_mask);
+			pr_info("rtk-hdmitx: " "Filter vic2_420_mask=0x%llx", product_info[i].vic2_420_mask);
 
 			return 1;
 		}

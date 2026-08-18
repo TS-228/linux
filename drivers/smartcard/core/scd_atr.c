@@ -1,7 +1,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include "scd_atr.h"
-#include "scd_debug.h"
 
 MODULE_LICENSE("GPL");
 
@@ -142,18 +141,18 @@ int decompress_atr(scd_atr* p_atr, scd_atr_info* p_info)
     switch (ret)
     {
     case 0:
-        SC_WARNING("Incomplete ATR\n");
+        pr_warn("rtk-scd: " "Incomplete ATR\n");
         return -1;
     case -1:
-        SC_WARNING("ATR CRC Error\n");
+        pr_warn("rtk-scd: " "ATR CRC Error\n");
         //return -1;
     }
 
 #ifdef COMPRESS_ATR_DEBUG_EN
-    SC_ATR_DBG("ATR Len = %d\n", p_atr->length);
-    SC_ATR_DBG("ATR = ");
+    pr_debug("rtk-scd: " "ATR Len = %d\n", p_atr->length);
+    pr_debug("rtk-scd: " "ATR = ");
     for (i=0; i<p_atr->length; i++)
-        SC_ATR_DBG(" %02x\n", p_atr->data[i]);
+        pr_debug("rtk-scd: " " %02x\n", p_atr->data[i]);
 #endif
 
     memset(p_info, 0, sizeof(*p_info));
@@ -180,14 +179,14 @@ int decompress_atr(scd_atr* p_atr, scd_atr_info* p_info)
     case 15:
         if ((p_atr->length - id) != (p_info->T0 & 0xF))
         {
-            SC_WARNING("too much history bytes %d/%d \n", p_atr->length - id, p_info->T0 & 0xF);
+            pr_warn("rtk-scd: " "too much history bytes %d/%d \n", p_atr->length - id, p_info->T0 & 0xF);
             return -1;
         }
         break;
     default:
         if ((p_atr->length - id -1) != (p_info->T0 & 0xF))
         {
-            SC_WARNING("too much history bytes %d/%d \n", p_atr->length - id -1, p_info->T0 & 0xF);
+            pr_warn("rtk-scd: " "too much history bytes %d/%d \n", p_atr->length - id -1, p_info->T0 & 0xF);
             return -1;
         }
     }

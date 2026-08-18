@@ -211,6 +211,8 @@ static struct nvmem_config config = {
 	.word_size = 4,
 	.reg_read = rtk_efuse_read,
 	.owner = THIS_MODULE,
+	/* Child nodes thermal-calibration@* use the legacy fixed-cell OF syntax. */
+	.add_legacy_fixed_of_cells = true,
 };
 
 static int rtk_efuse_init_reg(struct efuse_device *edev)

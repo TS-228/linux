@@ -114,7 +114,7 @@ static u32 gpio_get_reg_offset(u32 group_index, u32 reg_type, u32 pin)
 		reg_offset = p_rtk_gpio_grp->reg_dp_off[reg_index];
 		break;
 	default:
-		RTK_GPIO_DBG("[%s] Unknow type", __func__);
+		pr_debug("rtk-gpio: " "[%s] Unknow type", __func__);
 	}
 
 	return reg_offset;
@@ -137,7 +137,7 @@ int gpio_chk_irq_enable(struct rtk_gpio_controller *p_rtk_gpio_ctl, u32 irq)
 {
 	u32 ie_offset;
 
-	RTK_GPIO_DBG("[%s] irq(%u)", __func__, irq);
+	pr_debug("rtk-gpio: " "[%s] irq(%u)", __func__, irq);
 	ie_offset = gpio_get_reg_offset(p_rtk_gpio_ctl->group_index,
 					GP_REG_IE, irq);
 
@@ -151,7 +151,7 @@ static void gpio_irq_disable(struct irq_data *d)
 	struct rtk_gpio_controller *p_rtk_gpio_ctl =
 			(struct rtk_gpio_controller *)(d->chip_data);
 
-	RTK_GPIO_DBG("[%s] d->hwirq(%lu)", __func__, d->hwirq);
+	pr_debug("rtk-gpio: " "[%s] d->hwirq(%lu)", __func__, d->hwirq);
 
 	ie_offset = gpio_get_reg_offset(p_rtk_gpio_ctl->group_index,
 					GP_REG_IE, d->hwirq);
@@ -167,7 +167,7 @@ static void gpio_irq_enable(struct irq_data *d)
 	unsigned long irq_flag;
 	u32 gpa_offset, gpada_offset, ie_offset, gpio_int_flag;
 
-	RTK_GPIO_DBG("[%s] irq number(%u), hwirq(%lu), group(%s)",
+	pr_debug("rtk-gpio: " "[%s] irq number(%u), hwirq(%lu), group(%s)",
 			__func__, d->irq, d->hwirq, d->domain->name);
 
 	spin_lock_irqsave(&p_rtk_gpio_ctl->lock, irq_flag);
@@ -185,7 +185,7 @@ static void gpio_irq_enable(struct irq_data *d)
 		/*Clear assert interrupt flag*/
 		if (readl(p_rtk_gpio_ctl->irq_regs_base+gpa_offset)
 			& gpio_int_flag) {
-			RTK_GPIO_DBG("[%s] Wrte Reg(0x%08llx) Val(0x%08x)",
+			pr_debug("rtk-gpio: " "[%s] Wrte Reg(0x%08llx) Val(0x%08x)",
 				__func__,
 				(u64)(p_rtk_gpio_ctl->irq_regs_base+gpa_offset),
 				gpio_int_flag);
@@ -196,7 +196,7 @@ static void gpio_irq_enable(struct irq_data *d)
 		/*Clear de-assert interrupt flag*/
 		if (readl(p_rtk_gpio_ctl->irq_regs_base+gpada_offset)
 			& gpio_int_flag) {
-			RTK_GPIO_DBG("[%s] Wrte Reg(0x%08llx) Val(0x%08x)",
+			pr_debug("rtk-gpio: " "[%s] Wrte Reg(0x%08llx) Val(0x%08x)",
 				__func__,
 				(u64)(p_rtk_gpio_ctl->irq_regs_base+gpada_offset),
 				gpio_int_flag);
@@ -207,7 +207,7 @@ static void gpio_irq_enable(struct irq_data *d)
 		/*Enable interrupt*/
 		iowrite_reg_bit(((void *)p_rtk_gpio_ctl->gpio_regs_base
 				+ie_offset), GPIO_REG_BIT(d->hwirq), 1);
-		RTK_GPIO_DBG("[%s] Reg_ie[0x%08llx]= 0x%08x", __func__,
+		pr_debug("rtk-gpio: " "[%s] Reg_ie[0x%08llx]= 0x%08x", __func__,
 			  (u64)(p_rtk_gpio_ctl->gpio_regs_base+ie_offset),
 			  readl(p_rtk_gpio_ctl->gpio_regs_base+ie_offset));
 	}
@@ -228,7 +228,7 @@ static int gpio_irq_type(struct irq_data *d, unsigned int trigger)
 	switch (trigger) {
 	case IRQ_TYPE_EDGE_RISING:
 	case IRQ_TYPE_LEVEL_HIGH:
-		RTK_GPIO_DBG("[%s] Pin(%lu) IRQ_TYPE_EDGE_RISING",
+		pr_debug("rtk-gpio: " "[%s] Pin(%lu) IRQ_TYPE_EDGE_RISING",
 				__func__, d->hwirq);
 		iowrite_reg_bit(((void *)p_rtk_gpio_ctl->gpio_regs_base
 				+ dp_offset), GPIO_REG_BIT(d->hwirq), 1);
@@ -238,7 +238,7 @@ static int gpio_irq_type(struct irq_data *d, unsigned int trigger)
 
 	case IRQ_TYPE_EDGE_FALLING:
 	case IRQ_TYPE_LEVEL_LOW:
-		RTK_GPIO_DBG("[%s] Pin(%lu) IRQ_TYPE_EDGE_FALLING", __func__, d->hwirq);
+		pr_debug("rtk-gpio: " "[%s] Pin(%lu) IRQ_TYPE_EDGE_FALLING", __func__, d->hwirq);
 		iowrite_reg_bit(((void *)p_rtk_gpio_ctl->gpio_regs_base + dp_offset), GPIO_REG_BIT(d->hwirq), 0);
 		clear_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag[GPIO_REG_OFST(d->hwirq)]);
 		set_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_assert_enable_flag[GPIO_REG_OFST(d->hwirq)]);
@@ -247,7 +247,7 @@ static int gpio_irq_type(struct irq_data *d, unsigned int trigger)
 	case IRQ_TYPE_EDGE_BOTH:
 	case IRQ_TYPE_NONE:
 	default:
-		RTK_GPIO_DBG("[%s] Pin(%lu) trigger(%u)", __func__, d->hwirq, trigger);
+		pr_debug("rtk-gpio: " "[%s] Pin(%lu) trigger(%u)", __func__, d->hwirq, trigger);
 		iowrite_reg_bit(((void *)p_rtk_gpio_ctl->gpio_regs_base + dp_offset), GPIO_REG_BIT(d->hwirq), 1);
 		set_bit(GPIO_REG_BIT(d->hwirq), (unsigned long *)&p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag[GPIO_REG_OFST(d->hwirq)]);
 		set_bit(GPIO_REG_BIT(d->hwirq),
@@ -269,20 +269,20 @@ static void gpio_irq_handler(struct irq_desc *desc)
 	u32 hw_irq = 12345678, linux_irq;
 	u32 irq_had_fired = 0;
 
-	RTK_GPIO_DBG("[%s]", __func__);
+	pr_debug("rtk-gpio: " "[%s]", __func__);
 
 	p_rtk_gpio_ctl = (struct rtk_gpio_controller *)irq_desc_get_handler_data(desc);	/*rtk_gpio_controller for MISC or ISO*/
 
 	/* Get interrupt status */
 	event = readl(p_rtk_gpio_ctl->reg_isr) & (p_rtk_gpio_ctl->gpio_isr_deassert_int | p_rtk_gpio_ctl->gpio_isr_assert_int);
-	RTK_GPIO_DBG("[%s] event(0x%08x)", __func__, event);
+	pr_debug("rtk-gpio: " "[%s] event(0x%08x)", __func__, event);
 	if (event == 0)
 		return;
 
 	/* Handle gpio deassert */
 	if (event & (p_rtk_gpio_ctl->gpio_isr_deassert_int)) {
 		gpioNr = 0;
-		RTK_GPIO_DBG("[%s] de-assert interrupt", __func__);
+		pr_debug("rtk-gpio: " "[%s] de-assert interrupt", __func__);
 		while (gpioNr < (p_rtk_gpio_ctl->chip.ngpio)) {
 			gpada_offset = gpio_get_reg_offset(p_rtk_gpio_ctl->group_index, GP_REG_UMSK_ISR_GPDA, gpioNr);
 
@@ -296,8 +296,8 @@ static void gpio_irq_handler(struct irq_desc *desc)
 					hw_irq = i;
 					linux_irq = irq_find_mapping(p_rtk_gpio_ctl->irq_mux_domain, hw_irq);
 					if (linux_irq) {
-						RTK_GPIO_DBG("[%s] line: %d", __func__, __LINE__);
-						RTK_GPIO_DBG("hw_irq = %d,  deassertflg[0x%08llx] = %x", hw_irq, (u64)(&p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag[GPIO_REG_OFST(hw_irq)]), p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag[GPIO_REG_OFST(hw_irq)]);
+						pr_debug("rtk-gpio: " "[%s] line: %d", __func__, __LINE__);
+						pr_debug("rtk-gpio: " "hw_irq = %d,  deassertflg[0x%08llx] = %x", hw_irq, (u64)(&p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag[GPIO_REG_OFST(hw_irq)]), p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag[GPIO_REG_OFST(hw_irq)]);
 						if ((1<<GPIO_REG_BIT(hw_irq)) & (p_rtk_gpio_ctl->gpio_isr_deassert_enable_flag[GPIO_REG_OFST(hw_irq)])) {
 							generic_handle_irq(linux_irq);
 							irq_had_fired++;
@@ -308,21 +308,21 @@ static void gpio_irq_handler(struct irq_desc *desc)
 				}
 				i++;
 				status >>= 1;
-				RTK_GPIO_DBG("[%s] line: %d", __func__, __LINE__);
+				pr_debug("rtk-gpio: " "[%s] line: %d", __func__, __LINE__);
 			}
 
 			gpioNr += 31;
-			RTK_GPIO_DBG("[%s] line: %d", __func__, __LINE__);
+			pr_debug("rtk-gpio: " "[%s] line: %d", __func__, __LINE__);
 		}
 
 	}
 
-	RTK_GPIO_DBG("[%s] line: %d", __func__, __LINE__);
+	pr_debug("rtk-gpio: " "[%s] line: %d", __func__, __LINE__);
 
 	/* Handle gpio assert */
 	if (event & (p_rtk_gpio_ctl->gpio_isr_assert_int)) {
 		gpioNr = 0;
-		RTK_GPIO_DBG("[%s] assert interrupt", __func__);
+		pr_debug("rtk-gpio: " "[%s] assert interrupt", __func__);
 		while (gpioNr < (p_rtk_gpio_ctl->chip.ngpio)) {
 			gpa_offset = gpio_get_reg_offset(p_rtk_gpio_ctl->group_index, GP_REG_UMSK_ISR_GPA, gpioNr);
 
@@ -335,10 +335,10 @@ static void gpio_irq_handler(struct irq_desc *desc)
 					hw_irq = i;
 					linux_irq = irq_find_mapping(p_rtk_gpio_ctl->irq_mux_domain, hw_irq);
 					if (linux_irq) {
-						RTK_GPIO_DBG("[%s] line: %d", __func__, __LINE__);
-						RTK_GPIO_DBG("hw_irq = %d,  assertflg[0x%08llx] = %x", hw_irq, (u64)(&p_rtk_gpio_ctl->gpio_isr_assert_enable_flag[GPIO_REG_OFST(hw_irq)]), p_rtk_gpio_ctl->gpio_isr_assert_enable_flag[GPIO_REG_OFST(hw_irq)]);
+						pr_debug("rtk-gpio: " "[%s] line: %d", __func__, __LINE__);
+						pr_debug("rtk-gpio: " "hw_irq = %d,  assertflg[0x%08llx] = %x", hw_irq, (u64)(&p_rtk_gpio_ctl->gpio_isr_assert_enable_flag[GPIO_REG_OFST(hw_irq)]), p_rtk_gpio_ctl->gpio_isr_assert_enable_flag[GPIO_REG_OFST(hw_irq)]);
 						if ((1<<GPIO_REG_BIT(hw_irq)) & (p_rtk_gpio_ctl->gpio_isr_assert_enable_flag[GPIO_REG_OFST(hw_irq)])) {
-							RTK_GPIO_DBG("[%s]%s  line: %d", __FILE__, __func__, __LINE__);
+							pr_debug("rtk-gpio: " "[%s]%s  line: %d", __FILE__, __func__, __LINE__);
 							generic_handle_irq(linux_irq);
 							irq_had_fired++;
 						}
@@ -348,20 +348,20 @@ static void gpio_irq_handler(struct irq_desc *desc)
 				}
 				i++;
 				status >>= 1;
-				RTK_GPIO_DBG("[%s] line: %d", __func__, __LINE__);
+				pr_debug("rtk-gpio: " "[%s] line: %d", __func__, __LINE__);
 			}
 			gpioNr += 31;
-			RTK_GPIO_DBG("[%s] line: %d", __func__, __LINE__);
+			pr_debug("rtk-gpio: " "[%s] line: %d", __func__, __LINE__);
 		}
 	}
 
 
-	RTK_GPIO_DBG("[%s] irq_had_fired = %d", __func__, irq_had_fired);
+	pr_debug("rtk-gpio: " "[%s] irq_had_fired = %d", __func__, irq_had_fired);
 	writel(event, p_rtk_gpio_ctl->reg_isr);
 	if (!irq_had_fired)
-		RTK_GPIO_DBG("%s gpio irq(hwirq=%d) has triggered but no dispatch",
+		pr_debug("rtk-gpio: " "%s gpio irq(hwirq=%d) has triggered but no dispatch",
 				__func__, hw_irq);
-		RTK_GPIO_DBG("to user handler (12345678 mean something Wrong)");
+		pr_debug("rtk-gpio: " "to user handler (12345678 mean something Wrong)");
 	return;
 
 }
@@ -371,7 +371,7 @@ static __maybe_unused int
 		struct device_node *controller, const u32 *intspec, u32 intsize,
 		unsigned long *out_hwirq, u32 *out_type)
 {
-	RTK_GPIO_DBG("[%s] device_node.name = %s", __func__, controller->name);
+	pr_debug("rtk-gpio: " "[%s] device_node.name = %s", __func__, controller->name);
 
 	if (/*d->of_node*/to_of_node(d->fwnode) != controller)
 		return -EINVAL;
@@ -381,7 +381,7 @@ static __maybe_unused int
 
 	*out_hwirq = intspec[0];
 	*out_type = 0;
-	RTK_GPIO_DBG("[%s] out_hwirq = %ld", __func__, *out_hwirq);
+	pr_debug("rtk-gpio: " "[%s] out_hwirq = %ld", __func__, *out_hwirq);
 	return 0;
 }
 
@@ -389,10 +389,10 @@ static int mux_irq_domain_map(struct irq_domain *d, u32 irq, irq_hw_number_t hw)
 {
 	struct rtk_gpio_controller *p_rtk_gpio_ctl = d->host_data;
 
-	RTK_GPIO_DBG("[%s] irq=%d , irq_hw_number=%d", __func__, irq, (u32)hw);
+	pr_debug("rtk-gpio: " "[%s] irq=%d , irq_hw_number=%d", __func__, irq, (u32)hw);
 
 	if (!p_rtk_gpio_ctl) {
-		RTK_GPIO_DBG("[%s] p_rtk_gpio_ctl is NULL", __func__);
+		pr_debug("rtk-gpio: " "[%s] p_rtk_gpio_ctl is NULL", __func__);
 		return -EINVAL;
 	}
 
@@ -416,7 +416,7 @@ int rtk_gpio_irq_setup(struct device_node *node,
 {
 	unsigned int bank_deassert_irq, bank_assert_irq;
 
-	RTK_GPIO_DBG("[%s]", __func__);
+	pr_debug("rtk-gpio: " "[%s]", __func__);
 
 	p_rtk_gpio_ctl->gp_irq_chip.name = node->name;
 	p_rtk_gpio_ctl->gp_irq_chip.irq_enable = gpio_irq_enable;
@@ -438,9 +438,9 @@ int rtk_gpio_irq_setup(struct device_node *node,
 
 	p_rtk_gpio_ctl->bank_assert_irq = bank_assert_irq;
 	p_rtk_gpio_ctl->bank_deassert_irq = bank_deassert_irq;
-	RTK_GPIO_DBG("[%s] bank_assert_irq=%d", __func__,
+	pr_debug("rtk-gpio: " "[%s] bank_assert_irq=%d", __func__,
 			p_rtk_gpio_ctl->bank_assert_irq);
-	RTK_GPIO_DBG("[%s] bank_deassert_irq=%d", __func__,
+	pr_debug("rtk-gpio: " "[%s] bank_deassert_irq=%d", __func__,
 			p_rtk_gpio_ctl->bank_deassert_irq);
 
 	p_rtk_gpio_ctl->irq_mux_domain = irq_domain_add_simple(node,
@@ -469,7 +469,7 @@ static inline int __rtk_gpio_direction(struct gpio_chip *chip,
 	u32 temp;
 	u32 mask = 1 << (offset % 32);
 
-	RTK_GPIO_DBG("[%s] offset(%u) out(%u)", __func__, offset, out);
+	pr_debug("rtk-gpio: " "[%s] offset(%u) out(%u)", __func__, offset, out);
 
 	dir_offset = gpio_get_reg_offset(p_rtk_gpio_ctl->group_index,
 					GP_REG_DIR, offset);
@@ -482,7 +482,7 @@ static inline int __rtk_gpio_direction(struct gpio_chip *chip,
 		temp &= ~mask;
 
 	__raw_writel(temp, (p_rtk_gpio_ctl->gpio_regs_base) + dir_offset);
-	RTK_GPIO_DBG("[%s] offset(%u)  addr(0x%08llx)  temp(0x%08x)",
+	pr_debug("rtk-gpio: " "[%s] offset(%u)  addr(0x%08llx)  temp(0x%08x)",
 			__func__, offset,
 			(u64)((p_rtk_gpio_ctl->gpio_regs_base) + dir_offset),
 			temp);
@@ -498,7 +498,7 @@ static int rtk_gpio_get(struct gpio_chip *chip, unsigned int offset)
 	u32 mask = 1 << (offset % 32);
 	struct rtk_gpio_controller *p_rtk_gpio_ctl = chip2controller(chip);
 
-	RTK_GPIO_DBG("[%s] offset(%u)", __func__, offset);
+	pr_debug("rtk-gpio: " "[%s] offset(%u)", __func__, offset);
 
 	dir_offset = gpio_get_reg_offset(p_rtk_gpio_ctl->group_index, GP_REG_DIR, offset);
 	temp = __raw_readl((p_rtk_gpio_ctl->gpio_regs_base) + dir_offset);
@@ -518,7 +518,7 @@ static void rtk_gpio_set(struct gpio_chip *chip, unsigned int offset, int value)
 	u32 dato_offset;
 	struct rtk_gpio_controller *p_rtk_gpio_ctl = chip2controller(chip);
 
-	RTK_GPIO_DBG("[%s] offset(%u) value(%d)", __func__, offset, value);
+	pr_debug("rtk-gpio: " "[%s] offset(%u) value(%d)", __func__, offset, value);
 
 	dato_offset = gpio_get_reg_offset(p_rtk_gpio_ctl->group_index,
 					GP_REG_DATO, offset);
@@ -533,7 +533,7 @@ static void rtk_gpio_set(struct gpio_chip *chip, unsigned int offset, int value)
 
 static int rtk_gpio_direction_in(struct gpio_chip *chip, unsigned int offset)
 {
-	RTK_GPIO_DBG("[%s] offset(%u)", __func__, offset);
+	pr_debug("rtk-gpio: " "[%s] offset(%u)", __func__, offset);
 
 	return __rtk_gpio_direction(chip, offset, GP_DIRIN);
 }
@@ -541,7 +541,7 @@ static int rtk_gpio_direction_in(struct gpio_chip *chip, unsigned int offset)
 static int rtk_gpio_direction_out(struct gpio_chip *chip,
 	unsigned int offset, int value)
 {
-	RTK_GPIO_DBG("[%s] offset(%u) value(%d)", __func__, offset, value);
+	pr_debug("rtk-gpio: " "[%s] offset(%u) value(%d)", __func__, offset, value);
 
 	rtk_gpio_set(chip, offset, value);
 	return __rtk_gpio_direction(chip, offset, GP_DIROUT);
@@ -554,7 +554,7 @@ static int rtk_gpio_get_direction(struct gpio_chip *chip, unsigned int offset)
 	u32 mask = 1 << (offset % 32);
 	struct rtk_gpio_controller *p_rtk_gpio_ctl = chip2controller(chip);
 
-	RTK_GPIO_DBG("[%s] offset(%u)\n", __func__, offset);
+	pr_debug("rtk-gpio: " "[%s] offset(%u)\n", __func__, offset);
 
 	dir_offset = gpio_get_reg_offset(p_rtk_gpio_ctl->group_index, GP_REG_DIR, offset);
 	temp = __raw_readl((p_rtk_gpio_ctl->gpio_regs_base) + dir_offset);
@@ -570,7 +570,7 @@ static int rtk_gpio_setdeb(struct gpio_chip *chip,
 	struct rtk_gpio_controller *p_rtk_gpio_ctl = chip2controller(chip);
 	void __iomem *gpio_deb_addr;
 
-	RTK_GPIO_DBG("[%s] offset(%u) debounce(%d)",
+	pr_debug("rtk-gpio: " "[%s] offset(%u) debounce(%d)",
 			__func__, offset, debounce);
 
 	if (debounce >= 50*1000) {/*50ms*/
@@ -598,20 +598,20 @@ static int rtk_gpio_setdeb(struct gpio_chip *chip,
 		return 0;
 	}
 
-	RTK_GPIO_DBG("[%s] Fail", __func__);
+	pr_debug("rtk-gpio: " "[%s] Fail", __func__);
 	return -EINVAL;
 }
 
 static int rtk_gpio_request(struct gpio_chip *chip, unsigned int offset)
 {
-	RTK_GPIO_DBG("[%s] offset(%u)", __func__, offset);
+	pr_debug("rtk-gpio: " "[%s] offset(%u)", __func__, offset);
 
  return pinctrl_gpio_request(chip, offset);
 }
 
 static void rtk_gpio_free(struct gpio_chip *chip, unsigned int offset)
 {
-	RTK_GPIO_DBG("[%s] offset(%u)", __func__, offset);
+	pr_debug("rtk-gpio: " "[%s] offset(%u)", __func__, offset);
 
  pinctrl_gpio_free(chip, offset);
 }
@@ -622,7 +622,7 @@ static int rtk_gpio_to_irq(struct gpio_chip *chip, unsigned int offset)
 	u32 linux_irq = 0;
 
 	linux_irq = irq_create_mapping(p_rtk_gpio_ctl->irq_mux_domain, offset);
-	RTK_GPIO_DBG("[%s] offset(%u) linux_irq(%u)", __func__,
+	pr_debug("rtk-gpio: " "[%s] offset(%u) linux_irq(%u)", __func__,
 			offset, linux_irq);
 
 	if (!linux_irq) {
@@ -638,7 +638,7 @@ static int rtk_gpio_xlate(struct gpio_chip *gc,
 {
 	u32 pin;
 
-	RTK_GPIO_DBG("[%s] base(%d), args[0]=%d", __func__,
+	pr_debug("rtk-gpio: " "[%s] base(%d), args[0]=%d", __func__,
 		gc->base, gpiospec->args[0]);
 
 	if (WARN_ON(gc->of_gpio_n_cells < 1))
@@ -687,7 +687,7 @@ void set_default_gpio(struct device_node *node)
 		for (n = 0; n < num_gpios; n++) {
 			int gpio = of_get_named_gpio(node, "gpios", n);
 
-			RTK_GPIO_DBG("[%s]  %s  line: %d",
+			pr_debug("rtk-gpio: " "[%s]  %s  line: %d",
 					__FILE__, __func__, __LINE__);
 			if (gpio >= 0) {
 				if (!gpio_is_valid(gpio))
@@ -705,7 +705,7 @@ void set_default_gpio(struct device_node *node)
 			}
 		}
 	} else {
-		RTK_GPIO_INF("No default gpio need to set");
+		pr_info("rtk-gpio: " "No default gpio need to set");
 	}
 }
 
@@ -725,14 +725,14 @@ static int rtk_gpio_probe(struct platform_device *pdev)
 	u32 gpio_base;
 	struct device_node *node = NULL;
 
-	RTK_GPIO_DBG("[%s]", __func__);
+	pr_debug("rtk-gpio: " "[%s]", __func__);
 	node = pdev->dev.of_node;
 	if (!node) {
 		pr_err("rtk gpio: failed to allocate device structure.\n");
 		return -ENODEV;
 	}
 
-	RTK_GPIO_DBG("[%s] node name = [%s]", __func__, node->name);
+	pr_debug("rtk-gpio: " "[%s] node name = [%s]", __func__, node->name);
 
 	p_rtk_gpio_ctl =
 		kzalloc(sizeof(struct rtk_gpio_controller), GFP_KERNEL);

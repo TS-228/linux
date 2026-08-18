@@ -1,0 +1,298 @@
+=== QNAP TS-228 hal_daemon fan path ===
+date: Tue Aug 11 12:38:46 SST 2026
+uname: Linux NAS0A1894 3.10.20-al-2.5.3 #975 SMP PREEMPT Wed Jun 21 10:54:10 CST 2023 armv7l unknown
+
+=== boot console (should be ttyS0 / UART0, NOT the PIC) ===
+
+=== model.conf (FAN_UNIT / PIC device) ===
+--- /etc/model.conf ---
+MAX_FAN_NUM = 1
+PIC_DEV = /dev/ttyS1
+ETH_MAC_DEVICE = PIC
+BOARD_SN_DEVICE = PIC
+SYSTEM_TEMP_UNIT= PIC
+PWR_RECOVERY_UNIT = PIC
+STATUS_GREEN_LED = PIC
+STATUS_RED_LED = PIC
+FRONT_USB_LED = PIC
+RESET_BUTTON = GPIO:I2D:P
+USB_COPY_BUTTON = GPIO:I2C:P
+FRONT_BREATH_LED = PIC
+[System FAN]
+FAN_UNIT = PIC
+FAN_1 = I1
+ERR_LED = GPIO:I2E:P
+ERR_LED = GPIO:I2F:P
+
+=== hal_daemon.cfg ===
+
+=== hal.conf enclosure (if present) ===
+enc_sysid_root = 0
+enc_sysid_root_boot = 32
+enc_sysid_root_usb = 33
+enc_sysid_root_mmc = 34
+enc_sys_id = root
+max_fan_num = 1
+max_cpu_fan_num = 0
+default_cpu_fan_count = 0
+factory_cpu_fan_count = 0
+enc_sys_id = root_boot
+max_fan_num = 0
+max_cpu_fan_num = 0
+default_cpu_fan_count = 0
+factory_cpu_fan_count = 0
+enc_sys_id = root_boot
+enc_sys_id = root_usb
+max_fan_num = 0
+max_cpu_fan_num = 0
+default_cpu_fan_count = 0
+factory_cpu_fan_count = 0
+enc_sys_id = root_mmc
+max_fan_num = 0
+max_cpu_fan_num = 0
+default_cpu_fan_count = 0
+factory_cpu_fan_count = 0
+
+=== hal processes ===
+  583 admin      3524 S   /sbin/hal_daemon -f 
+
+hal_daemon pid: 583
+
+=== serial devices ===
+crw-------    1 admin    administ    4,  64 Aug 11 12:38 /dev/ttyS0
+crw-------    1 admin    administ    4,  65 Aug 11 12:38 /dev/ttyS1
+
+=== who owns ttyS0 (Linux console) ===
+COMMAND   PID  USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+sh      17218 admin    0u   CHR   4,64      0t0  641 /dev/ttyS0
+sh      17218 admin    1u   CHR   4,64      0t0  641 /dev/ttyS0
+sh      17218 admin    2u   CHR   4,64      0t0  641 /dev/ttyS0
+
+=== who owns ttyS1 (expected: hal_daemon PIC) ===
+COMMAND PID  USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+root    458 admin    4u   CHR   4,65      0t0  642 /dev/ttyS1
+
+=== hal_daemon open file descriptors ===
+dr-x------    2 admin    administ         0 Aug 11 12:38 .
+dr-xr-xr-x    9 admin    administ         0 Aug 11 12:37 ..
+lrwx------    1 admin    administ        64 Aug 11 12:38 0 -> /dev/null
+lrwx------    1 admin    administ        64 Aug 11 12:38 1 -> /dev/null
+lrwx------    1 admin    administ        64 Aug 11 12:38 2 -> /dev/null
+lr-x------    1 admin    administ        64 Aug 11 12:38 3 -> pipe:[11889]
+l-wx------    1 admin    administ        64 Aug 11 12:38 4 -> pipe:[11889]
+lrwx------    1 admin    administ        64 Aug 11 12:38 5 -> socket:[11890]
+lrwx------    1 admin    administ        64 Aug 11 12:38 6 -> socket:[11891]
+
+--- fd targets (grep tty/gpio) ---
+
+=== dmesg uart (kernel map) ===
+
+=== GPIO / PWM sysfs (fan usually NOT here on TS-228) ===
+/sys/class/gpio/gpio44
+/sys/class/gpio/gpio45
+/sys/class/gpio/gpiochip0
+/sys/class/gpio/gpiochip60
+
+=== libuLinux_hal.so static hints (/lib/libuLinux_hal.so) ===
+%s(%d): Cannot get POWER FAN PWM.
+%s(%d): Disable PIC thread.
+%s(%d): Error min pwm %d, max pwm %d.
+%s(%d): Fail to obtain the min-max pwm.
+%s(%d): Get fan%d pwm = %d(%d%)
+%s(%d): Init PIC UART fail
+%s(%d): LED_BV_GPIO not implement.
+%s(%d): PIC I2C System Write Failed!.
+%s(%d): PIC I2C System Write Success!.
+%s(%d): PIC monitor for %s abnormally quit,errno = %d.
+%s(%d): PIC monitor for %s can't get any data from PIC, quit..
+%s(%d): PIC monitor for %s normally quit.
+%s(%d): PIC monitor for %s not exist, quit..
+%s(%d): PIC monitor for %s quit.
+%s(%d): PIC monitor to 0x%X.
+%s(%d): RESET button:gpio_index = 0x%x, gpio_bit = %d
+%s(%d): Run when pic_thead not exist.
+%s(%d): Set fan%d pwm = %d(%d%)
+%s(%d): USB button:gpio_index = 0x%x, gpio_bit = %d
+%s(%d): Write to PIC data = 0x%x
+%s(%d): check pwr_%d, set gpio%d
+%s(%d): invalid pwm value %d
+%s(%d): mmio_gpio_base = 0x%x,reg_off = 0x%x, gpio_pin = 0x%x
+%s(%d): mmio_gpio_base = 0x%x,reg_off = 0x%x, group_bit = 0x%x
+%s(%d): mmio_gpio_base = 0x%x,reg_off = 0x%x, group_bit = 0x%x,sig_invert = %d
+%s(%d): set fan_pwm = %d.
+%s(%d):GPIO Control is disable
+%s(%d):Monitor pic_id = %s PIC start
+%s(%d):PIC receive 0x%x unsupport.
+%s(%d):enc_sys_id = %s get PIC devname fail
+%s(%d):fan_pwm = %d over spec.
+%s(%d):pic_id = %s, Server receive command = 0x%x.
+%s(%d):pic_id = %s,key = 0x%x, msgid = 0x%x
+/dev/ttyS
+/dev/ttyS%d
+/sys/class/gpio
+/tmp/ttyS%d.block
+BBU_GPIO
+FAN_PWM_DUTY_0
+FAN_PWM_DUTY_100
+FAN_PWM_DUTY_25
+FAN_PWM_DUTY_35
+FAN_PWM_DUTY_50
+FAN_PWM_DUTY_65
+FAN_PWM_DUTY_80
+FAN_PWM_DUTY_90
+FAN_PWM_STATUS
+FAN_UNIT
+GPIO_Does_Case_Cover_Open
+GPIO_Does_Copy_Button_Press
+GPIO_Does_Eject_Button_Press
+GPIO_Does_Reset_Button_Press
+GPIO_Enable_10G_Present_LED
+GPIO_Enable_BREATHING_LED
+GPIO_Enable_BREATHING_LED_BLINK
+GPIO_Enable_Breath_LED
+GPIO_Enable_EXP_Present_LED
+GPIO_Enable_HDD_Active_LED
+GPIO_Enable_HDD_ERR_LED
+GPIO_Enable_HDD_Ident_LED
+GPIO_Enable_HDD_Present_LED
+GPIO_Enable_Ident_Action
+GPIO_Enable_LED_In_Night_Mode
+GPIO_Enable_Power_LED
+GPIO_Enable_Power_LED_BLINK
+GPIO_Enable_Standby_LED
+GPIO_Enable_Status_LED
+GPIO_Enable_Status_LED_BLINK
+GPIO_Enable_USB_LED
+GPIO_Enable_USB_LED_BLINK
+GPIO_Get_Ident_Action
+GPIO_Get_Power_Status
+GPIO_IN_%d
+GPIO_OUT_%d
+GPIO_Set_NAS_Status_LED
+HM_Init_EC_7Level_PWM
+HM_Init_EC_QFan_PWM
+HM_Init_EC_TFan_PWM
+HM_Set_Fan_Speed_By_PWM
+HM_Set_LED_Brightness_By_PWM
+MAX_PWM
+MIN_PWM
+PIC_DEV
+Port_PIC
+READ_PWM0
+READ_PWM0_5
+READ_PWM1
+READ_PWM1_5
+RESET_GPIO
+System GPIO
+WRITE_PWM0
+WRITE_PWM1
+acquire_pic_lock
+cat /sys/class/gpio/gpio%d/value
+comm_sys_parse_c_gpio
+comm_sys_parse_c_pwm
+common_sys_get_cpu_fan_pwm
+common_sys_get_gpiolib
+common_sys_get_sys_fan_pwm
+common_sys_set_gpiolib
+common_sys_set_pwmlib_config
+common_sys_set_pwmlib_enable
+create_pic_fifo
+ec_sys_get_fan_pwm
+ec_sys_init_7level_pwm
+ec_sys_init_qfan_pwm
+ec_sys_init_tfan_pwm
+ec_sys_set_led_by_pwm
+echo "255" > /sys/class/pwm/pwmchip%d/device/clkoutDiv%d
+echo "in" > /sys/class/gpio/gpio%d/direction
+echo "out" > /sys/class/gpio/gpio%d/direction
+echo %d > /sys/class/gpio/export
+echo %d > /sys/class/gpio/gpio%d/value
+echo %d > /sys/class/pwm/pwmchip%d/device/clksrcDiv%d
+echo %d > /sys/class/pwm/pwmchip%d/device/dutyRate%d
+echo %d > /sys/class/pwm/pwmchip%d/device/enable%d
+emcu_sys_get_fan_pwm_1byte
+emcu_sys_get_fan_pwm_5byte
+emcu_sys_reset_gpio
+emcu_sys_set_fan_pwm
+
+
+%s(%d): msgrcv fail,errno = %d
+%s(%d):set pic_wol mode = %d, reload..
+GPIO_10G_LED%d
+GPIO_10G_LED1
+GPIO_10G_LED2
+GPIO_Does_Case_Cover_Open
+GPIO_Does_Copy_Button_Press
+GPIO_Does_Eject_Button_Press
+GPIO_Does_Reset_Button_Press
+GPIO_Enable_10G_Present_LED
+GPIO_Enable_EXP_Present_LED
+GPIO_Enable_HDD_Active_LED
+GPIO_Enable_HDD_ERR_LED
+GPIO_Enable_HDD_Ident_LED
+GPIO_Enable_HDD_Present_LED
+GPIO_Enable_Ident_Action
+GPIO_Enable_Power_LED
+GPIO_Enable_Status_LED
+GPIO_Enable_USB_LED
+GPIO_Enable_USB_LED_BLINK
+GPIO_Get_Power_Status
+GPIO_Set_NAS_Status_LED
+msgget
+msgrcv
+my_msgsnd
+
+=== hal_app fan commands (help strings) ===
+--- /sbin/hal_app ---
+ec_sys_set_fan_control_slope
+se_sys_set_fan_speed
+se_sys_set_fan_pwm
+se_sys_get_fan_pwm
+se_sys_set_fanerror_led
+enc_sys_set_fan_pwm
+enc_sys_get_fan_pwm
+enc_sys_set_fan_mode
+enc_sys_set_fanerror_led
+enc_sys_get_fan_pwm
+  --se_sys_get_fan_pwm enc_sys_id=XXX,obj_index=YYY
+  --se_sys_set_fan_mode enc_sys_id=XXX,obj_index=YYY,mode=ZZZ
+  --se_sys_set_fan_pwm enc_sys_id=XXX,obj_index=YYY,pwm=ZZZ
+  --se_sys_set_fanerror_led enc_sys_id=XXX,mode=[0-6]
+%s(%d):fan index = %d,ret = %d,fan_pwm = %d
+se_sys_get_fan_pwm
+se_sys_set_fan_mode
+se_sys_set_fan_pwm
+se_sys_set_fanerror_led
+--- /sbin/hal_event ---
+HM_Init_EC_QFan_PWM
+HM_Init_EC_TFan_PWM
+SE_Set_FAN_Region_Stepping
+HM_Set_FanError_Led
+HM_Set_Fan_Speed_By_PWM
+HM_Set_Fan_Speed
+FAN_Mode_Is_Divide
+  --se_set_fan_force_speed fan_level=XXX    Send root fan speed level.
+  --se_set_fan_scrollbar_stepping fan_region=XXX,value=YYY
+  --se_set_fan_mode_smart_intelligent fan_region=XXX.
+  --se_set_tfan_mode_smart_intelligent fan_region=XXX,tmode=YYY.
+  --se_set_fan_mode_smart_custom unit=UUU,stop_temp=VVV,low_temp=XXX,high_temp=YYY,fan_region=ZZZ
+  --se_set_fan_mode_fixed fan_level=XXX,fan_region=YYY.
+se_set_fan_force_speed
+se_set_fan_scrollbar_stepping
+se_set_fan_mode_smart_intelligent
+se_set_tfan_mode_smart_intelligent
+se_set_fan_mode_smart_custom
+se_set_fan_mode_fixed
+set_fan_speed
+
+=== current fan sysfs / HAL readouts ===
+
+=== CONCLUSION HINTS (read model.conf + lsof above) ===
+TS-228 expected:
+  - console = /dev/ttyS0 (UART @ 0x18007800) — your serial cable
+  - PIC/fan = /dev/ttyS1 (UART @ 0x1801B200) — hal_daemon only
+  - model.conf: FAN_UNIT=PIC, PIC_DEV=/dev/ttyS1
+  - fan bytes on UART: 0x30..0x35 (not SoC GPIO)
+
+Capture saved under: /tmp/qnap-hal-re
+Next: sh stock_hal_re.sh trace-fan   # while changing fan in UI

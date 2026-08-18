@@ -223,13 +223,6 @@ extern int rtl_initMcastImprove(void);
 #include "AsicDriver/rtl865x_asicBasic.h"
 
 #define RTL_DEBUG	1
-#ifdef RTL_DEBUG
-#define DBG(fmt, ...) pr_err("%s:%d: " fmt "\n", \
-				__func__, __LINE__, ## __VA_ARGS__)
-#else
-#define DBG(fmt, ...)
-#endif
-
 void __iomem *rtl_hwnat_mmio;
 void __iomem *rtl_hwnat_clk_mmio;
 void __iomem *rtl_hwnat_sata_mmio;
@@ -520,13 +513,6 @@ static void __exit rtl819x_exitWanPortSetting(void);
 #else
 #define NETDRV_PRIV(X) ((X)->priv)
 #endif
-
-#if 0
-#define DEBUG_ERR printk
-#else
-#define DEBUG_ERR(format, args...)
-#endif
-
 #if defined(CONFIG_RTL_LOCAL_PUBLIC)
 #include <net/rtl/rtl865x_localPublic.h>
 #endif
@@ -2660,7 +2646,7 @@ struct rtl865x_vlanConfig *rtl_get_vlanconfig_by_netif_name(const char *name)
 void rtl_ps_drv_netif_mapping_show(void)
 {
 	int i;
-	DEBUG_ERR("linux netif name VS driver netif name mapping:\n");
+	pr_err("rtk-hwnat: " "linux netif name VS driver netif name mapping:\n");
 	for (i = 0; i < NETIF_NUMBER; i++) {
 		DEBUG_ERR
 			("valid(%d),linux netif name(%s) <---->drv netif name(%s)\n",
@@ -3106,7 +3092,7 @@ static int32 re865x_packVlanConfig(struct rtl865x_vlanConfig vlanConfig1[],
 	}
 
 	if (vlanCnt + 1 > NETIF_NUMBER)
-		DEBUG_ERR("ERROR,vlanCnt(%d) > max size %d\n", vlanCnt,
+		pr_err("rtk-hwnat: " "ERROR,vlanCnt(%d) > max size %d\n", vlanCnt,
 			NETIF_NUMBER - 1);
 
 	/*initialize output vlan config */
@@ -3496,7 +3482,7 @@ __IRAM_FWD static void refill_rx_skb(void)
 #endif
 
 		if (skb == NULL) {
-			DEBUG_ERR("EthDrv: dev_alloc_skb() failed!\n");
+			pr_err("rtk-hwnat: " "EthDrv: dev_alloc_skb() failed!\n");
 			return;
 		}
 		skb_reserve(skb, RX_OFFSET);
@@ -3556,7 +3542,7 @@ __IRAM_FWD unsigned char *alloc_rx_buf(void **skb, int buflen)
 	if (buflen > CROSS_LAN_MBUF_LEN) {
 		new_skb = dev_alloc_skb(buflen);
 		if (new_skb == NULL) {
-			DEBUG_ERR("EthDrv: alloc skb failed!\n");
+			pr_err("rtk-hwnat: " "EthDrv: alloc skb failed!\n");
 		} else
 			skb_reserve(new_skb, RX_OFFSET);
 	} else {
@@ -3568,7 +3554,7 @@ __IRAM_FWD unsigned char *alloc_rx_buf(void **skb, int buflen)
 			new_skb = dev_alloc_skb(CROSS_LAN_MBUF_LEN);
 #endif
 			if (new_skb == NULL) {
-				DEBUG_ERR("EthDrv: alloc skb failed!\n");
+				pr_err("rtk-hwnat: " "EthDrv: alloc skb failed!\n");
 			} else
 				skb_reserve(new_skb, RX_OFFSET);
 		} else {
@@ -3604,7 +3590,7 @@ __IRAM_FWD unsigned char *alloc_rx_buf_init(void **skb, int buflen)
 	if (buflen > CROSS_LAN_MBUF_LEN) {
 		new_skb = dev_alloc_skb(buflen);
 		if (new_skb == NULL) {
-			DEBUG_ERR("EthDrv: alloc skb failed!\n");
+			pr_err("rtk-hwnat: " "EthDrv: alloc skb failed!\n");
 		} else
 			skb_reserve(new_skb, RX_OFFSET);
 	} else {
@@ -3619,7 +3605,7 @@ __IRAM_FWD unsigned char *alloc_rx_buf_init(void **skb, int buflen)
 			new_skb = dev_alloc_skb(CROSS_LAN_MBUF_LEN);
 #endif
 			if (new_skb == NULL) {
-				DEBUG_ERR("EthDrv: alloc skb failed!\n");
+				pr_err("rtk-hwnat: " "EthDrv: alloc skb failed!\n");
 			} else
 				skb_reserve(new_skb, RX_OFFSET);
 		} else {
@@ -4270,7 +4256,7 @@ static bool rtl_MulticastRxFilterOff(struct sk_buff *skb, int ipversion)
 #endif
 
 	if (IgmpRxFilter_Hook == NULL) {
-		DEBUG_ERR("IgmpRxFilter_hook is NULL\n");
+		pr_err("rtk-hwnat: " "IgmpRxFilter_hook is NULL\n");
 		return false;
 	}
 #if defined(CONFIG_RTD_1295_HWNAT)
@@ -4376,7 +4362,7 @@ static bool rtl_MulticastRxFilterOff(struct sk_buff *skb, int ipversion)
 		ret = false;	/* ipv6 hava no iptables rule now */
 
 	if (ret) {
-		DEBUG_ERR(" filter a v%d pkt\n", ipversion);
+		pr_err("rtk-hwnat: " " filter a v%d pkt\n", ipversion);
 	}
 	/* return point to l2 header */
 #if defined(CONFIG_RTL_PROCESS_PPPOE_IGMP_FOR_BRIDGE_FORWARD)
@@ -6142,7 +6128,7 @@ __MIPS16 __IRAM_FWD
 #else
 		dev->netdev_ops->ndo_start_xmit(skb, dev);
 #endif
-		DEBUG_ERR("[%s][%d]-[%s]\n", __FUNCTION__, __LINE__,
+		pr_err("rtk-hwnat: " "[%s][%d]-[%s]\n", __FUNCTION__, __LINE__,
 			skb->dev->name);
 		return SUCCESS;
 #if 0
@@ -6184,7 +6170,7 @@ __MIPS16 __IRAM_FWD
 #else
 		dev->netdev_ops->ndo_start_xmit(skb, dev);
 #endif
-		DEBUG_ERR("[%s][%d]-[%s]\n", __FUNCTION__, __LINE__,
+		pr_err("rtk-hwnat: " "[%s][%d]-[%s]\n", __FUNCTION__, __LINE__,
 			skb->dev->name);
 
 		return SUCCESS;
@@ -11468,7 +11454,7 @@ __MIPS16 __IRAM_FWD
 			mapping =
 				dma_map_single(&rtl819x_pdev->dev, tx_skb->data,
 				dlen, DMA_TO_DEVICE);
-			/* DBG("dma_map_single(dev 0x%p, start 0x%p, len %d, dir %d) = mapping 0x%x", &rtl819x_pdev->dev, tx_skb->data, dlen, DMA_TO_DEVICE, (uint) mapping); */
+			/* pr_debug("rtk-hwnat: " "dma_map_single(dev 0x%p, start 0x%p, len %d, dir %d) = mapping 0x%x", &rtl819x_pdev->dev, tx_skb->data, dlen, DMA_TO_DEVICE, (uint) mapping); */
 			if (unlikely(dma_mapping_error(&rtl819x_pdev->dev,
 						mapping))) {
 				if (net_ratelimit())
@@ -11488,7 +11474,7 @@ __MIPS16 __IRAM_FWD
 		mapping =
 			dma_map_single(&rtl819x_pdev->dev, tx_skb->data,
 			tx_skb->len, DMA_TO_DEVICE);
-		/* DBG("dma_map_single(dev 0x%p, start 0x%p, len %d, dir %d) = mapping 0x%x", &rtl819x_pdev->dev, tx_skb->data, tx_skb->len, DMA_TO_DEVICE, (uint) mapping); */
+		/* pr_debug("rtk-hwnat: " "dma_map_single(dev 0x%p, start 0x%p, len %d, dir %d) = mapping 0x%x", &rtl819x_pdev->dev, tx_skb->data, tx_skb->len, DMA_TO_DEVICE, (uint) mapping); */
 		if (unlikely(dma_mapping_error(&rtl819x_pdev->dev, mapping))) {
 			if (net_ratelimit())
 				netif_err(cp, drv, tx_skb->dev,
@@ -11507,7 +11493,7 @@ __MIPS16 __IRAM_FWD
 	mapping =
 		dma_map_single(&rtl819x_pdev->dev, tx_skb->data, tx_skb->len,
 		DMA_TO_DEVICE);
-	/* DBG("dma_map_single(dev 0x%p, start 0x%p, len %d, dir %d) = mapping 0x%x", &rtl819x_pdev->dev, tx_skb->data, tx_skb->len, DMA_TO_DEVICE, (uint) mapping); */
+	/* pr_debug("rtk-hwnat: " "dma_map_single(dev 0x%p, start 0x%p, len %d, dir %d) = mapping 0x%x", &rtl819x_pdev->dev, tx_skb->data, tx_skb->len, DMA_TO_DEVICE, (uint) mapping); */
 	if (unlikely(dma_mapping_error(&rtl819x_pdev->dev, mapping))) {
 		if (net_ratelimit())
 			netif_err(cp, drv, tx_skb->dev,
@@ -13899,7 +13885,7 @@ static int rtl_set_vlanconfig_mac_addr(void)
 		for (i = 0; i < ETH_ALEN; i++)
 			mac[i] = RTL_UMAC_R8(i);
 	}
-	/* DBG("MAC address base = %pM", mac); */
+	/* pr_debug("rtk-hwnat: " "MAC address base = %pM", mac); */
 
 	for (i = 0; i < ETH_INTF_NUM; i++) {
 		#if defined(CONFIG_RTL_WAN_MAC5)
@@ -14064,7 +14050,7 @@ int __init re865x_probe(void)
 		return -EINVAL;
 	}
 
-	DBG("IRQ = %d", irq);
+	pr_debug("rtk-hwnat: " "IRQ = %d", irq);
 
 	rtl_hwnat_mmio = of_iomap(pdev->dev.of_node, 0);
 	if (!rtl_hwnat_mmio) {
@@ -14086,39 +14072,39 @@ int __init re865x_probe(void)
 
 	of_property_read_u32_array(pdev->dev.of_node, "reg", dt_array, 6);
 	rtl_hwnat_base = dt_array[0];
-	DBG("HWNAT start 0x%x, rtl_hwnat_mmio = 0x%p", dt_array[0],
+	pr_debug("rtk-hwnat: " "HWNAT start 0x%x, rtl_hwnat_mmio = 0x%p", dt_array[0],
 		rtl_hwnat_mmio);
 
 	of_property_read_u32(pdev->dev.of_node, "offload_enable", &dt_tmp);
-	DBG("HW NAT offload_enable = %s", dt_tmp > 0 ? "enable" : "disable");
+	pr_debug("rtk-hwnat: " "HW NAT offload_enable = %s", dt_tmp > 0 ? "enable" : "disable");
 	rtl_hwnat_enable = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "rgmii_enable", &dt_tmp);
-	DBG("rgmii_enable = %s", dt_tmp > 0 ? "enable" : "disable");
+	pr_debug("rtk-hwnat: " "rgmii_enable = %s", dt_tmp > 0 ? "enable" : "disable");
 	hwnat_rgmii_enable = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "rgmii_voltage", &dt_tmp);
-	DBG("RGMII voltage = %d (1:1.8V, 2:2.5V, 3:3.3V)", dt_tmp);
+	pr_debug("rtk-hwnat: " "RGMII voltage = %d (1:1.8V, 2:2.5V, 3:3.3V)", dt_tmp);
 	hwnat_rgmii_voltage = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "rgmii0_tx_delay", &dt_tmp);
-	DBG("RGMII0 TX delay = %d (0.5 ns per step)", dt_tmp);
+	pr_debug("rtk-hwnat: " "RGMII0 TX delay = %d (0.5 ns per step)", dt_tmp);
 	hwnat_rgmii0_tx_delay = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "rgmii0_rx_delay", &dt_tmp);
-	DBG("RGMII0 RX delay = %d (0.5 ns per step)", dt_tmp);
+	pr_debug("rtk-hwnat: " "RGMII0 RX delay = %d (0.5 ns per step)", dt_tmp);
 	hwnat_rgmii0_rx_delay = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "rgmii1_tx_delay", &dt_tmp);
-	DBG("RGMII1 TX delay = %d (0.5 ns per step)", dt_tmp);
+	pr_debug("rtk-hwnat: " "RGMII1 TX delay = %d (0.5 ns per step)", dt_tmp);
 	hwnat_rgmii1_tx_delay = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "rgmii1_rx_delay", &dt_tmp);
-	DBG("RGMII1 RX delay = %d (0.5 ns per step)", dt_tmp);
+	pr_debug("rtk-hwnat: " "RGMII1 RX delay = %d (0.5 ns per step)", dt_tmp);
 	hwnat_rgmii1_rx_delay = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "mac0_enable", &dt_tmp);
-	DBG("mac0_enable = %s", dt_tmp > 0 ? "enable" : "disable");
+	pr_debug("rtk-hwnat: " "mac0_enable = %s", dt_tmp > 0 ? "enable" : "disable");
 	hwnat_mac0_enable = dt_tmp;
 	#if defined(CONFIG_RTL_MULTI_LAN_DEV)
 	#if !defined(CONFIG_RTL_CPU_TAG)
@@ -14131,32 +14117,32 @@ int __init re865x_probe(void)
 	#endif /* CONFIG_RTL_MULTI_LAN_DEV */
 
 	of_property_read_u32(pdev->dev.of_node, "mac0_mode", &dt_tmp);
-	DBG("mac0_mode = %s to %s", (dt_tmp & 1) > 0 ? "SGMII" : "RGMII",
+	pr_debug("rtk-hwnat: " "mac0_mode = %s to %s", (dt_tmp & 1) > 0 ? "SGMII" : "RGMII",
 		(dt_tmp & 2) > 0 ? "MAC" : "PHY");
 	hwnat_mac0_mode = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "mac5_conn_to", &dt_tmp);
-	DBG("mac5_conn_to = %s", dt_tmp > 0 ? "MAC" : "PHY");
+	pr_debug("rtk-hwnat: " "mac5_conn_to = %s", dt_tmp > 0 ? "MAC" : "PHY");
 	hwnat_mac5_conn_to = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "mac0_phy_id", &dt_tmp);
-	DBG("mac0_phy_id = %d", dt_tmp);
+	pr_debug("rtk-hwnat: " "mac0_phy_id = %d", dt_tmp);
 	rtl8651AsicEthernetTable[0].phyId = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "mac4_phy_id", &dt_tmp);
-	DBG("mac4_phy_id = %d", dt_tmp);
+	pr_debug("rtk-hwnat: " "mac4_phy_id = %d", dt_tmp);
 	rtl8651AsicEthernetTable[4].phyId = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "mac5_phy_id", &dt_tmp);
-	DBG("mac5_phy_id = %d", dt_tmp);
+	pr_debug("rtk-hwnat: " "mac5_phy_id = %d", dt_tmp);
 	rtl8651AsicEthernetTable[5].phyId = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "led_mode", &dt_tmp);
-	DBG("LED mode = %d", dt_tmp);
+	pr_debug("rtk-hwnat: " "LED mode = %d", dt_tmp);
 	hwnat_led_mode = dt_tmp;
 
 	of_property_read_u32(pdev->dev.of_node, "gpio_link_led_enable", &dt_tmp);
-	DBG("gpio_link_led_enable = %d", dt_tmp);
+	pr_debug("rtk-hwnat: " "gpio_link_led_enable = %d", dt_tmp);
 	hwnat_gpio_link_led_enable = dt_tmp;
 
 	if (hwnat_gpio_link_led_enable) {
@@ -15281,7 +15267,7 @@ static void init_priv_eth_skb_buf(void)
 {
 	int i;
 
-	DEBUG_ERR("Init priv skb.\n");
+	pr_err("rtk-hwnat: " "Init priv skb.\n");
 	memset(eth_skb_buf, '\0',
 		sizeof(struct priv_skb_buf2) * (MAX_ETH_SKB_NUM));
 	INIT_LIST_HEAD(&eth_skbbuf_list);
@@ -15306,15 +15292,15 @@ static inline unsigned char *get_buf_from_poll(struct list_head *phead,
 
 	if (list_empty(phead)) {
 		SMP_UNLOCK_ETH_BUF(flags);
-		DEBUG_ERR("eth_drv: phead=%X buf is empty now!\n",
+		pr_err("rtk-hwnat: " "eth_drv: phead=%X buf is empty now!\n",
 			(unsigned int)phead);
-		DEBUG_ERR("free count %d\n", *count);
+		pr_err("rtk-hwnat: " "free count %d\n", *count);
 		return NULL;
 	}
 
 	if (*count == 1) {
 		SMP_UNLOCK_ETH_BUF(flags);
-		DEBUG_ERR("eth_drv: phead=%X under-run!\n",
+		pr_err("rtk-hwnat: " "eth_drv: phead=%X under-run!\n",
 			(unsigned int)phead);
 		return NULL;
 	}
@@ -15366,7 +15352,7 @@ __MIPS16 __IRAM_FWD
 		data = get_buf_from_poll(&eth_skbbuf_list,
 			(unsigned int *)&eth_skb_free_num);
 		if (data == NULL) {
-			DEBUG_ERR("eth_drv: priv_skb buffer empty!\n");
+			pr_err("rtk-hwnat: " "eth_drv: priv_skb buffer empty!\n");
 			return NULL;
 		}
 
@@ -15376,7 +15362,7 @@ __MIPS16 __IRAM_FWD
 			/* free_rtl865x_eth_priv_buf(data); */
 			release_buf_to_poll(data, &eth_skbbuf_list,
 				(unsigned int *)&eth_skb_free_num);
-			DEBUG_ERR("alloc linux_skb buff failed!\n");
+			pr_err("rtk-hwnat: " "alloc linux_skb buff failed!\n");
 			return NULL;
 		}
 		return skb;
@@ -15748,7 +15734,7 @@ static int rtd129x_nat_suspend(struct device *dev)
 			napi_disable(&cp->napi);
 #endif /* CONFIG_RTL_ETH_NAPI_SUPPORT */
 			if (netif_running(ndev)) {
-				DBG(KERN_ERR "[RTD129X_NAT] stop portmask 0x%x\n",
+				pr_debug("rtk-hwnat: " KERN_ERR "[RTD129X_NAT] stop portmask 0x%x\n",
 						cp->portmask);
 				netif_device_detach(ndev);
 				netif_stop_queue(ndev);
@@ -15811,7 +15797,7 @@ static int rtd129x_nat_resume(struct device *dev)
 			napi_enable(&cp->napi);
 #endif /* CONFIG_RTL_ETH_NAPI_SUPPORT */
 			if (netif_running(ndev)) {
-				DBG(KERN_ERR "[RTD129X_NAT] resume portmask 0x%x\n",
+				pr_debug("rtk-hwnat: " KERN_ERR "[RTD129X_NAT] resume portmask 0x%x\n",
 						cp->portmask);
 				netif_device_attach(ndev);
 			}

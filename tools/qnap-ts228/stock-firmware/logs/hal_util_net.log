@@ -1,0 +1,18 @@
+2026-08-11 12:30:46 DETECT NEW IP:X‰ò¶x«Ðµ IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:30:49 DETECT NEW IP:X‰ò¶x«Ðµ IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:30:49 DETECT NEW IP:X‰ò¶x«Ðµ IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:32:37 DETECT DEL IP:X‰ò¶x«Ðµ IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:32:37 DETECT DEL IP:X‰ò¶x«Ðµ IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:32:37 DETECT DEL IP:X‰ò¶x«Ðµ IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:32:37 DETECT DEL IP:X‰ò¶x«Ðµ IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:32:41 SCAN:eth0:status = 1
+2026-08-11 12:32:42 NetLink eth0 down.
+2026-08-11 12:32:42 Run cmd = /etc/init.d/network.sh linkdown eth0 >& /dev/null & 
+2026-08-11 12:32:46 NetLink eth0 up.
+2026-08-11 12:32:46 Run cmd = /etc/init.d/network.sh linkup eth0 >& /dev/null & 
+2026-08-11 12:32:48 DETECT NEW IP: IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:32:51 DETECT NEW IP: IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:32:51 DETECT NEW IP: IP= X‰ò¶°«Ðµñ¶‹ò¶
+2026-08-11 12:32:54 DETECT NEW IP:eth0 IP= 192.168.178.98
+2026-08-11 12:40:48 DETECT NEW IP:eth0 IP= 192.168.178.98
+2026-08-11 12:40:48 DETECT NEW IP:eth0 IP= 192.168.178.98

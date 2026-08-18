@@ -96,7 +96,7 @@ void scd_device_release(struct device* dev)
 {
     scd_device* p_dev = to_scd_device(dev);
 
-    SC_INFO("scd dev %s released\n", p_dev->name);
+    pr_info("rtk-scd: " "scd dev %s released\n", p_dev->name);
 }
 
 
@@ -126,7 +126,7 @@ int register_scd_device(scd_device* device)
     {
         if (scd_device_list[i]==NULL)
         {
-            SC_INFO("register scd device '%s' (%p) to scd%d\n", device->name, dev, i);
+            pr_info("rtk-scd: " "register scd device '%s' (%p) to scd%d\n", device->name, dev, i);
 
             dev_set_name(dev, "scd%d", i);
 
@@ -136,7 +136,7 @@ int register_scd_device(scd_device* device)
 
             if (device_register(dev)<0)
             {
-                SC_INFO("register scd device '%s' (%p) to scd%d failed\n", device->name, dev, i);
+                pr_info("rtk-scd: " "register scd device '%s' (%p) to scd%d failed\n", device->name, dev, i);
                 return -1;
             }
 
@@ -146,7 +146,7 @@ int register_scd_device(scd_device* device)
         }
     }
 
-    SC_INFO("register scd device '%s' (%p) failed, no more free entry\n", device->name, dev);
+    pr_info("rtk-scd: " "register scd device '%s' (%p) failed, no more free entry\n", device->name, dev);
 
     return -1;
 }
@@ -198,7 +198,7 @@ int scd_drv_probe(struct device * dev)
 {
     scd_device* p_dev = to_scd_device(dev);
     scd_driver* p_drv = to_scd_driver(dev->driver);
-    SC_INFO("probe : scd_dev '%s' (%p), scd_drv '%s' (%p)\n", p_dev->name, dev,p_drv->name, dev->driver);
+    pr_info("rtk-scd: " "probe : scd_dev '%s' (%p), scd_drv '%s' (%p)\n", p_dev->name, dev,p_drv->name, dev->driver);
 
     if (!p_drv->probe)
         return -ENODEV;
@@ -231,7 +231,7 @@ int scd_drv_remove(struct device * dev)
     scd_device* p_dev = to_scd_device(dev);
     scd_driver* p_drv = to_scd_driver(dev->driver);
 
-    SC_INFO("remove smart card device '%s'\n", p_dev->name);
+    pr_info("rtk-scd: " "remove smart card device '%s'\n", p_dev->name);
 
     if (p_drv->remove)
         p_drv->remove(p_dev);
@@ -259,7 +259,7 @@ void scd_drv_shutdown(struct device * dev)
     scd_device* p_dev = to_scd_device(dev);
     scd_driver* p_drv = to_scd_driver(dev->driver);
 
-    SC_INFO("shotdown smart card device '%s'\n", p_dev->name);
+    pr_info("rtk-scd: " "shotdown smart card device '%s'\n", p_dev->name);
 
     if (p_drv->enable)
         p_drv->enable(p_dev, 0);
@@ -281,7 +281,7 @@ int scd_drv_suspend(struct device * dev, pm_message_t state)
     scd_device* p_dev = to_scd_device(dev);
     scd_driver*  p_drv = to_scd_driver(dev->driver);
 
-    SC_INFO("suspend scd_dev '%s'\n", p_dev->name);
+    pr_info("rtk-scd: " "suspend scd_dev '%s'\n", p_dev->name);
     return (p_drv->suspend) ? p_drv->suspend(p_dev) : 0;
 }
 
@@ -301,7 +301,7 @@ int scd_drv_resume(struct device * dev)
     scd_device* p_dev = to_scd_device(dev);
     scd_driver*  p_drv = to_scd_driver(dev->driver);
 
-    SC_INFO("resume scd_dev '%s'\n", p_dev->name);
+    pr_info("rtk-scd: " "resume scd_dev '%s'\n", p_dev->name);
 
     return (p_drv->resume) ? p_drv->resume(p_dev) : 0;
 }
@@ -329,7 +329,7 @@ int register_scd_driver(scd_driver* driver)
     drv->suspend  = scd_drv_suspend;
     drv->resume   = scd_drv_resume;
 
-    SC_INFO("register scd driver '%s' (%p)\n", drv->name, drv);
+    pr_info("rtk-scd: " "register scd driver '%s' (%p)\n", drv->name, drv);
 
     return driver_register(drv);
 }
@@ -348,7 +348,7 @@ int register_scd_driver(scd_driver* driver)
 void unregister_scd_driver(scd_driver* driver)
 {
     struct device_driver* drv = &driver->drv;
-    SC_INFO("unregister scd driver '%s' (%p)\n", drv->name, &driver->drv);
+    pr_info("rtk-scd: " "unregister scd driver '%s' (%p)\n", drv->name, &driver->drv);
     driver_unregister(&driver->drv);
 }
 
@@ -365,7 +365,7 @@ void unregister_scd_driver(scd_driver* driver)
  *------------------------------------------------------------------*/
 static int __init scd_core_init(void)
 {
-    SC_INFO("%s, register scd_bus %p\n",__FUNCTION__, &scd_bus_type);
+    pr_info("rtk-scd: " "%s, register scd_bus %p\n",__FUNCTION__, &scd_bus_type);
 
 #ifdef CONFIG_SMARTCARD_DEV_FILE
     scd_dev_module_init();

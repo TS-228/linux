@@ -51,52 +51,6 @@ struct dwc3_rtk {
 	struct work_struct work;
 };
 
-#ifdef CONFIG_RTK_USB3PHY
-extern void rtk_usb3_phy_toggle(struct usb_phy *usb3_phy, bool isConnect,
-	    int port);
-#endif
-
-void RTK_dwc3_usb3_phy_toggle(struct device *hcd_dev, bool isConnect, int port)
-{
-	struct device *dwc3_dev = NULL;
-	struct dwc3 *dwc = NULL;
-	if (hcd_dev == NULL) return;
-
-	dwc3_dev = hcd_dev->parent;
-	if (dwc3_dev == NULL) return;
-
-	dwc = dev_get_drvdata(dwc3_dev);
-#ifdef CONFIG_RTK_USB3PHY
-	dev_dbg(dwc3_dev, "%s port=%d\n", __func__, port);
-	if (dwc != NULL)
-		rtk_usb3_phy_toggle(dwc->usb3_phy, isConnect, port);
-#endif
-}
-
-#ifdef CONFIG_RTK_USB2PHY
-extern void rtk_usb2_phy_toggle(struct usb_phy *usb3_phy, bool isConnect,
-	    int port);
-#endif
-
-int RTK_dwc3_usb2_phy_toggle(struct device *hcd_dev, bool isConnect, int port)
-{
-	struct device *dwc3_dev = NULL;
-	struct dwc3 *dwc = NULL;
-	if (hcd_dev == NULL) return -1;
-
-	dwc3_dev = hcd_dev->parent;
-	if (dwc3_dev == NULL) return -1;
-
-	dwc = dev_get_drvdata(dwc3_dev);
-	if (dwc == NULL) return -1;
-
-#ifdef CONFIG_RTK_USB2PHY
-	dev_dbg(dwc3_dev, "%s port=%d\n", __func__, port);
-	rtk_usb2_phy_toggle(dwc->usb2_phy, isConnect, port);
-#endif
-	return 0;
-}
-
 static int dwc3_rtk_register_phys(struct dwc3_rtk *rtk)
 {
 	struct platform_device	*pdev;

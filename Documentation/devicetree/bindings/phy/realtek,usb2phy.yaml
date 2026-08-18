@@ -60,6 +60,7 @@ description: |
 properties:
   compatible:
     enum:
+      - realtek,rtd119x-usb2phy
       - realtek,rtd1295-usb2phy
       - realtek,rtd1312c-usb2phy
       - realtek,rtd1315e-usb2phy

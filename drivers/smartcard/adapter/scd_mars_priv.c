@@ -135,7 +135,7 @@ void mars_scd_power_enable(
 
     if (p_this->cmd_vcc_en)
     {
-        //SC_INFO("SC%d - power enable=%d, %s_GPIO[%d]=%d\n",
+        //pr_info("rtk-scd: " "SC%d - power enable=%d, %s_GPIO[%d]=%d\n",
         //p_this->id, on, gpio_type(p_this->pin_cmd_vcc), gpio_idx(p_this->pin_cmd_vcc), val);
 	gpio_direction_output(p_this->pin_cmd_vcc, val);
     }
@@ -162,7 +162,7 @@ void mars_scd_power_select(
 
     if (p_this->pwr_sel_en)
     {
-        //SC_INFO("SC%d - power select=%d, %s_GPIO[%d]=%d\n",
+        //pr_info("rtk-scd: " "SC%d - power select=%d, %s_GPIO[%d]=%d\n",
         //p_this->id, on, gpio_type(p_this->pin_pwr_sel), gpio_idx(p_this->pin_pwr_sel), val);
         gpio_direction_output(p_this->pin_pwr_sel, val);
     }
@@ -190,7 +190,7 @@ int mars_scd_set_state(mars_scd *p_this, IFD_FSM fsm)
     {
     case IFD_FSM_DISABLE:
 
-        SC_INFO("SC%d - FSM = DISABLE\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = DISABLE\n", id);
 
         SET_SCFP(base, SC_CLK_EN(0)    |
                         SC_CLKDIV((p_this->clock_div-1))|
@@ -217,7 +217,7 @@ int mars_scd_set_state(mars_scd *p_this, IFD_FSM fsm)
         break;
 
     case IFD_FSM_DEACTIVATE:
-        SC_INFO("SC%d - FSM = IDEL\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = IDEL\n", id);
         // - begin - add to fix Nagxx ICC Test 11 - Paired 5040.2 deactivate with extra clk issue
         //mars_scd_power_enable(p_this, 0);
         udelay(100);
@@ -240,7 +240,7 @@ int mars_scd_set_state(mars_scd *p_this, IFD_FSM fsm)
         p_this->atr.length = -1;
         kfifo_reset(&p_this->rx_fifo);
 #if 0
-        SC_INFO("SC%d - FSM = IDEL\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = IDEL\n", id);
         mars_scd_set_etu(p_this, 372);
         mars_scd_set_parity(p_this, 1);
 
@@ -259,7 +259,7 @@ int mars_scd_set_state(mars_scd *p_this, IFD_FSM fsm)
 
         if (!mars_scd_card_detect(p_this))
         {
-            SC_WARNING("SC%d - RESET mars scd failed, no ICC exist\n", id);
+            pr_warn("rtk-scd: " "SC%d - RESET mars scd failed, no ICC exist\n", id);
             mars_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
             return SC_ERR_NO_ICC;
         }
@@ -288,12 +288,12 @@ int mars_scd_set_state(mars_scd *p_this, IFD_FSM fsm)
 
         p_this->atr_timeout = jiffies + HZ;
 
-        SC_INFO("SC%d - FSM = RESET & ATR\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = RESET & ATR\n", id);
 
         break;
 
     case IFD_FSM_ACTIVE:
-        SC_INFO("SC%d - FSM = ACTIVATE\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = ACTIVATE\n", id);
 
         SET_SCIRER(base, SC_CPRES_INT    |
                         SC_ATRS_INT     |
@@ -332,14 +332,14 @@ void mars_scd_fsm_reset(mars_scd* p_this)
     unsigned long rx_len = 0;
     unsigned long i      = 0;
 
-    SC_INT_DBG("mars_scd_fsm_reset : SC_RISR=%08lx\n", event);
+    pr_debug("rtk-scd: " "mars_scd_fsm_reset : SC_RISR=%08lx\n", event);
 
     if ((event & SC_RXP_INT) || !(event & SC_PRES)|| time_after(jiffies, p_this->atr_timeout))
         goto err_atr_failed;
 
     if (event & SC_ATRS_INT)
     {
-        SC_INT_DBG("mars_scd_fsm_reset : Got ATR INT, reset ATR buffer\n");
+        pr_debug("rtk-scd: " "mars_scd_fsm_reset : Got ATR INT, reset ATR buffer\n");
 
         if (p_this->atr.length== -1)
             p_this->atr.length = 0;         // got ATR
@@ -347,7 +347,7 @@ void mars_scd_fsm_reset(mars_scd* p_this)
 
     if (event & SC_RCV_INT)
     {
-        SC_INT_DBG("mars_scd_fsm_reset : Got RCV INT, p_this->atr.length==%d, rx_len=%d\n", p_this->atr.length, GET_SC_RXLENR(p_this->base));
+        pr_debug("rtk-scd: " "mars_scd_fsm_reset : Got RCV INT, p_this->atr.length==%d, rx_len=%d\n", p_this->atr.length, GET_SC_RXLENR(p_this->base));
 
         if (p_this->atr.length<0)
         {
@@ -373,16 +373,16 @@ void mars_scd_fsm_reset(mars_scd* p_this)
                 switch(p_this->atr.data[0])
                 {
                 case 0x3B:
-                    SC_INFO("SC%d - Direct Convention (%02x)\n", p_this->id, p_this->atr.data[0]);
+                    pr_info("rtk-scd: " "SC%d - Direct Convention (%02x)\n", p_this->id, p_this->atr.data[0]);
                     break;
 
                 case 0x03:
                      p_this->atr.data[0] = 0x3F;
-                     SC_INFO("SC%d - Inverse Convention (%02x)\n", p_this->id, p_this->atr.data[0]);
+                     pr_info("rtk-scd: " "SC%d - Inverse Convention (%02x)\n", p_this->id, p_this->atr.data[0]);
                      break;
 
                 default:
-                    SC_WARNING("SC%d - unknown TS (%02x)\n", p_this->id, p_this->atr.data[0]);
+                    pr_warn("rtk-scd: " "SC%d - unknown TS (%02x)\n", p_this->id, p_this->atr.data[0]);
                     break;
                 }
             }
@@ -392,12 +392,12 @@ void mars_scd_fsm_reset(mars_scd* p_this)
 	     //wake_up(&p_this->wq);  //ATR do not use wq
         }
 
-        SC_INT_DBG("mars_scd_fsm_reset : p_this->atr.length=%d\n", p_this->atr.length);
+        pr_debug("rtk-scd: " "mars_scd_fsm_reset : p_this->atr.length=%d\n", p_this->atr.length);
 
         // check atr
         if (is_atr_complete(&p_this->atr))
         {
-            SC_INFO("SC%d - Got ATR Completed\n", p_this->id);
+            pr_info("rtk-scd: " "SC%d - Got ATR Completed\n", p_this->id);
 
             if (decompress_atr(&p_this->atr, &p_this->atr_info)<0)
                 goto err_atr_failed;
@@ -414,38 +414,38 @@ err_atr_failed:
 
     if (!(event & SC_PRES))
     {
-        SC_WARNING("SC%d - RESET ICC failed, no ICC detected\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, no ICC detected\n", p_this->id);
     }
 
     if (event & SC_RXP_INT)
     {
-        SC_WARNING("SC%d - RESET ICC failed, RX Parity Error\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, RX Parity Error\n", p_this->id);
     }
 
     if (time_after(jiffies, p_this->atr_timeout))
     {
-        SC_WARNING("SC%d - RESET ICC failed, timeout\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, timeout\n", p_this->id);
     }
 
     if (p_this->atr.length <0)
     {
-        SC_WARNING("SC%d - RESET ICC failed, wait ATR failed\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, wait ATR failed\n", p_this->id);
     }
     else if (p_this->atr.length >= MAX_ATR_SIZE)
     {
-        SC_WARNING("SC%d - RESET ICC failed, atr length %d more then %d\n", p_this->id, p_this->atr.length, MAX_ATR_SIZE);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, atr length %d more then %d\n", p_this->id, p_this->atr.length, MAX_ATR_SIZE);
     }
     else if (!is_atr_complete(&p_this->atr))
     {
-        SC_WARNING("SC%d - RESET ICC failed, incomplete atr\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, incomplete atr\n", p_this->id);
     }
     else if (decompress_atr(&p_this->atr, &p_this->atr_info)<0)
     {
-        SC_WARNING("SC%d - RESET ICC failed, decompress atr failed\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, decompress atr failed\n", p_this->id);
     }
     else
     {
-        SC_WARNING("SC%d - RESET ICC failed, parse protocol faield\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, parse protocol faield\n", p_this->id);
     }
 
     mars_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
@@ -484,10 +484,10 @@ void mars_scd_fsm_active(mars_scd* p_this)
 	        {
 	            buff[i] = GET_SC_RXFIFO(p_this->base);
 	        }
-		SC_INFO("RX Receive~~  event=%d  len=%d  buf=0x%x \n",event,len,buff[0]);
+		pr_info("rtk-scd: " "RX Receive~~  event=%d  len=%d  buf=0x%x \n",event,len,buff[0]);
 	        if (kfifo_in_locked(&p_this->rx_fifo, buff, len, &p_this->rx_fifo_lock)<len)
 	        {
-	            SC_WARNING("mars_scd_fsm_active : fifo over flow... flush data...\n");
+	            pr_warn("rtk-scd: " "mars_scd_fsm_active : fifo over flow... flush data...\n");
 	            kfifo_reset(&p_this->rx_fifo);
 	        }
 
@@ -496,7 +496,7 @@ void mars_scd_fsm_active(mars_scd* p_this)
 
 	    if (event & SC_RX_FOVER_INT)
 	    {
-	        SC_WARNING("Rx over flow!\n");
+	        pr_warn("rtk-scd: " "Rx over flow!\n");
 	        SET_SCCR(p_this->base, GET_SCCR(p_this->base) | SC_FIFO_RST(1));
 	    }
     }
@@ -504,7 +504,7 @@ void mars_scd_fsm_active(mars_scd* p_this)
 #if 1
 	if (event & SC_RCV_INT && p_this->tx_status != SC_TX_DONE)
 	{
-		SC_WARNING("RX Receive~~  event=%d  \n",event);
+		pr_warn("rtk-scd: " "RX Receive~~  event=%d  \n",event);
 		SET_SCCR(p_this->base, GET_SCCR(p_this->base) | SC_FIFO_RST(1));
 	}
 #endif
@@ -518,7 +518,7 @@ void mars_scd_fsm_active(mars_scd* p_this)
 
             tx_data_len = kfifo_out(&p_this->tx_fifo, tx_buff, sizeof(tx_buff));
 
-            SC_INFO("Send %d Bytes!\n", tx_data_len);
+            pr_info("rtk-scd: " "Send %d Bytes!\n", tx_data_len);
             for(i=0; i<tx_data_len; i++)
                 SET_SC_TXFIFO(p_this->base, tx_buff[i]);
 
@@ -526,7 +526,7 @@ void mars_scd_fsm_active(mars_scd* p_this)
         }
         else
         {
-		SC_INFO("TX Done~~  \n");
+		pr_info("rtk-scd: " "TX Done~~  \n");
             SET_SCIRER(p_this->base, GET_SCIRER(p_this->base) & ~SC_TXEMPTY_INT);
             p_this->tx_status = SC_TX_DONE;
             wake_up(&p_this->wq);                               // wakeup queue
@@ -551,18 +551,18 @@ void mars_scd_work(mars_scd* p_this)
     void __iomem *base = p_this->base;
     unsigned long status = GET_SCIRSR(base) & GET_SCIRER(base);
 
-    SC_INFO("SC%d - work!!  FSM--%d  \n", p_this->id,p_this->fsm);
+    pr_info("rtk-scd: " "SC%d - work!!  FSM--%d  \n", p_this->id,p_this->fsm);
 
     if (status & SC_CPRES_INT)
     {
         if (mars_scd_card_detect(p_this))
         {
-            SC_INFO("SC%d - ICC detected!!\n", p_this->id);
+            pr_info("rtk-scd: " "SC%d - ICC detected!!\n", p_this->id);
         }
         else
         {
             mars_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
-            SC_INFO("SC%d - ICC removed!!\n", p_this->id);
+            pr_info("rtk-scd: " "SC%d - ICC removed!!\n", p_this->id);
         }
 
         p_this->card_status_change = 1;
@@ -633,7 +633,7 @@ static irqreturn_t mars_scd_isr(int this_irq, void *dev_id)
     if (event)
         mars_scd_work(p_this);
 
-    SC_INT_DBG("MIS ISR=%08x\n", GET_MIS_ISR(dts_info.misc+0xC));
+    pr_debug("rtk-scd: " "MIS ISR=%08x\n", GET_MIS_ISR(dts_info.misc+0xC));
 
     SET_MIS_ISR(dts_info.misc+0xC, event);
 
@@ -694,13 +694,13 @@ int mars_scd_set_clock(mars_scd* p_this, unsigned long clk)
 
     if (clk > MAX_SC_CLK)
     {
-        SC_WARNING("clock %lu out of range, using minimum value to instead %lu\n", (unsigned long)clk, (unsigned long)MAX_SC_CLK);
+        pr_warn("rtk-scd: " "clock %lu out of range, using minimum value to instead %lu\n", (unsigned long)clk, (unsigned long)MAX_SC_CLK);
         clk = MAX_SC_CLK;
     }
 
     if (clk < MIN_SC_CLK)
     {
-        SC_WARNING("clock %lu out of range, using minimum value to instead %lu\n", (unsigned long)clk, (unsigned long)MIN_SC_CLK);
+        pr_warn("rtk-scd: " "clock %lu out of range, using minimum value to instead %lu\n", (unsigned long)clk, (unsigned long)MIN_SC_CLK);
         clk = MIN_SC_CLK;
     }
 
@@ -769,7 +769,7 @@ int mars_scd_set_etu(mars_scd* p_this, unsigned long etu)
     val = GET_SCFP(p_this->base) & ~SC_BAUDDIV_MASK;
     val |= SC_BAUDDIV1((p_this->baud_div1-1)) | SC_BAUDDIV2(div2);
 
-    SC_INFO("ETU = %lu. Baud Div2=%lu, Div1 = %lu\n", etu, p_this->baud_div2 ,p_this->baud_div1);
+    pr_info("rtk-scd: " "ETU = %lu. Baud Div2=%lu, Div1 = %lu\n", etu, p_this->baud_div2 ,p_this->baud_div1);
     SET_SCFP(p_this->base, val);
     return 0;
 }
@@ -974,33 +974,33 @@ int mars_scd_activate(mars_scd* p_this)
     switch(p_this->fsm)
     {
     case IFD_FSM_DISABLE:
-        SC_WARNING("activate ICC failed, please enable IFD first\n");
+        pr_warn("rtk-scd: " "activate ICC failed, please enable IFD first\n");
         return SC_ERR_IFD_DISABLED;
 
     case IFD_FSM_DEACTIVATE:
 
         if (mars_scd_reset(p_this)==0)
         {
-            SC_INFO("activate ICC success\n");
+            pr_info("rtk-scd: " "activate ICC success\n");
             return SC_SUCCESS;
         }
         else
         {
-            SC_WARNING("activate ICC failed\n");
+            pr_warn("rtk-scd: " "activate ICC failed\n");
             return SC_ERR_NO_ICC;
         }
         break;
 
     case IFD_FSM_RESET:
-        SC_INFO("ICC has is reseting\n");
+        pr_info("rtk-scd: " "ICC has is reseting\n");
         return SC_SUCCESS;
 
     case IFD_FSM_ACTIVE:
-        SC_INFO("ICC has been activated already\n");
+        pr_info("rtk-scd: " "ICC has been activated already\n");
         return SC_SUCCESS;
 
     default:
-        SC_WARNING("activate ICC failed, unknown state\n");
+        pr_warn("rtk-scd: " "activate ICC failed, unknown state\n");
         return SC_FAIL;
     }
 }
@@ -1057,12 +1057,12 @@ int mars_scd_reset(mars_scd* p_this)
 
     if (p_this->fsm != IFD_FSM_ACTIVE)
     {
-        SC_WARNING("SC%d - Reset ICC failed\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - Reset ICC failed\n", p_this->id);
         mars_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
         return SC_ERR_ATR_TIMEOUT;
     }
 
-    SC_INFO("SC%d - Reset ICC Complete, atr_len=%d\n", p_this->id, p_this->atr.length);
+    pr_info("rtk-scd: " "SC%d - Reset ICC Complete, atr_len=%d\n", p_this->id, p_this->atr.length);
     return SC_SUCCESS;
 }
 
@@ -1167,7 +1167,7 @@ int mars_scd_xmit(mars_scd* p_this, unsigned char* p_data, unsigned int len)
     unsigned char tx_buff[TX_RX_DEPTH];
     unsigned char tx_data_len;
     int i;
-    SC_WARNING("0x%08x:0x%08x:0x%08x:  \n",GET_SCFP(base),GET_SCCR(base),GET_SCPCR(base));
+    pr_warn("rtk-scd: " "0x%08x:0x%08x:0x%08x:  \n",GET_SCFP(base),GET_SCCR(base),GET_SCPCR(base));
     if (mars_scd_card_detect(p_this)==0)
         return SC_ERR_NO_ICC;
 
@@ -1180,7 +1180,7 @@ int mars_scd_xmit(mars_scd* p_this, unsigned char* p_data, unsigned int len)
 
     if (kfifo_in(&p_this->tx_fifo, p_data, len)<len)
     {
-        SC_WARNING("[SC%d] xmit data failed, tx fifo overflow\n", id);
+        pr_warn("rtk-scd: " "[SC%d] xmit data failed, tx fifo overflow\n", id);
         return SC_FAIL;
     }
 
@@ -1190,7 +1190,7 @@ int mars_scd_xmit(mars_scd* p_this, unsigned char* p_data, unsigned int len)
     for(i=0; i<tx_data_len; i++)
         SET_SC_TXFIFO(base, tx_buff[i]);
 
-    //SC_WARNING("Send %d Bytes!\n", tx_data_len);
+    //pr_warn("rtk-scd: " "Send %d Bytes!\n", tx_data_len);
 
     // kick-off
     p_this->tx_status = 0;
@@ -1206,7 +1206,7 @@ int mars_scd_xmit(mars_scd* p_this, unsigned char* p_data, unsigned int len)
 
     if ((p_this->tx_status & SC_TX_DONE)==0)
     {
-        SC_WARNING("[SC%d] xmit data failed, tx timeout\n", id);
+        pr_warn("rtk-scd: " "[SC%d] xmit data failed, tx timeout\n", id);
         SET_SCCR(base, GET_SCCR(base) & ~SC_TX_GO(1));      // stop Xmit
         return SC_FAIL;
     }
@@ -1274,7 +1274,7 @@ static void mars_scd_load_gpio_config(mars_scd* p_this)
     p_this->cmd_vcc_polarity = dts_info.cmd_vcc_polarity;
     p_this->pin_pwr_sel      = 53;
 
-    SC_INFO("SC%d - cmd_vcc(en=%d, polarity=%d, pin=%s_GPIO[%d]), pwr_sel(en=%d,polarity=%d,pin=%s_GPIO[%d])\n",
+    pr_info("rtk-scd: " "SC%d - cmd_vcc(en=%d, polarity=%d, pin=%s_GPIO[%d]), pwr_sel(en=%d,polarity=%d,pin=%s_GPIO[%d])\n",
             p_this->id,
             p_this->cmd_vcc_en,
             p_this->cmd_vcc_polarity,
@@ -1324,7 +1324,7 @@ mars_scd* mars_scd_open(unsigned char id)
     //void __iomem *gpio = ioremap(0x9801B000, 0x120);
 
     if (id >= MAX_IFD_CNT) {
-        SC_WARNING("scd : open %s scd failed, invalid id - %d\n", IFD_MODOLE, id);
+        pr_warn("rtk-scd: " "scd : open %s scd failed, invalid id - %d\n", IFD_MODOLE, id);
         return NULL;
     }
 
@@ -1341,14 +1341,14 @@ mars_scd* mars_scd_open(unsigned char id)
 
         if (kfifo_alloc(&p_this->rx_fifo, 1024, GFP_KERNEL)<0)
         {
-            SC_WARNING("scd : open %s scd(%d) failed, create rx fifo failed\n", IFD_MODOLE, id);
+            pr_warn("rtk-scd: " "scd : open %s scd(%d) failed, create rx fifo failed\n", IFD_MODOLE, id);
             kfree(p_this);
             return NULL;
         }
 
         if (kfifo_alloc(&p_this->tx_fifo, 1024, GFP_KERNEL)<0)
         {
-            SC_WARNING("scd : open %s scd(%d) failed, create tx fifo failed\n", IFD_MODOLE, id);
+            pr_warn("rtk-scd: " "scd : open %s scd(%d) failed, create tx fifo failed\n", IFD_MODOLE, id);
             kfifo_free(&p_this->rx_fifo);
             kfree(p_this);
             return NULL;
@@ -1447,7 +1447,7 @@ mars_scd* mars_scd_open(unsigned char id)
         //if (request_irq(p_this->irq, mars_scd_isr, SA_SHIRQ, "MARS SCD", (void *) p_this) < 0)
         if (request_irq(p_this->irq, mars_scd_isr, IRQF_SHARED, "MARS SCD", (void *) p_this) < 0)
         {
-            SC_WARNING("scd : open %s scd failed, unable to request irq#%d\n", IFD_MODOLE, p_this->irq);
+            pr_warn("rtk-scd: " "scd : open %s scd failed, unable to request irq#%d\n", IFD_MODOLE, p_this->irq);
             kfifo_free(&p_this->tx_fifo);
             kfifo_free(&p_this->rx_fifo);
             kfree(p_this);
@@ -1459,7 +1459,7 @@ mars_scd* mars_scd_open(unsigned char id)
         mars_scd_set_state(p_this, IFD_FSM_DISABLE);
     }
     else{
-        SC_WARNING("scd : open mars scd failed\n");
+        pr_warn("rtk-scd: " "scd : open mars scd failed\n");
         return NULL;
     }
     return p_this;

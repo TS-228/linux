@@ -36,7 +36,6 @@
 
 #include <asm/system_misc.h>
 
-#include "../../common/include/debug.h"
 
 void __cpu_do_lowpower(void);
 
@@ -184,10 +183,10 @@ irqreturn_t scpu_wrapper_isr(int irq, void *reg_base)
 
 	regs = get_irq_regs();
 
-	dbg_err("scpu wrapper get int 0x%08x", intr);
+	pr_err("rtk-scpu: wrapper interrupt 0x%08x\n", intr);
 	if(intr & (BIT(4) | BIT(2))){
 		writel((intr & ~(BIT(3)|BIT(1))), scpu_wrap_addr + DBG_INT);
-		dbg_err("scpu addr:0x%08x mode:%s", addr, (cause & 1) ? "W" : "R");
+		pr_err("rtk-scpu: illegal access addr=0x%08x mode=%s\n", addr, (cause & 1) ? "W" : "R");
 
 		sprintf(buf, "[SCUP] Memory 0x%08x trashed with %s\n", addr,
 				(cause & 1) ? "W" : "R");
@@ -224,7 +223,7 @@ static int __init scpu_wrapper_init(void)
 	of_node_put(np);
 
 	if(request_irq(irq, scpu_wrapper_isr, IRQF_SHARED, "scpu_wrapper", scpu_wrap_addr) != 0){
-		dbg_err("Cannot get IRQ\n");
+		pr_err("rtk-scpu: failed to request IRQ\n");
 		return -1;
 	}
 

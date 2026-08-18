@@ -20,7 +20,6 @@
 #include "../../drivers/gpu/ion/ion_priv.h"
 #endif
 
-#include "include/debug.h"
 #include "soc/realtek/memory.h"
 #include "../../../../mm/cma.h"
 
@@ -138,7 +137,8 @@ static int rtk_ion_populate_heap(struct ion_platform_heap *heap)
 		}
 	}
 	if (ret)
-		dbg_err("%s: unable to populate heap, error: %d", __func__, ret);
+		pr_err("rtk-ion: unable to populate heap: %d
+", ret);
 
 	return ret;
 }
@@ -173,7 +173,8 @@ static struct ion_platform_data *rtk_ion_parse_dt(const struct device_node *dt_n
 	for_each_child_of_node(dt_node, node) {
 		ret = of_property_read_u32(node, "reg", &val);
 		if (ret) {
-			dbg_err("%s: unable to find reg key", __func__);
+			pr_err("rtk-ion: missing reg property
+");
 			goto free_heaps;
 		}
 		heap_data->id = val;
@@ -275,7 +276,8 @@ static int rtk_ion_probe(struct platform_device *pdev)
 	int err = -1;
 	int i;
 
-	dbg_info("%s %s",__FILE__, __func__);
+	pr_info("rtk-ion: probe
+");
 	if (pdev->dev.of_node) {
 		pdata = rtk_ion_parse_dt(pdev->dev.of_node);
 		if (IS_ERR(pdata)) {
@@ -291,7 +293,8 @@ static int rtk_ion_probe(struct platform_device *pdev)
 
 	num_heaps = pdata->nr;
 
-	dbg_info("%s %s nr_heaps:%d",__FILE__, __func__, num_heaps);
+	pr_info("rtk-ion: nr_heaps=%d
+", num_heaps);
 
 	//heaps = kcalloc(pdata->nr, sizeof(struct ion_heap*), GFP_KERNEL);
 	heaps = devm_kzalloc(&pdev->dev,
@@ -355,10 +358,11 @@ static int rtk_ion_probe(struct platform_device *pdev)
 			struct ion_rtk_priv_pool * pool, * tmp_pool;
 			list_for_each_entry_safe(pool, tmp_pool,  pools, list) {
 
-				dbg_info("%s: adding heap %s of type %d with %lx@%lx (type:%s)", __func__, heap_data->name,
-						 heap_data->type, pool->base, pool->size,
-						 (pool->type == RTK_CARVEOUT_GEN_POOL_TYPE)?"GEN_POOL":
-						 (pool->type == RTK_CARVEOUT_CMA_POOL_TYPE)?"CMA_POOL":"Unknown");
+				pr_info("rtk-ion: adding heap %s type=%d %lx@%lx (%s)\n",
+					heap_data->name, heap_data->type, pool->base, pool->size,
+					(pool->type == RTK_CARVEOUT_GEN_POOL_TYPE) ? "GEN_POOL" :
+					(pool->type == RTK_CARVEOUT_CMA_POOL_TYPE) ? "CMA_POOL" :
+					"Unknown");
 
 				list_del(&pool->list);
 				kfree(pool);

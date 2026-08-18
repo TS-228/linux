@@ -13,13 +13,10 @@
 #include "../osd/osd.h"
 #include "../vo/vo.h"
 #include "../hdmi/hdmi.h"
-#include "../../../debug.h"
 
 static int debug    = 1;
 #if 0
-#define dprintk(msg...) if (debug)   { printk(KERN_DEBUG    "D/DC: " msg); }
 #else
-#define dprintk(msg...) if (debug)   { dbg_info(KERN_DEBUG    "D/RTK_FB: " msg); }
 #endif
 
 #include <linux/kthread.h>
@@ -37,7 +34,7 @@ static int kbrook(void *arg)
 
     for(;;) {
         if (kthread_should_stop()) break;
-        //dprintk("%s(): %d\n", __FUNCTION__, (*d)++);
+        //pr_debug("rtk_fb: " "%s(): %d\n", __FUNCTION__, (*d)++);
         do {
             set_current_state(TASK_INTERRUPTIBLE);
             timeout = schedule_timeout(HZ/60);
@@ -179,7 +176,7 @@ int FPGAInit(void)
     brook_tsk = kthread_create(kbrook, &data, "brook");
     if (IS_ERR(brook_tsk)) {
         brook_tsk = NULL;
-        dprintk("[%s %d] ERROR!\n",__func__,__LINE__);
+        pr_debug("rtk_fb: " "[%s %d] ERROR!\n",__func__,__LINE__);
     } else {
         wake_up_process(brook_tsk);
     }

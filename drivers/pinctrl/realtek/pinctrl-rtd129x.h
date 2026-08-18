@@ -9,22 +9,11 @@
  * option) any later version.
  */
 
-
 #ifndef __PINCTRL_RTK129X_H
 #define __PINCTRL_RTK129X_H
 
 #include <linux/kernel.h>
 #include <linux/pinctrl/pinctrl.h>
-
-//#define RTK_PINCTRL_DEBUG
-#ifdef RTK_PINCTRL_DEBUG
-#define RTK_PINCTRL_DBG(fmt, ....) pr_info("[PINCTRL] " fmt "\n", ## __VA_ARGS__)
-#else
-#define RTK_PINCTRL_DBG(fmt, ...) do {} while (0)
-#endif
-
-#define RTK_PINCTRL_INF(fmt, ...) pr_info("[PINCTRL] " fmt "\n", ## __VA_ARGS__)
-#define RTK_PINCTRL_ERR(fmt, ...) pr_err("[PINCTRL Error] " fmt "\n", ## __VA_ARGS__)
 
 #define P_MISC_BASE		0
 #define P_MISC_BANK		101
@@ -32,12 +21,10 @@
 #define P_ISO_BANK		35
 #define P_OTHER_BASE		(P_ISO_BASE+P_ISO_BANK)
 
-
 #define RTK_PCONF_SCHM		3
 #define RTK_PCONF_CURR		2
 #define RTK_PCONF_PULEN		1
 #define RTK_PCONF_PULSEL	0
-
 
 /*****   SB2 muxpad2   *****/
 #define RTK_PINCTRL_PIN_SB2_tp0_data				PINCTRL_PIN(P_MISC_BASE + 21, "tp0_data")
@@ -121,7 +108,6 @@
 #define RTK_PINCTRL_PIN_SB2_rgmii1_rxd_3			PINCTRL_PIN(P_MISC_BASE + 53, "rgmii1_rxd_3")
 /*hole:28~31*/
 
-
 /*****	  DISP muxpad0   *****/
 #define RTK_PINCTRL_PIN_DISP_spdif					PINCTRL_PIN(P_MISC_BASE + 54, "spdif")
 #define RTK_PINCTRL_PIN_DISP_dmic_clk				PINCTRL_PIN(P_MISC_BASE + 55, "dmic_clk")
@@ -135,7 +121,6 @@
 #define RTK_PINCTRL_PIN_DISP_ao_sd_3				PINCTRL_PIN(P_MISC_BASE + 63, "ao_sd_3")
 #define RTK_PINCTRL_PIN_DISP_ai_loc					PINCTRL_PIN(P_OTHER_BASE + 7, "ai_loc")
 /*hole:22~31*/
-
 
 /*****	  CardReader muxpad0	  *****/
 #define RTK_PINCTRL_PIN_CR_nf_dqs				PINCTRL_PIN(P_MISC_BASE + 77, "nf_dqs")
@@ -155,7 +140,6 @@
 #define RTK_PINCTRL_PIN_CR_nf_dd_6				PINCTRL_PIN(P_MISC_BASE + 70, "nf_dd_6")
 #define RTK_PINCTRL_PIN_CR_nf_dd_7				PINCTRL_PIN(P_MISC_BASE + 69, "nf_dd_7")
 
-
 /*****	  CardReader muxpad1   *****/
 #define RTK_PINCTRL_PIN_CR_sdio_cmd				PINCTRL_PIN(P_MISC_BASE + 89, "sdio_cmd")
 #define RTK_PINCTRL_PIN_CR_sdio_clk				PINCTRL_PIN(P_MISC_BASE + 90, "sdio_clk")
@@ -174,7 +158,6 @@
 #define RTK_PINCTRL_PIN_CR_mmc_data_2				PINCTRL_PIN(P_MISC_BASE + 87, "mmc_data_2")
 #define RTK_PINCTRL_PIN_CR_mmc_data_3				PINCTRL_PIN(P_MISC_BASE + 88, "mmc_data_3")
 
-
 /*****	  CardReader muxpad2   *****/
 #define RTK_PINCTRL_PIN_CR_sdio_loc				PINCTRL_PIN(P_OTHER_BASE + 8, "sdio_loc")
 #define RTK_PINCTRL_PIN_CR_pcie_clkreq_0			PINCTRL_PIN(P_MISC_BASE + 95, "pcie_clkreq_0")
@@ -184,7 +167,6 @@
 #define RTK_PINCTRL_PIN_CR_prob_2				PINCTRL_PIN(P_MISC_BASE + 99, "prob_2")
 #define RTK_PINCTRL_PIN_CR_prob_3				PINCTRL_PIN(P_MISC_BASE + 100, "prob_3")
 /*hole:14~31*/
-
 
 /*****	  ISO muxpad0   *****/
 #define RTK_PINCTRL_PIN_ISO_iso_gpio_4				PINCTRL_PIN(P_ISO_BASE + 4, "iso_gpio_4")
@@ -202,7 +184,6 @@
 #define RTK_PINCTRL_PIN_ISO_i2c_sda_0				PINCTRL_PIN(P_ISO_BASE + 17, "i2c_sda_0")
 #define RTK_PINCTRL_PIN_ISO_etn_led_link			PINCTRL_PIN(P_ISO_BASE + 27, "etn_led_link")
 #define RTK_PINCTRL_PIN_ISO_etn_led_rxtx			PINCTRL_PIN(P_ISO_BASE + 28, "etn_led_rxtx")
-
 
 /*****	  ISO muxpad1	*****/
 #define RTK_PINCTRL_PIN_ISO_i2c_scl_6				PINCTRL_PIN(P_ISO_BASE + 20, "i2c_scl_6")
@@ -223,7 +204,6 @@
 #define RTK_PINCTRL_PIN_ISO_ejtag_avcpu_loc			PINCTRL_PIN(P_OTHER_BASE + 13, "ejtag_avcpu_loc")
 #define RTK_PINCTRL_PIN_ISO_ur2_loc					PINCTRL_PIN(P_OTHER_BASE + 14, "ur2_loc")
 
-
 /*****	  ISO muxpad2	*****/
 #define RTK_PINCTRL_PIN_ISO_iso_gpio_21					PINCTRL_PIN(P_ISO_BASE + 21, "iso_gpio_21")
 #define RTK_PINCTRL_PIN_ISO_iso_gpio_22					PINCTRL_PIN(P_ISO_BASE + 22, "iso_gpio_22")
@@ -235,11 +215,9 @@
 /*hole:14*/
 #define RTK_PINCTRL_PIN_ISO_i2c_tg_enable				PINCTRL_PIN(P_OTHER_BASE + 15,	"i2c_tg_enable")
 
-
 /*****	  No muxpad GPIO	*****/
 #define RTK_PINCTRL_PIN_ISO_iso_gpio_0				PINCTRL_PIN(P_ISO_BASE + 0, "iso_gpio_0")
 #define RTK_PINCTRL_PIN_ISO_iso_gpio_1				PINCTRL_PIN(P_ISO_BASE + 1, "iso_gpio_1")
-
 
 enum PMUX_BASE_TYPE {
 	PMUX_BASE_SB2,
@@ -477,8 +455,6 @@ static const struct rtk_pin_regmap pin_regmap[] = {
 	{.pmux_base = PMUX_BASE_ISO,	.pmux_regoff = 0x31c, .pmux_regbit = 15, .pmux_regbitmsk = 0x1,	.pcof_regoff = PCOF_UNSUPPORT, .pcof_regbit = 0, .pcof_cur_strgh = PADDRI_UNSUPPORT}, //(P_OTHER_BASE + 15, "i2c_tg_enable")
 };
 
-
-
 struct RTK_desc_function {
 	const char	*name;
 	u8		muxval;
@@ -535,7 +511,6 @@ struct RTK_pinctrl {
 		.name = _name,					\
 		.muxval = _val,					\
 	}
-
 
 static const struct RTK_desc_pin rtk_pins[] = {
 	/*****   Pin 0~4   *****/

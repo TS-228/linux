@@ -1284,7 +1284,41 @@ static const struct phy_cfg rtd1315e_phy_cfg = {
 	.is_double_sensitivity_mode = true,
 };
 
+static const struct phy_cfg rtd119x_phy_cfg = {
+	.page0_size = MAX_USB_PHY_PAGE0_DATA_SIZE,
+	.page0 = {
+		[0]  = {0xe0, 0xa1}, [1]  = {0xe1, 0x30}, [2]  = {0xe2, 0x9a},
+		[3]  = {0xe3, 0x8d}, [4]  = {0xe4, 0xd6}, [5]  = {0xe5, 0x1d},
+		[6]  = {0xe6, 0xc0}, [7]  = {0xe7, 0xb1}, [8]  = {0xf0, 0xfc},
+		[9]  = {0xf1, 0x9c}, [10] = {0xf2, 0x00}, [11] = {0xf3, 0x11},
+		[12] = {0xf4, 0x9b}, [13] = {0xf5, 0x81}, [14] = {0xf6, 0x00},
+		[15] = {0xf7, 0x02},
+	},
+	.page1_size = MAX_USB_PHY_PAGE1_DATA_SIZE,
+	.page1 = {
+		[0] = {0xe0, 0x35}, [1] = {0xe1, 0xaf}, [2] = {0xe2, 0x60},
+		[3] = {0xe3, 0x00}, [4] = {0xe4, 0x00}, [5] = {0xe5, 0x0f},
+		[6] = {0xe6, 0x18}, [7] = {0xe7, 0xe3},
+	},
+	.page2_size = 0,
+	.page2 = { /* no parameter */ },
+	.num_phy = 1,
+	.check_efuse = false,
+	.check_efuse_version = CHECK_EFUSE_V1,
+	.efuse_dc_driving_rate = 1,
+	.dc_driving_mask = 0xf,
+	.efuse_dc_disconnect_rate = EFUS_USB_DC_DIS_RATE,
+	.dc_disconnect_mask = 0xf,
+	.usb_dc_disconnect_at_page0 = true,
+	.do_toggle = false,
+	.do_toggle_driving = false,
+	.driving_updated_for_dev_dis = 0xf,
+	.use_default_parameter = false,
+	.is_double_sensitivity_mode = false,
+};
+
 static const struct of_device_id usbphy_rtk_dt_match[] = {
+	{ .compatible = "realtek,rtd119x-usb2phy", .data = &rtd119x_phy_cfg },
 	{ .compatible = "realtek,rtd1295-usb2phy", .data = &rtd1295_phy_cfg },
 	{ .compatible = "realtek,rtd1312c-usb2phy", .data = &rtd1312c_phy_cfg },
 	{ .compatible = "realtek,rtd1315e-usb2phy", .data = &rtd1315e_phy_cfg },

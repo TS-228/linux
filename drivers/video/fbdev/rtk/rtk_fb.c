@@ -41,7 +41,6 @@
 #include <linux/dma-contiguous.h>
 #include <asm/div64.h>
 
-#include "debug.h"
 #include "rtk_fb.h"
 #include "dc2vo/dc2vo.h"
 
@@ -84,8 +83,7 @@ extern struct ion_device *rtk_phoenix_ion_device;
 #define ANDROID_BYTES_PER_PIXEL 4
 static int debug = 0;
 
-#define dprintk(msg...) if (debug)   { printk(KERN_ALERT	"D/RTK_FB: " msg); }
-//#define dprintk(msg...) if (debug)   { dbg_info(KERN_DEBUG	"D/RTK_FB: " msg); }
+//#define pr_debug("rtk_fb: " msg...) if (debug)   { dbg_info(KERN_DEBUG	"D/RTK_FB: " msg); }
 
 #define MEMORY_ALIGN( value, base ) (((value) + ((base) - 1)) & ~((base) - 1))
 
@@ -189,7 +187,7 @@ static int rtk_fb_check_var(struct fb_var_screeninfo *var, struct fb_info *info)
 {
 	struct rtk_fb *fb = container_of(info, struct rtk_fb, fb);
 
-	dprintk("[%s %d]\n", __func__, __LINE__);
+	pr_debug("rtk_fb: " "[%s %d]\n", __func__, __LINE__);
 #if 0
 	if ((var->rotate & 1) != (info->var.rotate & 1)) {
 		if ((var->xres != info->var.yres) ||
@@ -227,7 +225,7 @@ static int rtk_fb_set_par(struct fb_info *info)
 {
 	struct rtk_fb *fb = container_of(info, struct rtk_fb, fb);
 	if (fb->rotation != fb->fb.var.rotate) {
-		dbg_info("[%s %d] TODO: FB_ROTATE\n",__func__,__LINE__);
+		pr_info("rtk_fb: TODO: FB_ROTATE\n");
 
 		info->fix.line_length   = info->var.xres * rtk_fb_memory_bypePrePixel(fb->pMem);
 		fb->rotation = fb->fb.var.rotate;
@@ -337,14 +335,14 @@ static int rtk_fb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long ar
 #else
 			ret = put_user(dmabuf_export, up_dmabuf_export);
 #endif /* CONFIG_CPU_V7 */
-			dprintk("[%s] FBIOGET_DMABUF return[ret:%d fd:%d]\n", __func__, ret, dmabuf_export.fd);
+			pr_debug("rtk_fb: " "[%s] FBIOGET_DMABUF return[ret:%d fd:%d]\n", __func__, ret, dmabuf_export.fd);
 			gat_cmd = 1;
 			break;
 		}
 #ifdef USE_UMP
 	case IOCTL_GET_FB_UMP_SECURE_ID:
 		{
-			//dprintk(KERN_ALERT "%s %d IOCTL GET FB UMP\n", __FUNCTION__, __LINE__);
+			//pr_debug("rtk_fb: " KERN_ALERT "%s %d IOCTL GET FB UMP\n", __FUNCTION__, __LINE__);
 			u32 __user *psecureid;
 			ump_secure_id secure_id;
 
@@ -355,7 +353,7 @@ static int rtk_fb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long ar
 			psecureid = (u32 __user *)arg;
 			//secure_id = 0;//ump_dd_secure_id_get(ump_wrapped_buffer);
 			secure_id = ump_ops.secure_id_get(ump_wrapped_buffer);
-			dprintk(KERN_ALERT "UMP secure ID %d\n", secure_id);
+			pr_debug("rtk_fb: " KERN_ALERT "UMP secure ID %d\n", secure_id);
 			ret = put_user((u32)secure_id, psecureid);
 			gat_cmd = 1;
 			break;
@@ -448,7 +446,7 @@ static unsigned long rtk_fb_memory_phy(struct rtk_fb_memory *pMem)
 		goto err;
 
 	if (ion_phys(pMem->fb_client, pMem->fb_handle, &ret, &len) != 0) {
-		dbg_err("[%s %s] ion_phys error size=%ld\n", __FILE__, __func__, pMem->alloc_size);
+		pr_err("rtk_fb: ion_phys failed, size=%ld\n", pMem->alloc_size);
 		ret = -1UL;
 	}
 
@@ -531,8 +529,8 @@ static int rtk_fb_update_by_memory(struct rtk_fb *fb, struct rtk_fb_memory *pMem
 	fb_virAddr = rtk_fb_memory_map(pMem);
 	fb_byte_per_pixel = rtk_fb_memory_bypePrePixel(pMem);
 
-	dbg_info("[%s %s] [%d x %d] addr:0x%lx size:0x%lx irq:%d\n",
-		__FILE__, __func__, fb_width, fb_height, (unsigned long)fb_phys, fb_size, fb->irq);
+	pr_info("rtk_fb: %dx%d addr=0x%lx size=0x%lx irq=%d\n",
+		fb_width, fb_height, (unsigned long)fb_phys, fb_size, fb->irq);
 
 	fb->fb.flags	 = FBINFO_FLAG_DEFAULT;
 	fb->fb.pseudo_palette = fb->cmap;
@@ -547,8 +545,7 @@ static int rtk_fb_update_by_memory(struct rtk_fb *fb, struct rtk_fb_memory *pMem
 	if (fb_cnt > rtk_fb_memory_count(pMem))
 		fb_cnt = rtk_fb_memory_count(pMem);
 
-	dbg_info("[%s %s] numberofbuffers %d\n",
-		__FILE__, __func__, fb_cnt);
+	pr_info("rtk_fb: buffers=%d\n", fb_cnt);
 
 	fb->fb.var.xres = fb_width;
 	fb->fb.var.yres = fb_height;
@@ -605,7 +602,7 @@ static int rtk_fb_update_by_memory(struct rtk_fb *fb, struct rtk_fb_memory *pMem
 	fb->fb.fix.smem_start = fb_phys;
 	fb->fb.screen_base = fb_virAddr;
 	if (!fb->fb.screen_base) {
-		dbg_err("Could not allocate frame buffer memory");
+		pr_err("rtk_fb: Could not allocate frame buffer memory\n");
 		goto err_fb_set_var_failed;
 	}
 	if (fb_set_var(&fb->fb, &fb->fb.var) != 0) {
@@ -651,16 +648,16 @@ static int rtk_fb_set_size (struct rtk_fb *fb, int width, int height,
 
 	ret = rtk_fb_memory_alloc(&pMem, width, height, byte_per_pixel, PAGE_SIZE, count, flags);
 	if (ret != 0) {
-		dbg_err("[%s %s] rtk_fb_memory_alloc return error! ([%dx%d] bypePrePixel=%d align=%ld count=%d) \n",
-			__FILE__, __func__, width, height, byte_per_pixel, PAGE_SIZE, count);
+		pr_err("rtk_fb: memory alloc failed (%dx%d bpp=%d align=%ld count=%d)\n",
+			width, height, byte_per_pixel, PAGE_SIZE, count);
 		goto err;
 	}
 
 
 	ret = rtk_fb_update_by_memory(fb, pMem);
 	if (ret != 0) {
-		dbg_err("[%s %s] rtk_fb_update_by_memory return error! ([%dx%d] bypePrePixel=%d align=%ld count=%d) \n",
-			__FILE__, __func__, width, height, byte_per_pixel, PAGE_SIZE, count);
+		pr_err("rtk_fb: update_by_memory failed (%dx%d bpp=%d align=%ld count=%d)\n",
+			width, height, byte_per_pixel, PAGE_SIZE, count);
 		goto err;
 	}
 
@@ -686,7 +683,7 @@ static int rtk_fb_probe(struct platform_device *pdev)
 	const u32 *prop;
 	int size;
 
-	dbg_warn("[%s %s] \n", __FILE__, __func__);
+	pr_warn("rtk_fb: probe\n");
 
 	fb = kzalloc(sizeof(*fb), GFP_KERNEL);
 	if (fb == NULL) {
@@ -703,7 +700,7 @@ static int rtk_fb_probe(struct platform_device *pdev)
 	} else {
 		width = 1280;
 		height = 720;
-		dbg_warn("[%s %s] Use default w:%d h:%d\n", __FILE__, __func__, width, height);
+		pr_warn("rtk_fb: using default size %dx%d\n", width, height);
 	}
 
 	prop = of_get_property(pdev->dev.of_node, "buffer-cnt", &size);
@@ -711,7 +708,7 @@ static int rtk_fb_probe(struct platform_device *pdev)
 		count = of_read_number(prop, 1);
 	} else {
 		count = 3;
-		dbg_warn("[%s %s] Use default count:%d\n", __FILE__, __func__, count);
+		pr_warn("rtk_fb: using default buffer count %d\n", count);
 	}
 
 	fb->irq = irq_of_parse_and_map(pdev->dev.of_node, 0);
@@ -720,12 +717,12 @@ static int rtk_fb_probe(struct platform_device *pdev)
 	if ((prop) && (size >= sizeof(u32) * 1))
 		fb->fps = of_read_number(prop, 1);
 	else
-		dbg_warn("[%s %s] Use default fps:%d\n", __FILE__, __func__, fb->fps);
+		pr_warn("rtk_fb: using default fps %d\n", fb->fps);
 
 	ret = rtk_fb_set_size(fb, width, height, count, ANDROID_BYTES_PER_PIXEL, RTK_FB_MEM_ALLOC_ALGO_LAST_FIT);
 	if (ret != 0) {
-		dbg_err("[%s %s] rtk_fb_set_size return error! ([%dx%d] bypePrePixel=%d align=%ld count=%d) \n",
-			__FILE__, __func__, width, height, ANDROID_BYTES_PER_PIXEL, PAGE_SIZE, count);
+		pr_err("rtk_fb: set_size failed (%dx%d bpp=%d align=%ld count=%d)\n",
+			width, height, ANDROID_BYTES_PER_PIXEL, PAGE_SIZE, count);
 		goto err_fb_set_var_failed;
 	}
 

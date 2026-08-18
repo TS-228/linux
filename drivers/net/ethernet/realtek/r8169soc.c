@@ -96,18 +96,13 @@
 
 #define CYAN	"\033[0;36m"
 #define NONE	"\033[m"
-#ifdef RTL8169_DEBUG
 #define assert(expr) \
-	if (!(expr)) {					\
-		printk( "Assertion failed! %s,%s,%s,line=%d\n",	\
-		#expr,__FILE__,__func__,__LINE__);		\
-	}
-#define dprintk(fmt, args...) \
-	do { printk(KERN_DEBUG "\033[0;36m" PFX "\033[m" fmt, ## args); } while (0)
-#else
-#define assert(expr) do {} while (0)
-#define dprintk(fmt, args...)	do {} while (0)
-#endif /* RTL8169_DEBUG */
+	do { \
+		if (unlikely(!(expr))) \
+			pr_err(PFX "assertion failed: %s in %s:%d
+", \
+			       #expr, __func__, __LINE__); \
+	} while (0)
 
 #define R8169_MSG_DEFAULT \
 	(NETIF_MSG_DRV | NETIF_MSG_PROBE | NETIF_MSG_IFUP | NETIF_MSG_IFDOWN)
@@ -2597,7 +2592,7 @@ static void rtl8169_get_mac_version(struct rtl8169_private *tp,
 
 static void rtl8169_print_mac_version(struct rtl8169_private *tp)
 {
-	dprintk("mac_version = 0x%02x\n", tp->mac_version);
+	pr_debug("r8169: " "mac_version = 0x%02x\n", tp->mac_version);
 }
 
 struct phy_reg {
@@ -4581,7 +4576,7 @@ static void rtl8169_init_phy(struct net_device *dev, struct rtl8169_private *tp)
 	rtl_hw_phy_config(dev);
 
 	if (tp->mac_version <= RTL_GIGA_MAC_VER_06) {
-		dprintk("Set MAC Reg C+CR Offset 0x82h = 0x01h\n");
+		pr_debug("r8169: " "Set MAC Reg C+CR Offset 0x82h = 0x01h\n");
 		RTL_W8(0x82, 0x01);
 	}
 
@@ -4594,9 +4589,9 @@ static void rtl8169_init_phy(struct net_device *dev, struct rtl8169_private *tp)
 //		pci_write_config_byte(tp->pci_dev, PCI_CACHE_LINE_SIZE, 0x08);
 
 	if (tp->mac_version == RTL_GIGA_MAC_VER_02) {
-		dprintk("Set MAC Reg C+CR Offset 0x82h = 0x01h\n");
+		pr_debug("r8169: " "Set MAC Reg C+CR Offset 0x82h = 0x01h\n");
 		RTL_W8(0x82, 0x01);
-		dprintk("Set PHY Reg 0x0bh = 0x00h\n");
+		pr_debug("r8169: " "Set PHY Reg 0x0bh = 0x00h\n");
 		rtl_writephy(tp, 0x0b, 0x0000); //w 0x0b 15 0 0
 	}
 
@@ -5586,7 +5581,7 @@ static void rtl_hw_start_8169(struct net_device *dev)
 
 	if (tp->mac_version == RTL_GIGA_MAC_VER_02 ||
 		tp->mac_version == RTL_GIGA_MAC_VER_03) {
-		dprintk("Set MAC Reg C+CR Offset 0xE0. "
+		pr_debug("r8169: " "Set MAC Reg C+CR Offset 0xE0. "
 			"Bit-3 and bit-14 MUST be 1\n");
 		tp->cp_cmd |= (1 << 14);
 	}
@@ -10044,42 +10039,42 @@ rtl_init_one(struct platform_device *pdev)
 
 #if 1	//barry
 	if (of_property_read_u32(pdev->dev.of_node, "rtl-config", &rtl_config)) {
-		dprintk("%s canot specified config", __func__);
+		pr_debug("r8169: " "%s canot specified config", __func__);
 	}
 	cfg = rtl_cfg_infos + rtl_config;
 	if (of_property_read_u32(pdev->dev.of_node, "mac-version", &mac_version)) {
-		dprintk("%s canot specified config", __func__);
+		pr_debug("r8169: " "%s canot specified config", __func__);
 	}
 	if (of_property_read_u32(pdev->dev.of_node, "output-mode", &output_mode)) {
-		dprintk("%s can't get output mode", __func__);
+		pr_debug("r8169: " "%s can't get output mode", __func__);
 	}
 	if (of_property_read_u32(pdev->dev.of_node, "ext-phy-id", &ext_phy_id)) {
-		dprintk("%s can't get RGMII external PHY ID", __func__);
+		pr_debug("r8169: " "%s can't get RGMII external PHY ID", __func__);
 	}
 	if (of_property_read_u32(pdev->dev.of_node, "eee", &eee_enable)) {
-		dprintk("%s can't get eee_enable", __func__);
+		pr_debug("r8169: " "%s can't get eee_enable", __func__);
 	}
 
 	#if defined(CONFIG_ARCH_RTD129x)
 	if (of_property_read_u32(pdev->dev.of_node, "rgmii-voltage", &rgmii_voltage)) {
-		dprintk("%s can't get RGMII voltage", __func__);
+		pr_debug("r8169: " "%s can't get RGMII voltage", __func__);
 	}
 	if (of_property_read_u32(pdev->dev.of_node, "rgmii-tx-delay", &rgmii_tx_delay)) {
-		dprintk("%s can't get RGMII TX delay", __func__);
+		pr_debug("r8169: " "%s can't get RGMII TX delay", __func__);
 	}
 	if (of_property_read_u32(pdev->dev.of_node, "rgmii-rx-delay", &rgmii_rx_delay)) {
-		dprintk("%s can't get RGMII RX delay", __func__);
+		pr_debug("r8169: " "%s can't get RGMII RX delay", __func__);
 	}
 	#elif defined(CONFIG_ARCH_RTD139x) || defined(CONFIG_ARCH_RTD16xx)
 	if (of_property_read_u32(pdev->dev.of_node, "bypass", &bypass_enable)) {
-		dprintk("%s can't get bypass", __func__);
+		pr_debug("r8169: " "%s can't get bypass", __func__);
 	}
 	if (of_property_read_u32(pdev->dev.of_node, "acp", &acp_enable)) {
-		dprintk("%s can't get acp", __func__);
+		pr_debug("r8169: " "%s can't get acp", __func__);
 	}
 	#if defined(CONFIG_ARCH_RTD16xx)
 	if (of_property_read_u32(pdev->dev.of_node, "sgmii-swing", &sgmii_swing)) {
-		dprintk("%s can't get sgmii-swing", __func__);
+		pr_debug("r8169: " "%s can't get sgmii-swing", __func__);
 	}
 	#endif /* CONFIG_ARCH_RTD16xx */
 	sbxaddr = of_iomap(pdev->dev.of_node, 2);

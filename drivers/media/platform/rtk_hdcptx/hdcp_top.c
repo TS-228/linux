@@ -86,7 +86,7 @@ static void hdcp_wq_start_authentication(void)
 	hdcp_set_state(&mdev, hdcp.auth_state);
 
 	if (hdcp.print_messages)
-		HDCP_INFO("Authentication start");
+		pr_info("rtk-hdcp: " "Authentication start");
 
 	/* Step 1 part 1 (until R0 calc delay) */
 	status = hdcp_lib_step1_start();
@@ -94,7 +94,7 @@ static void hdcp_wq_start_authentication(void)
 	if (status == -HDCP_AKSV_ERROR) {
 		hdcp_wq_authentication_failure();
 	} else if (status == -HDCP_CANCELLED_AUTH) {
-		HDCP_ERROR("Authentication step 1 cancelled");
+		pr_err("rtk-hdcp: " "Authentication step 1 cancelled");
 		return;
 	} else if (status != HDCP_OK) {
 		hdcp_wq_authentication_failure();
@@ -115,7 +115,7 @@ static void hdcp_wq_check_r0(void)
 	int status = hdcp_lib_step1_r0_check();
 
 	if (status == -HDCP_CANCELLED_AUTH) {
-		HDCP_ERROR("Authentication step 1/R0 cancelled.");
+		pr_err("rtk-hdcp: " "Authentication step 1/R0 cancelled.");
 		return;
 	} else if (status < 0) {
 		hdcp_wq_authentication_failure();
@@ -124,7 +124,7 @@ static void hdcp_wq_check_r0(void)
 		hdcp.print_messages = 1;
 		if (hdcp_lib_check_repeater_bit_in_tx()) {
 			/* Repeater */
-			HDCP_INFO("authentication step 1 successful - Repeater");
+			pr_info("rtk-hdcp: " "authentication step 1 successful - Repeater");
 
 			hdcp.hdcp_state = HDCP_WAIT_KSV_LIST;
 			hdcp.auth_state = HDCP_STATE_AUTH_2ND_STEP;
@@ -132,7 +132,7 @@ static void hdcp_wq_check_r0(void)
 				hdcp_submit_work(HDCP_KSV_LIST_RDY_EVENT, 500);
 		} else {
 			/* Receiver */
-			HDCP_INFO("authentication step 1 successful - Receiver");
+			pr_info("rtk-hdcp: " "authentication step 1 successful - Receiver");
 #ifdef CONFIG_RTK_HDCP1x_REPEATER
 			ksvlist_info.device_count = 0;
 			ksvlist_info.bstatus[0] = 0;
@@ -160,7 +160,7 @@ static void hdcp_wq_auto_check_r0(void)
 
 	status = hdcp_lib_r0_check();
 	if (status == -HDCP_CANCELLED_AUTH) {
-		HDCP_ERROR("Authentication step 3 cancelled.");
+		pr_err("rtk-hdcp: " "Authentication step 3 cancelled.");
 		return;
 	} else if (status < 0) {
 		hdcp_wq_authentication_failure();
@@ -169,7 +169,7 @@ static void hdcp_wq_auto_check_r0(void)
 		hdcp.print_messages = 1;
 
 		/* Receiver */
-		HDCP_DEBUG("hdcp_wq_auto_check_r0 successful - %s",
+		pr_debug("rtk-hdcp: " "hdcp_wq_auto_check_r0 successful - %s",
 			hdcp_lib_check_repeater_bit_in_tx() ? "Repeater" : "Receiver");
 
 		/* hdcp.av_mute_needed = 1; */
@@ -199,7 +199,7 @@ static void hdcp_wq_step2_authentication(void)
 {
 	int status = HDCP_OK;
 
-	HDCP_DEBUG("[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
 
 	/* KSV list timeout is running and should be canceled */
 	hdcp_cancel_work(&hdcp.pending_wq_event);
@@ -207,12 +207,12 @@ static void hdcp_wq_step2_authentication(void)
 	status = hdcp_lib_step2();
 
 	if (status == -HDCP_CANCELLED_AUTH) {
-		HDCP_ERROR("Authentication step 2 cancelled.");
+		pr_err("rtk-hdcp: " "Authentication step 2 cancelled.");
 		return;
 	} else if (status < 0) {
 		hdcp_wq_authentication_failure();
 	} else {
-		HDCP_INFO("Repeater authentication step 2 successful");
+		pr_info("rtk-hdcp: " "Repeater authentication step 2 successful");
 
 		/* hdcp.av_mute_needed = 1; */
 		hdcp.hdcp_state = HDCP_LINK_INTEGRITY_CHECK;
@@ -253,17 +253,17 @@ static void hdcp_wq_authentication_failure(void)
 
 		if (hdcp.retry_cnt < HDCP_INFINITE_REAUTH) {
 			hdcp.retry_cnt--;
-			HDCP_ERROR("authentication failed - retrying, attempts=%d", hdcp.retry_cnt);
+			pr_err("rtk-hdcp: " "authentication failed - retrying, attempts=%d", hdcp.retry_cnt);
 		} else {
 			hdcp.fail_cnt++;
 			if (hdcp.print_messages) {
 
 				if (hdcp.fail_cnt < HDCP_MAX_FAIL_MESSAGES) {
-					HDCP_ERROR("authentication failed - retrying");
+					pr_err("rtk-hdcp: " "authentication failed - retrying");
 				} else {
 					hdcp.print_messages = 0;
-					HDCP_ERROR(" authentication failed %d consecutive times", hdcp.fail_cnt);
-					HDCP_ERROR(" will keep trying but silencing logs until hotplug or success");
+					pr_err("rtk-hdcp: " " authentication failed %d consecutive times", hdcp.fail_cnt);
+					pr_err("rtk-hdcp: " " will keep trying but silencing logs until hotplug or success");
 				}
 			}
 		}
@@ -280,7 +280,7 @@ static void hdcp_wq_authentication_failure(void)
 			hdcp.reauth_delay = hdcp.reauth_delay * 2;
 
 	} else {
-		HDCP_ERROR("authentication failed -HDCP disabled\n");
+		pr_err("rtk-hdcp: " "authentication failed -HDCP disabled\n");
 		hdcp.hdcp_state = HDCP_ENABLE_PENDING;
 		hdcp.auth_state = HDCP_STATE_AUTH_FAILURE;
 		hdcp_set_state(&mdev, hdcp.auth_state);
@@ -302,7 +302,7 @@ static void hdcp_work_queue(struct work_struct *work)
 
 	mutex_lock(&hdcp.lock);
 
-	HDCP_DEBUG("hdcp_work_queue() - START - %u hdmi=%d hdcp=%d auth=%d evt= %x %d",
+	pr_debug("rtk-hdcp: " "hdcp_work_queue() - START - %u hdmi=%d hdcp=%d auth=%d evt= %x %d",
 		jiffies_to_msecs(jiffies),
 		hdcp.hdmi_state,
 		hdcp.hdcp_state,
@@ -370,14 +370,14 @@ static void hdcp_work_queue(struct work_struct *work)
 
 		if (event == HDCP_RI_FAIL_EVENT) {
 			/* Ri failure */
-			HDCP_ERROR("Ri check failure");
+			pr_err("rtk-hdcp: " "Ri check failure");
 			hdcp_wq_authentication_failure();
 		} else if (event == HDCP_KSV_LIST_RDY_EVENT) {
 			/* KSV list ready event */
 			hdcp_wq_step2_authentication();
 		} else if (event == HDCP_KSV_TIMEOUT_EVENT) {
 			/* Timeout */
-			HDCP_ERROR("BCAPS polling timeout\n");
+			pr_err("rtk-hdcp: " "BCAPS polling timeout\n");
 			hdcp_wq_authentication_failure();
 		}
 		break;
@@ -386,13 +386,13 @@ static void hdcp_work_queue(struct work_struct *work)
 		hdcp_wq_auto_check_r0();
 		/* Ri failure */
 		if (event == HDCP_RI_FAIL_EVENT) {
-			HDCP_ERROR("Ri check failure\n");
+			pr_err("rtk-hdcp: " "Ri check failure\n");
 			hdcp_wq_authentication_failure();
 		}
 		break;
 
 	default:
-		HDCP_ERROR("error - unknow HDCP state\n");
+		pr_err("rtk-hdcp: " "error - unknow HDCP state\n");
 		break;
 	} /* end of switch (hdcp.hdcp_state) */
 
@@ -404,7 +404,7 @@ static void hdcp_work_queue(struct work_struct *work)
 	if (event == HDCP_KSV_LIST_RDY_EVENT || event == HDCP_R0_EXP_EVENT)
 		hdcp.pending_wq_event = 0;
 
-	HDCP_DEBUG("hdcp_work_queue() - END - %u hdmi=%d hdcp=%d auth=%d evt=%x %d ",
+	pr_debug("rtk-hdcp: " "hdcp_work_queue() - END - %u hdmi=%d hdcp=%d auth=%d evt=%x %d ",
 		jiffies_to_msecs(jiffies),
 		hdcp.hdmi_state,
 		hdcp.hdcp_state,
@@ -431,7 +431,7 @@ static struct delayed_work *hdcp_submit_work(int event, int delay)
 		queue_delayed_work(hdcp.workqueue,
 			&work->work, msecs_to_jiffies(delay));
 	} else {
-		HDCP_ERROR("Cannot allocate memory to create work");
+		pr_err("rtk-hdcp: " "Cannot allocate memory to create work");
 		return 0;
 	}
 
@@ -451,7 +451,7 @@ static void hdcp_cancel_work(struct delayed_work **work)
 
 		if (ret != 1) {
 			ret = cancel_work_sync(&((*work)->work));
-			HDCP_ERROR("Canceling work failed - cancel_work_sync done %d", ret);
+			pr_err("rtk-hdcp: " "Canceling work failed - cancel_work_sync done %d", ret);
 		}
 
 		kfree(*work);
@@ -471,13 +471,13 @@ static long hdcp_enable_ctl(void __user *argp)
 		hdcp.en_ctrl = kmalloc(sizeof(struct hdcp_enable_control), GFP_KERNEL);
 
 		if (hdcp.en_ctrl == 0) {
-			HDCP_ERROR("Cannot allocate memory for HDCP enable control struct");
+			pr_err("rtk-hdcp: " "Cannot allocate memory for HDCP enable control struct");
 			return -EFAULT;
 		}
 	}
 
 	if (copy_from_user(hdcp.en_ctrl, argp, sizeof(struct hdcp_enable_control))) {
-		HDCP_ERROR("Error copying from user space - enable ioctl");
+		pr_err("rtk-hdcp: " "Error copying from user space - enable ioctl");
 		return -EFAULT;
 	}
 
@@ -494,7 +494,7 @@ static long hdcp_enable_ctl(void __user *argp)
  */
 static long hdcp_disable_ctl(void)
 {
-	HDCP_DEBUG("[%s] %s  %d :%u\n", __FILE__, __FUNCTION__, __LINE__, jiffies_to_msecs(jiffies));
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u\n", __FILE__, __FUNCTION__, __LINE__, jiffies_to_msecs(jiffies));
 
 	hdcp.hdcp_enabled = 0;
 
@@ -530,12 +530,12 @@ static long hdcp_query_status_ctl(void __user *argp)
 {
 	uint32_t status;
 
-	HDCP_DEBUG("[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
 
 	status = hdcp.auth_state;
 
 	if (copy_to_user(argp, &status, sizeof(status))) {
-		HDCP_ERROR("%s:failed to copy to user !", __func__);
+		pr_err("rtk-hdcp: " "%s:failed to copy to user !", __func__);
 		return -EFAULT;
 	}
 
@@ -547,18 +547,18 @@ static long hdcp_query_sink_hdcp_capable_ctl(void __user *argp)
 {
 	uint32_t hdcp_capable;
 
-	HDCP_DEBUG("[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
 
 	if (hdcp_lib_query_sink_hdcp_capable()) {
 		hdcp_set_state(&mdev, hdcp.auth_state);
 		hdcp_capable = HDCP_INCAPABLE;
-		HDCP_INFO("[%s] HDCP_INCAPABLE, auth_state(%d)", __func__, hdcp.auth_state);
+		pr_info("rtk-hdcp: " "[%s] HDCP_INCAPABLE, auth_state(%d)", __func__, hdcp.auth_state);
 	} else {
 		hdcp_capable = HDCP_CAPABLE;
 	}
 
 	if (copy_to_user(argp, &hdcp_capable, sizeof(hdcp_capable))) {
-		HDCP_ERROR("%s:failed to copy to user !", __func__);
+		pr_err("rtk-hdcp: " "%s:failed to copy to user !", __func__);
 		return -EFAULT;
 	}
 
@@ -567,10 +567,10 @@ static long hdcp_query_sink_hdcp_capable_ctl(void __user *argp)
 
 static long hdcp_get_downstream_KSVlist_ctl(void __user *argp)
 {
-	HDCP_DEBUG("[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
 
 	if (copy_to_user(argp, &ksvlist_info, sizeof(struct hdcp_ksvlist_info))) {
-		HDCP_DEBUG("[%s]ksvlist info failed to copy to user !", __func__);
+		pr_debug("rtk-hdcp: " "[%s]ksvlist info failed to copy to user !", __func__);
 		return -EFAULT;
 	}
 
@@ -581,10 +581,10 @@ static long hdcp_set_22_cipher_ctl(void __user *argp)
 {
 	struct HDCP_22_CIPHER_INFO cipher_info;
 
-	HDCP_DEBUG("[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
 
 	if (copy_from_user(&cipher_info, argp, sizeof(cipher_info))) {
-		HDCP_DEBUG("[%s]failed to copy from user !", __func__);
+		pr_debug("rtk-hdcp: " "[%s]failed to copy from user !", __func__);
 		return -EFAULT;
 	}
 
@@ -597,10 +597,10 @@ static long hdcp_control_22_cipher_ctl(void __user *argp)
 {
 	int flag;
 
-	HDCP_DEBUG("[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
 
 	if (copy_from_user(&flag, argp, sizeof(flag))) {
-		HDCP_DEBUG("[%s]failed to copy from user !", __func__);
+		pr_debug("rtk-hdcp: " "[%s]failed to copy from user !", __func__);
 		return -EFAULT;
 	}
 
@@ -615,10 +615,10 @@ static long hdcp_set_22_repeater_info_ctl(void __user *argp)
 {
 	struct H2_RepeaterAuthSendRxIdList_PayLoad repeater_info;
 
-	HDCP_DEBUG("[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
 
 	if (copy_from_user(&repeater_info, argp, sizeof(repeater_info))) {
-		HDCP_DEBUG("[%s]failed to copy from user !\n", __func__);
+		pr_debug("rtk-hdcp: " "[%s]failed to copy from user !\n", __func__);
 		return -EFAULT;
 	}
 
@@ -626,16 +626,16 @@ static long hdcp_set_22_repeater_info_ctl(void __user *argp)
 	//HdmiRx_save_hdcp2p2_repeater_state(&repeater_info);
 #endif
 
-	HDCP_DEBUG("Rxinfo: %02x %02x", repeater_info.Rxinfo[0], repeater_info.Rxinfo[1]);
-	HDCP_DEBUG("Seq_num: %02x %02x %02x",
+	pr_debug("rtk-hdcp: " "Rxinfo: %02x %02x", repeater_info.Rxinfo[0], repeater_info.Rxinfo[1]);
+	pr_debug("rtk-hdcp: " "Seq_num: %02x %02x %02x",
 		repeater_info.Seq_num[0], repeater_info.Seq_num[1], repeater_info.Seq_num[2]);
-	HDCP_DEBUG("maxDevsExceeded: %02x", repeater_info.maxDevsExceeded);
-	HDCP_DEBUG("maxCascadeExceeded: %02x", repeater_info.maxCascadeExceeded);
-	HDCP_DEBUG("deviceCount: %02x", repeater_info.deviceCount);
-	HDCP_DEBUG("depth: %02x", repeater_info.depth);
-	HDCP_DEBUG("HDCP2_0_repeater_downstream: %02x", repeater_info.HDCP2_0_repeater_downstream);
-	HDCP_DEBUG("HDCP1_device_downstream: %02x", repeater_info.HDCP1_device_downstream);
-	HDCP_DEBUG("Receive ID list : %02x , %02x, %02x, %02x, %02x",
+	pr_debug("rtk-hdcp: " "maxDevsExceeded: %02x", repeater_info.maxDevsExceeded);
+	pr_debug("rtk-hdcp: " "maxCascadeExceeded: %02x", repeater_info.maxCascadeExceeded);
+	pr_debug("rtk-hdcp: " "deviceCount: %02x", repeater_info.deviceCount);
+	pr_debug("rtk-hdcp: " "depth: %02x", repeater_info.depth);
+	pr_debug("rtk-hdcp: " "HDCP2_0_repeater_downstream: %02x", repeater_info.HDCP2_0_repeater_downstream);
+	pr_debug("rtk-hdcp: " "HDCP1_device_downstream: %02x", repeater_info.HDCP1_device_downstream);
+	pr_debug("rtk-hdcp: " "Receive ID list : %02x , %02x, %02x, %02x, %02x",
 		repeater_info.Receiver_ID_LIST[0], repeater_info.Receiver_ID_LIST[1],
 		repeater_info.Receiver_ID_LIST[2], repeater_info.Receiver_ID_LIST[3],
 		repeater_info.Receiver_ID_LIST[4]);
@@ -648,7 +648,7 @@ static long hdcp_set_param_key14(void __user *argp)
 	struct hdcp_key14_param key;
 
 	if (copy_from_user(&key, argp, sizeof(key))) {
-		HDCP_DEBUG("[%s]failed to copy from user !\n", __func__);
+		pr_debug("rtk-hdcp: " "[%s]failed to copy from user !\n", __func__);
 		return -EFAULT;
 	}
 
@@ -673,7 +673,7 @@ long hdcp_ioctl(struct file *fd, unsigned int cmd, unsigned long arg)
 {
 	void __user *argp = (void __user *)arg;
 
-	HDCP_DEBUG("ioctl TYPE(0x%x) NR(%u) SIZE(%u)",
+	pr_debug("rtk-hdcp: " "ioctl TYPE(0x%x) NR(%u) SIZE(%u)",
 		_IOC_TYPE(cmd), _IOC_NR(cmd), _IOC_SIZE(cmd));
 
 #ifdef CONFIG_RTK_HDCP_1x_TEE
@@ -739,13 +739,13 @@ const struct file_operations hdcp_fops = {
 
 static ssize_t hdcp_state_show(struct device *device, struct device_attribute *attr, char *buffer)
 {
-	HDCP_DEBUG("%s\n", __func__);
+	pr_debug("rtk-hdcp: " "%s\n", __func__);
 	return sprintf(buffer, "%d", hdcp.auth_state);
 }
 
 static ssize_t hdcp_name_show(struct device *device, struct device_attribute *attr, char *buffer)
 {
-	HDCP_DEBUG("%s\n", __func__);
+	pr_debug("rtk-hdcp: " "%s\n", __func__);
 	return sprintf(buffer, "%s\n", "hdcp");
 }
 
@@ -753,7 +753,7 @@ static ssize_t hdcp_hdcp1x_en_show(struct device *device, struct device_attribut
 {
 	ssize_t ret_count;
 
-	HDCP_DEBUG("%s\n", __func__);
+	pr_debug("rtk-hdcp: " "%s\n", __func__);
 
 	ret_count = sprintf(buffer, "%s\n", (hdcp.hdcp_enabled == 1)?"Enable":"Disable");
 
@@ -764,7 +764,7 @@ static ssize_t hdcp_hdcp2p2_en_show(struct device *device, struct device_attribu
 {
 	ssize_t ret_count;
 
-	HDCP_DEBUG("%s\n", __func__);
+	pr_debug("rtk-hdcp: " "%s\n", __func__);
 
 	ret_count = sprintf(buffer, "%s\n", (hdcp.hdcp2p2_enabled == HDCP_22_CIPHER_RESUME)?"Enable":"Disable");
 
@@ -802,7 +802,7 @@ void hdcp_set_state(struct miscdevice *pdev, int state)
 		kobject_uevent_env(&pdev->this_device->kobj, KOBJ_CHANGE, envp);
 		free_page((unsigned long)prop_buf);
 	} else {
-		HDCP_ERROR("Out of memory in %s\n", __func__);
+		pr_err("rtk-hdcp: " "Out of memory in %s\n", __func__);
 		kobject_uevent(&pdev->this_device->kobj, KOBJ_CHANGE);
 	}
 
@@ -823,19 +823,19 @@ static int rtk_hdcptx_probe(struct platform_device *pdev)
 	struct device_node __maybe_unused *hdcp_node;
 	int ret;
 
-	HDCP_INFO("Driver init");
+	pr_info("rtk-hdcp: " "Driver init");
 
 	hdcp.hdcp_base_addr = of_iomap(pdev->dev.of_node, 0);
 	if (!hdcp.hdcp_base_addr) {
-		HDCP_ERROR("HDCP iomap error");
+		pr_err("rtk-hdcp: " "HDCP iomap error");
 		goto err_map_hdcp;
 	}
 
 	hdcp.hdcp_irq_num = irq_of_parse_and_map(pdev->dev.of_node, 0);
 	if (!hdcp.hdcp_irq_num)
-		HDCP_ERROR("map hdcp irq num failed");
+		pr_err("rtk-hdcp: " "map hdcp irq num failed");
 	else
-		HDCP_INFO("hdcp_irq_num=%d", hdcp.hdcp_irq_num);
+		pr_info("rtk-hdcp: " "hdcp_irq_num=%d", hdcp.hdcp_irq_num);
 
 	mutex_init(&hdcp.lock);
 
@@ -845,7 +845,7 @@ static int rtk_hdcptx_probe(struct platform_device *pdev)
 	mdev.fops = &hdcp_fops;
 
 	if (misc_register(&mdev)) {
-		HDCP_ERROR("Could not add character driver\n");
+		pr_err("rtk-hdcp: " "Could not add character driver\n");
 		goto err_register;
 	}
 
@@ -908,35 +908,35 @@ err_map_hdcp:
 
 static int rtk_hdcptx_suspend(struct device *dev)
 {
-	HDCP_INFO("Enter %s", __func__);
+	pr_info("rtk-hdcp: " "Enter %s", __func__);
 
 #ifdef CONFIG_RTK_HDCP_1x_TEE
 	/* tee_client should be closed before enter suspend */
 	ta_hdcp14_deinit();
 #endif
 
-	HDCP_INFO("Exit %s", __func__);
+	pr_info("rtk-hdcp: " "Exit %s", __func__);
 
 	return 0;
 }
 
 static int rtk_hdcptx_resume(struct device *dev)
 {
-	HDCP_INFO("Enter %s", __func__);
-	HDCP_INFO("Exit %s", __func__);
+	pr_info("rtk-hdcp: " "Enter %s", __func__);
+	pr_info("rtk-hdcp: " "Exit %s", __func__);
 
 	return 0;
 }
 
 static void rtk_hdcptx_shutdown(struct platform_device *pdev)
 {
-	HDCP_INFO("Enter %s", __func__);
+	pr_info("rtk-hdcp: " "Enter %s", __func__);
 
 #ifdef CONFIG_RTK_HDCP_1x_TEE
 	ta_hdcp14_deinit();
 #endif
 
-	HDCP_INFO("Exit %s", __func__);
+	pr_info("rtk-hdcp: " "Exit %s", __func__);
 }
 
 static const struct of_device_id rtk_hdcptx_dt_ids[] = {
@@ -970,7 +970,7 @@ static struct platform_driver rtk_hdcptx_driver = {
 static int __init hdcp_init(void)
 {
 	if (platform_driver_register(&rtk_hdcptx_driver)) {
-		HDCP_ERROR("Could not register platform driver");
+		pr_err("rtk-hdcp: " "Could not register platform driver");
 		goto err_register;
 	}
 

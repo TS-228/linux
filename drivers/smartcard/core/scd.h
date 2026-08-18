@@ -2,7 +2,6 @@
 #define __SCD_H__
 
 #include <linux/device.h>
-#include "scd_debug.h"
 #include "scd_atr.h"
 #include "scd_buff.h"
 

@@ -18,14 +18,6 @@
 #include <linux/gpio/driver.h>
 //#include <mach/irqs.h>
 
-
-//#define RTK_DEBUG
-#ifdef RTK_DEBUG
-#define RTK_debug(fmt, ...) printk(fmt, ##__VA_ARGS__)
-#else
-#define RTK_debug(fmt, ...)
-#endif
-
 #define GP_HIGH		1
 #define GP_LOW		0
 #define GP_DIROUT	1
@@ -41,8 +33,6 @@ typedef enum {
     RTK119X_GPIO_DEBOUNCE_20ms,
     RTK119X_GPIO_DEBOUNCE_30ms,
 }RTK119X_GPIO_DEBOUNCE;
-
-
 
 struct rtk119x_gpio_groups {
 	const char		*group_name;
@@ -68,7 +58,6 @@ struct rtk119x_gpio_desc {
 	const struct rtk119x_gpio_groups	*groups;
 	int								ngroups;
 };
-
 
 /*
  * basic gpio routines
@@ -118,7 +107,6 @@ struct rtk119x_gpio_controller {
 
 };
 
-
 /* The __gpio_to_controller() and __gpio_mask() functions inline to constants
  * with constant parameters; or in outlined code they execute at runtime.
  *
@@ -146,14 +134,5 @@ static inline u32 __gpio_mask(unsigned gpio)
 	return 1 << (gpio % 32);
 }
 */
-
-
-
-
-
-
-
-
-
 
 //#endif	/* __RTK119X_RTK119X_GPIO_H */

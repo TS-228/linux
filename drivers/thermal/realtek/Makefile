@@ -1,3 +1,6 @@
+include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
+CFLAGS_sensor.o += $(rtk_vendor-ccflags)
+
 obj-$(CONFIG_RTK_THERMAL) += rtk-thermal.o
 
 rtk-thermal-y += sensor.o

@@ -1,0 +1,340 @@
+Tue Aug 11 12:29:47 2026
+read_root_temp_adjust_setting(3470):ADJUST SYS TEMP = 0
+Tue Aug 11 12:29:47 2026
+evt_action_monitor(200): evt_action_monitor thread running
+Tue Aug 11 12:29:47 2026
+read_root_fan_control_setting(3149):CPU CRIT:WARN:HYSTERESIS = 80:72:4
+Tue Aug 11 12:29:47 2026
+read_root_fan_control_setting(3153):SYS CRIT:WARN:HYSTERESIS = 60:50:5
+Tue Aug 11 12:29:47 2026
+read_root_fan_control_setting(3157):PD CRIT:WARN:HYSTERESIS = 55:52:5
+Tue Aug 11 12:29:47 2026
+se_add(8720):initial fan mode = -1, cpu fan mode -1, control_method = 4
+Tue Aug 11 12:29:47 2026
+se_scan(5050):enc_id = 0,pd_counts = 2,vd_counts = 0
+Tue Aug 11 12:29:47 2026
+UTIL_PD_Add(4760): <0:1> Write/Read error recovery timer = 0/0 ms.
+Tue Aug 11 12:29:47 2026
+UTIL_PD_Add(4805): <0:1> ncq scheme  not support.
+Tue Aug 11 12:29:47 2026
+UTIL_Get_PD_SMART(5567):Fail to obtain the latest_pd_notify_event of the specified pd
+Tue Aug 11 12:29:47 2026
+UTIL_PD_Add(4760): <0:2> Write/Read error recovery timer = 0/0 ms.
+Tue Aug 11 12:29:47 2026
+UTIL_PD_Add(4805): <0:2> ncq scheme  not support.
+Tue Aug 11 12:29:47 2026
+UTIL_Get_PD_SMART(5567):Fail to obtain the latest_pd_notify_event of the specified pd
+Tue Aug 11 12:29:47 2026
+se_scan(5050):enc_id = 32,pd_counts = 0,vd_counts = 0
+Tue Aug 11 12:29:47 2026
+se_scan(5050):enc_id = 33,pd_counts = 1,vd_counts = 0
+Tue Aug 11 12:29:47 2026
+se_scan(5050):enc_id = 34,pd_counts = 0,vd_counts = 0
+Tue Aug 11 12:29:47 2026
+Show HAL UTIL SE/PD objects:
+Tue Aug 11 12:29:47 2026
+enc_id = 34,flags = 0x00000000
+Tue Aug 11 12:29:47 2026
+enc_id = 33,flags = 0x00000000
+Tue Aug 11 12:29:47 2026
+	pd_port = 1,bus_name = 1:0:0:0,flags=0x00000000
+Tue Aug 11 12:29:47 2026
+enc_id = 32,flags = 0x00000000
+Tue Aug 11 12:29:47 2026
+enc_id = 0,flags = 0x00009e00
+Tue Aug 11 12:29:47 2026
+	pd_port = 2,bus_name = 3:0:0:0,flags=0x0000c201
+Tue Aug 11 12:29:47 2026
+	pd_port = 1,bus_name = 2:0:0:0,flags=0x0000c201
+Tue Aug 11 12:29:47 2026
+	cpu_temp = -1,sys_temp = -1
+Tue Aug 11 12:29:47 2026
+	fan_index = 0, status = 0, rpm = -1
+Tue Aug 11 12:29:47 2026
+	pwr_index = 0, status = 0, rpm = -1, temp = -1
+Tue Aug 11 12:29:47 2026
+_set_max_cpu_freq(5584):set cpu0 freq = 1.1 GHz
+Tue Aug 11 12:29:47 2026
+_set_max_cpu_freq(5584):set cpu1 freq = 1.1 GHz
+Tue Aug 11 12:29:47 2026
+hal_hd_smart_monitor(6240):DISK S.M.A.R.T interval = 300 seconds
+Tue Aug 11 12:29:47 2026
+hal_vol_free_check(330):volume free check,action = 1,free_size_limit = 3072 MB
+Tue Aug 11 12:29:47 2026
+start_monitor_threads: BBU not supported.
+Tue Aug 11 12:29:47 2026
+hal_lvm_check(622): Check LVM status.
+Tue Aug 11 12:29:47 2026
+hal_mem_swap_usage_monitor start
+Tue Aug 11 12:29:47 2026
+hal_mem_swap_usage_monitor start monitor
+Tue Aug 11 12:29:48 2026
+read_temp_limit_setting(3263):SHUTDOWN TEMP CPU:SYS:DISK:PWR = 85:70:60:55
+Tue Aug 11 12:29:48 2026
+read_temp_warning_setting(3275):WARNING TEMP SYS:DISK:SSD = 60:55:70
+Tue Aug 11 12:29:48 2026
+hal_case_intrusion_monitor(2857):case_intrusion_support = 0
+Tue Aug 11 12:29:48 2026
+hal_button_usb_monitor(2378):usb_button_support = 1
+Tue Aug 11 12:30:44 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 1, msgsz = 264
+Tue Aug 11 12:30:44 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:30:44 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:30:44 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:30:44 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:30:44 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:30:46 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:30:46 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 153, msgsz = 264
+Tue Aug 11 12:30:46 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:30:46 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:30:46 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:30:46 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:30:46 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:30:49 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:30:49 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 153, msgsz = 264
+Tue Aug 11 12:30:49 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:30:49 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:30:49 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:30:49 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:30:49 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:30:49 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:30:49 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 153, msgsz = 264
+Tue Aug 11 12:30:49 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:30:49 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:30:49 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:30:49 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:30:49 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:32:37 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:32:37 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 152, msgsz = 264
+Tue Aug 11 12:32:37 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:32:37 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 152, msgsz = 264
+Tue Aug 11 12:32:37 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:32:37 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 152, msgsz = 264
+Tue Aug 11 12:32:37 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:32:37 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 152, msgsz = 264
+Tue Aug 11 12:32:37 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:37 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:37 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:37 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:37 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:37 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:37 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:37 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:37 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:37 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:37 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:37 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:37 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:37 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:32:37 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:37 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:32:37 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:37 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:32:37 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:37 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:32:41 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 154, msgsz = 264
+Tue Aug 11 12:32:41 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:41 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:41 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:41 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:41 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:32:42 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 2, msgsz = 264
+Tue Aug 11 12:32:42 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:42 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:42 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:43 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:43 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 1 seconds
+Tue Aug 11 12:32:46 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 1, msgsz = 264
+Tue Aug 11 12:32:46 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:46 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:46 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:47 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:47 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 1 seconds
+Tue Aug 11 12:32:48 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:32:48 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 153, msgsz = 264
+Tue Aug 11 12:32:48 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:48 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:48 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:48 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:48 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:32:51 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:32:51 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 153, msgsz = 264
+Tue Aug 11 12:32:51 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:51 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:51 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:51 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:51 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:32:51 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:32:51 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 153, msgsz = 264
+Tue Aug 11 12:32:51 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:51 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:51 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:51 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:51 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:32:54 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:32:54 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 153, msgsz = 264
+Tue Aug 11 12:32:54 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:32:54 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:32:54 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:32:54 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:32:54 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:33:12 2026
+hal_tr_fwxml_monitor(2618):/etc/latest_tr_version.conf differs. replace it.
+Tue Aug 11 12:35:04 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 5,msgp.arg.action = 3, msgsz = 264
+Tue Aug 11 12:35:04 2026
+main(2803): ret= 264, msgp.type = 5
+Tue Aug 11 12:35:04 2026
+main(2805): evt_action_ary[5] start
+Tue Aug 11 12:35:04 2026
+usblp_evt_func(228):scan usb printer ...
+Tue Aug 11 12:35:04 2026
+evt_action_monitor(218): evt_action_ary[5] start
+Tue Aug 11 12:35:04 2026
+evt_action_monitor(241): evt_action_ary[5] end, total = 0 seconds
+Tue Aug 11 12:35:04 2026
+main(2811): evt_action_ary[5] end
+Tue Aug 11 12:39:08 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 1,msgp.arg.action = 16, msgsz = 264
+Tue Aug 11 12:39:08 2026
+main(2803): ret= 264, msgp.type = 1
+Tue Aug 11 12:39:08 2026
+main(2805): evt_action_ary[1] start
+Tue Aug 11 12:39:08 2026
+enc_evt_func(7772):SET_FAN_MODE_FIXED level = 5, fan_region = 0
+Tue Aug 11 12:39:08 2026
+evt_action_monitor(218): evt_action_ary[1] start
+Tue Aug 11 12:39:08 2026
+set_fan_speed(2921):Change Fan level,enc->id = 0,speed_leve = 1 ->5
+Tue Aug 11 12:39:08 2026
+main(2811): evt_action_ary[1] end
+Tue Aug 11 12:39:08 2026
+evt_action_monitor(241): evt_action_ary[1] end, total = 0 seconds
+Tue Aug 11 12:40:48 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:40:48 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 153, msgsz = 264
+Tue Aug 11 12:40:48 2026
+netdev_ip_addr_change(2538):unknown rta->rta_type = 6
+Tue Aug 11 12:40:48 2026
+my_msgsnd(162): msgp.mtype = 1,msgp.type = 4,msgp.arg.action = 153, msgsz = 264
+Tue Aug 11 12:40:48 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:40:48 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:40:48 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:40:48 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:40:48 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds
+Tue Aug 11 12:40:48 2026
+main(2803): ret= 264, msgp.type = 4
+Tue Aug 11 12:40:48 2026
+main(2805): evt_action_ary[4] start
+Tue Aug 11 12:40:48 2026
+evt_action_monitor(218): evt_action_ary[4] start
+Tue Aug 11 12:40:48 2026
+main(2811): evt_action_ary[4] end
+Tue Aug 11 12:40:48 2026
+evt_action_monitor(241): evt_action_ary[4] end, total = 0 seconds

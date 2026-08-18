@@ -156,13 +156,13 @@ void pli_IPCCopyMemory(unsigned char* src, unsigned char* des, unsigned long len
     unsigned long *psrc, *pdes;
 
     if ((((unsigned long)src & 0x3) != 0) || (((unsigned long)des & 0x3) != 0) || ((len & 0x3) != 0))
-        TRACE_CODE("error in pli_IPCCopyMemory()...\n");
+        pr_debug("rtk-alsa: " "error in pli_IPCCopyMemory()...\n");
 
     for (i = 0; i < len; i+=4) {
         psrc = (unsigned long *)&src[i];
         pdes = (unsigned long *)&des[i];
         *pdes = reverseInteger(*psrc);
-        //TRACE_CODE("%x, %x...\n", src[i], des[i]);
+        //pr_debug("rtk-alsa: " "%x, %x...\n", src[i], des[i]);
     }
 #else
     volatile unsigned char * pdes = (volatile unsigned char *) des;
@@ -199,13 +199,13 @@ unsigned long GetBufferFromRing(unsigned char* upper, unsigned char* lower, unsi
 
 void UpdateRingPtr(unsigned char* upper, unsigned char* lower, unsigned char* rptr,
     rtk_runtime_stream_t *stream, unsigned long size, unsigned long space) {
-    //TRACE_CODE("%s %d rptr %x size %d upper %x\n", __FUNCTION__, __LINE__, rptr, size, upper);
+    //pr_debug("rtk-alsa: " "%s %d rptr %x size %d upper %x\n", __FUNCTION__, __LINE__, rptr, size, upper);
     if ((rptr + size) < upper) {
         stream->dwnstrmRingHeader.readPtr[0] = ntohl(ntohl(stream->dwnstrmRingHeader.readPtr[0]) + size);
-        //TRACE_CODE("%s %d rp %x\n", __FUNCTION__, __LINE__, stream->virDwnRing + (ntohl(stream->dwnstrmRingHeader.readPtr[0]) - ntohl(stream->dwnstrmRingHeader.beginAddr)));
+        //pr_debug("rtk-alsa: " "%s %d rp %x\n", __FUNCTION__, __LINE__, stream->virDwnRing + (ntohl(stream->dwnstrmRingHeader.readPtr[0]) - ntohl(stream->dwnstrmRingHeader.beginAddr)));
     } else {
         stream->dwnstrmRingHeader.readPtr[0] = ntohl(ntohl(stream->dwnstrmRingHeader.beginAddr) + size - space);
-        //TRACE_CODE("%s %d rp %x\n", __FUNCTION__, __LINE__, stream->virDwnRing + (ntohl(stream->dwnstrmRingHeader.readPtr[0]) - ntohl(stream->dwnstrmRingHeader.beginAddr)));
+        //pr_debug("rtk-alsa: " "%s %d rp %x\n", __FUNCTION__, __LINE__, stream->virDwnRing + (ntohl(stream->dwnstrmRingHeader.readPtr[0]) - ntohl(stream->dwnstrmRingHeader.beginAddr)));
     }
 }
 
@@ -254,7 +254,7 @@ void dumptr(rtk_runtime_stream_t *stream , int i)
 }
 
 int triggerAudio(rtk_runtime_stream_t *stream, int cmd) {
-    //TRACE_CODE("%s %d", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "%s %d", __FUNCTION__, __LINE__);
     switch (cmd) {
         case SNDRV_PCM_TRIGGER_START:
         case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
@@ -273,7 +273,7 @@ int triggerAudio(rtk_runtime_stream_t *stream, int cmd) {
                 sendio.instanceID = stream->audioDecId;
                 sendio.pinID = stream->audioDecPinId;
                 if (RPC_TOAGENT_FLUSH_SVC(&sendio)) {
-                    ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+                    pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
                     return -1;
                 }
                 //dumptr(stream, 1);
@@ -303,7 +303,7 @@ int triggerAudio(rtk_runtime_stream_t *stream, int cmd) {
 }
 
 void destroyAudioComponent(rtk_runtime_stream_t *stream) {
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
 
     triggerAudio(stream, SNDRV_PCM_TRIGGER_STOP);
 
@@ -319,23 +319,23 @@ void destroyAudioComponent(rtk_runtime_stream_t *stream) {
 }
 
 int createAudioComponent(rtk_runtime_stream_t *stream) {
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
 
     // create decoder agent
     if (RPC_TOAGENT_CREATE_DECODER_AGENT(&stream->audioDecId, &stream->audioDecPinId)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -ENOMEM;
     }
 
     // create pp agent and get global pp pin
     if (RPC_TOAGENT_CREATE_PP_AGENT(&stream->audioPPId, &stream->audioAppPinId)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -ENOMEM;
     }
 
     // create ao agent
     if (RPC_TOAGENT_CREATE_AO_AGENT(&stream->audioOutId, AUDIO_OUT)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -ENOMEM;
     }
     stream->audioOutId = GetGeneralInstanceID(stream->audioOutId, stream->audioAppPinId);
@@ -347,13 +347,13 @@ int createAudioComponent(rtk_runtime_stream_t *stream) {
     //ENUM_OMX_AUDIO_VERSION_1 : supports both new(contains only 'long' type) & old AUDIO_INFO_CHANNEL_INDEX type.
 
     if (RPC_TOAGENT_SEND_AUDIO_VERSION(ENUM_OMX_AUDIO_VERSION_1)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -ENOMEM;
     }
 
-    TRACE_CODE("[create audio dec %d pin id %d]\n", stream->audioDecId, stream->audioDecPinId);
-    TRACE_CODE("[create audio pp  %d pin id %d]\n", stream->audioPPId, stream->audioAppPinId);
-    TRACE_CODE("[create audio out %d]\n", stream->audioOutId);
+    pr_debug("rtk-alsa: " "[create audio dec %d pin id %d]\n", stream->audioDecId, stream->audioDecPinId);
+    pr_debug("rtk-alsa: " "[create audio pp  %d pin id %d]\n", stream->audioPPId, stream->audioAppPinId);
+    pr_debug("rtk-alsa: " "[create audio out %d]\n", stream->audioOutId);
     return 0;
 }
 
@@ -363,7 +363,7 @@ int configOutput(rtk_runtime_stream_t *stream) {
     AUDIO_CONFIG_DAC_SPDIF dac_spdif_config;
     AUDIO_RPC_FOCUS focus;
 
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
 
     dac_i2s_config.instanceID = stream->audioOutId;
     dac_i2s_config.dacConfig.audioGeneralConfig.interface_en = 1;
@@ -373,7 +373,7 @@ int configOutput(rtk_runtime_stream_t *stream) {
     dac_i2s_config.dacConfig.sampleInfo.sampling_rate = 48000;
     dac_i2s_config.dacConfig.sampleInfo.PCM_bitnum = 24;
     if (RPC_TOAGENT_DAC_I2S_CONFIG(&dac_i2s_config)) {
-        ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -393,7 +393,7 @@ int configOutput(rtk_runtime_stream_t *stream) {
     dac_spdif_config.spdifConfig.out_cs_info.pre_emphasis = 0;
     dac_spdif_config.spdifConfig.out_cs_info.stereo_channel = 0;
     if (RPC_TOAGENT_DAC_SPDIF_CONFIG(&dac_spdif_config)) {
-        ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -401,20 +401,20 @@ int configOutput(rtk_runtime_stream_t *stream) {
     focus.instanceID = stream->audioOutId;
     focus.focusID = 0;
     if (RPC_TOAGENT_SWITCH_FOCUS(&focus)) {
-        ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
     focus.instanceID = stream->audioPPId;
     focus.focusID = stream->audioAppPinId;
     if (RPC_TOAGENT_SWITCH_FOCUS(&focus)) {
-        ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
         return -1;
     }
     return 0;
 }
 
 void destroyRingBuf(rtk_runtime_stream_t *stream) {
-    //TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
     if (stream->codecId == SND_AUDIOCODEC_TRUEHD) {
         RPC_TOAGENT_SET_TRUEHD_ERR_SELF_RESET(false);
     }
@@ -427,35 +427,35 @@ void destroyRingBuf(rtk_runtime_stream_t *stream) {
         int ch;
 
         if (refclock_handle != NULL) {
-            //TRACE_CODE("%s %d free refclock_handle\n", __FUNCTION__, __LINE__);
+            //pr_debug("rtk-alsa: " "%s %d free refclock_handle\n", __FUNCTION__, __LINE__);
             ion_unmap_kernel(alsa_client, refclock_handle);
             ion_free(alsa_client, refclock_handle);
             refclock_handle = NULL;
         }
 
         if (compr_inRing_handle != NULL) {
-            //TRACE_CODE("%s %d free compr_inRing_handle\n", __FUNCTION__, __LINE__);
+            //pr_debug("rtk-alsa: " "%s %d free compr_inRing_handle\n", __FUNCTION__, __LINE__);
             ion_unmap_kernel(alsa_client, compr_inRing_handle);
             ion_free(alsa_client, compr_inRing_handle);
             compr_inRing_handle = NULL;
         }
 
         if (compr_inband_handle != NULL) {
-            //TRACE_CODE("%s %d free compr_inband_handle\n", __FUNCTION__, __LINE__);
+            //pr_debug("rtk-alsa: " "%s %d free compr_inband_handle\n", __FUNCTION__, __LINE__);
             ion_unmap_kernel(alsa_client, compr_inband_handle);
             ion_free(alsa_client, compr_inband_handle);
             compr_inband_handle = NULL;
         }
 
         if (compr_dwnstrm_handle != NULL) {
-            //TRACE_CODE("%s %d free compr_dwnstrm_handle\n", __FUNCTION__, __LINE__);
+            //pr_debug("rtk-alsa: " "%s %d free compr_dwnstrm_handle\n", __FUNCTION__, __LINE__);
             ion_unmap_kernel(alsa_client, compr_dwnstrm_handle);
             ion_free(alsa_client, compr_dwnstrm_handle);
             compr_dwnstrm_handle = NULL;
         }
 
         if (compr_outRing_handle[0] != NULL) {
-            //TRACE_CODE("%s %d free compr_outRing_handle\n", __FUNCTION__, __LINE__);
+            //pr_debug("rtk-alsa: " "%s %d free compr_outRing_handle\n", __FUNCTION__, __LINE__);
             for (ch = 0; ch < AUDIO_DEC_OUTPIN; ch++) {
                 ion_unmap_kernel(alsa_client, compr_outRing_handle[ch]);
                 ion_free(alsa_client, compr_outRing_handle[ch]);
@@ -474,7 +474,7 @@ int createRingBuf(rtk_runtime_stream_t *stream, unsigned int buffer_size) {
     AUDIO_RPC_RINGBUFFER_HEADER ringBufferHeader;
     AUDIO_RPC_CONNECTION connection;
 
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
 
     /* Set low water mode for according to format & sample rate */
     if (stream->isLowWater) {
@@ -488,19 +488,19 @@ int createRingBuf(rtk_runtime_stream_t *stream, unsigned int buffer_size) {
     //create RINGBUFFER_HEADER decInRing
     compr_inRing_handle = ion_alloc(alsa_client, buffer_size, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
     if (IS_ERR(compr_inRing_handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     }
     if (ion_phys(alsa_client, compr_inRing_handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
         goto fail;
     }
     stream->virDecInRing = ion_map_kernel(alsa_client, compr_inRing_handle);
     stream->phyDecInRing = dat;
 
-    //TRACE_CODE("decInring phy %x limit %x\n\n", stream->phyDecInRing, stream->phyDecInRing + len);
+    //pr_debug("rtk-alsa: " "decInring phy %x limit %x\n\n", stream->phyDecInRing, stream->phyDecInRing + len);
 
-    TRACE_CODE("%s %d inRing_size %u\n", __FUNCTION__, __LINE__,buffer_size);
+    pr_debug("rtk-alsa: " "%s %d inRing_size %u\n", __FUNCTION__, __LINE__,buffer_size);
     stream->decInRingHeader.beginAddr = htonl((unsigned long)stream->phyDecInRing);
     stream->decInRingHeader.size = htonl(buffer_size);
     stream->decInRingHeader.writePtr = stream->decInRingHeader.beginAddr;
@@ -515,19 +515,19 @@ int createRingBuf(rtk_runtime_stream_t *stream, unsigned int buffer_size) {
     ringBufferHeader.pRingBufferHeaderList[0] = (unsigned long)&stream->decInRingHeader - (unsigned long)stream + stream->phy_addr;
 
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&ringBufferHeader, ringBufferHeader.listSize) < 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     };
-    //TRACE_CODE("decInRing wp %x rp %x\n\n", htonl(stream->decInRingHeader.writePtr), htonl(stream->decInRingHeader.readPtr[0]));
+    //pr_debug("rtk-alsa: " "decInRing wp %x rp %x\n\n", htonl(stream->decInRingHeader.writePtr), htonl(stream->decInRingHeader.readPtr[0]));
 
     //create RINGBUFFER_HEADER decInbandRing;
     compr_inband_handle = ion_alloc(alsa_client, DEC_INBAND_BUFFER_SIZE, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
     if (IS_ERR(compr_inband_handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     }
     if (ion_phys(alsa_client, compr_inband_handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
         goto fail;
     }
     stream->virInbandRing = ion_map_kernel(alsa_client, compr_inband_handle);
@@ -546,18 +546,18 @@ int createRingBuf(rtk_runtime_stream_t *stream, unsigned int buffer_size) {
     ringBufferHeader.pRingBufferHeaderList[0] = (unsigned long)&stream->decInbandRingHeader - (unsigned long)stream + stream->phy_addr;
 
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&ringBufferHeader, ringBufferHeader.listSize) < 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     };
 
     //create RINGBUFFER_HEADER dwnstrmRing;
     compr_dwnstrm_handle = ion_alloc(alsa_client, DEC_DWNSTRM_BUFFER_SIZE, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
     if (IS_ERR(compr_dwnstrm_handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     }
     if (ion_phys(alsa_client, compr_dwnstrm_handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
         goto fail;
     }
     stream->virDwnRing = ion_map_kernel(alsa_client, compr_dwnstrm_handle);
@@ -579,7 +579,7 @@ int createRingBuf(rtk_runtime_stream_t *stream, unsigned int buffer_size) {
     ringBufferHeader.pRingBufferHeaderList[0] = (unsigned long)&stream->dwnstrmRingHeader - (unsigned long)stream + stream->phy_addr;
 
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&ringBufferHeader, ringBufferHeader.listSize) < 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     };
 
@@ -587,11 +587,11 @@ int createRingBuf(rtk_runtime_stream_t *stream, unsigned int buffer_size) {
     for (ch = 0; ch < AUDIO_DEC_OUTPIN; ch++) {
         compr_outRing_handle[ch] = ion_alloc(alsa_client, decOutSize, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
         if (IS_ERR(compr_outRing_handle[ch])) {
-            ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
             goto fail;
         }
         if (ion_phys(alsa_client, compr_outRing_handle[ch], &dat, &len) != 0) {
-            ALSA_WARNING("[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
             goto fail;
         }
         stream->virDecOutRing[ch] = ion_map_kernel(alsa_client, compr_outRing_handle[ch]);
@@ -617,7 +617,7 @@ int createRingBuf(rtk_runtime_stream_t *stream, unsigned int buffer_size) {
         ringBufferHeader.pRingBufferHeaderList[ch] = (unsigned long)&stream->decOutRingHeader[ch] - (unsigned long)stream + stream->phy_addr;
 
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&ringBufferHeader, ringBufferHeader.listSize) < 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     };
 
@@ -629,7 +629,7 @@ int createRingBuf(rtk_runtime_stream_t *stream, unsigned int buffer_size) {
         ringBufferHeader.pRingBufferHeaderList[ch] = (unsigned long)&stream->decOutRingHeader[ch] - (unsigned long)stream + stream->phy_addr;
 
     if (RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(&ringBufferHeader, ringBufferHeader.listSize) < 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     };
 
@@ -640,12 +640,12 @@ int createRingBuf(rtk_runtime_stream_t *stream, unsigned int buffer_size) {
     connection.desPinID = stream->audioAppPinId;
 
     if (RPC_TOAGENT_CONNECT_SVC(&connection)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     };
 
     if (configOutput(stream)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     }
 
@@ -681,10 +681,10 @@ int getAudioInfo(rtk_runtime_stream_t *stream, unsigned int *channel, unsigned i
     ///////////////////////////////////////////////////////////////////////////////
     memset(&inbandInfo, 0, INBAND_INFO_SIZE);
     space = GetBufferFromRing(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp_tmp, (unsigned char*)&inbandInfo, INBAND_INFO_SIZE);
-    //TRACE_CODE("inbanInfo headerType %lu\n", inbandInfo.header.type);
-    //TRACE_CODE("inbanInfo headerSize %lu\n", inbandInfo.header.size);
-    //TRACE_CODE("inbanInfo infoType   %lu\n", inbandInfo.infoType);
-    //TRACE_CODE("inbanInfo size       %lu\n", inbandInfo.infoSize);
+    //pr_debug("rtk-alsa: " "inbanInfo headerType %lu\n", inbandInfo.header.type);
+    //pr_debug("rtk-alsa: " "inbanInfo headerSize %lu\n", inbandInfo.header.size);
+    //pr_debug("rtk-alsa: " "inbanInfo infoType   %lu\n", inbandInfo.infoType);
+    //pr_debug("rtk-alsa: " "inbanInfo size       %lu\n", inbandInfo.infoSize);
 
     if (inbandInfo.infoType != AUDIO_INBAND_CMD_PRIVATE_PCM_FMT) {
         return ret;
@@ -697,8 +697,8 @@ int getAudioInfo(rtk_runtime_stream_t *stream, unsigned int *channel, unsigned i
     memset(&pcmFormat, 0, INBAND_PCM_SIZE);
     space = GetBufferFromRing(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp_tmp, (unsigned char*)&pcmFormat, INBAND_PCM_SIZE);
 
-    //TRACE_CODE("pcmFormat chnum %d\n", pcmFormat.pcmFormat.chnum);
-    TRACE_CODE("pcmFormat rate  %d\n", pcmFormat.pcmFormat.samplerate);
+    //pr_debug("rtk-alsa: " "pcmFormat chnum %d\n", pcmFormat.pcmFormat.chnum);
+    pr_debug("rtk-alsa: " "pcmFormat rate  %d\n", pcmFormat.pcmFormat.samplerate);
 
     if (space > 0)
         ptsrp_tmp = stream->virDwnRing + INBAND_PCM_SIZE - space;
@@ -708,13 +708,13 @@ int getAudioInfo(rtk_runtime_stream_t *stream, unsigned int *channel, unsigned i
     memset(&inbandInfo, 0, INBAND_INFO_SIZE);
     space = GetBufferFromRing(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp_tmp, (unsigned char*)&inbandInfo, INBAND_INFO_SIZE);
 
-    //TRACE_CODE("cmd header type %lu\n", inbandInfo.header.type);
-    //TRACE_CODE("cmd header size %lu\n", inbandInfo.header.size);
-    //TRACE_CODE("cmd infoType    %lu\n", inbandInfo.infoType);
-    //TRACE_CODE("cmd infoSize    %lu\n", inbandInfo.infoSize);
+    //pr_debug("rtk-alsa: " "cmd header type %lu\n", inbandInfo.header.type);
+    //pr_debug("rtk-alsa: " "cmd header size %lu\n", inbandInfo.header.size);
+    //pr_debug("rtk-alsa: " "cmd infoType    %lu\n", inbandInfo.infoType);
+    //pr_debug("rtk-alsa: " "cmd infoSize    %lu\n", inbandInfo.infoSize);
 
     if (inbandInfo.infoType != AUDIO_INBAND_CMD_PRIVATE_CH_IDX) {
-        TRACE_CODE("Info.infoType != AUDIO_INBAND");
+        pr_debug("rtk-alsa: " "Info.infoType != AUDIO_INBAND");
         return ret;
     }
 
@@ -740,7 +740,7 @@ int getAudioInfo(rtk_runtime_stream_t *stream, unsigned int *channel, unsigned i
         space = GetBufferFromRing(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp_tmp, (unsigned char*)&infoChIndex, sizeof(infoChIndex));
 
         for (count = 0; count < AUDIO_DEC_OUTPIN; count++) {
-            //TRACE_CODE("infoChIndex index %d\n", infoChIndex.channel_index[count]);
+            //pr_debug("rtk-alsa: " "infoChIndex index %d\n", infoChIndex.channel_index[count]);
             if(infoChIndex.channel_index[count])
                 (*channel)++;
         }
@@ -751,7 +751,7 @@ int getAudioInfo(rtk_runtime_stream_t *stream, unsigned int *channel, unsigned i
         space = GetBufferFromRing(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp_tmp, (unsigned char*)&infoChIndex, sizeof(infoChIndex));
 
         for (count = 0; count < AUDIO_DEC_OUTPIN; count++) {
-            //TRACE_CODE("infoChIndex index %d\n", infoChIndex.channel_index[count]);
+            //pr_debug("rtk-alsa: " "infoChIndex index %d\n", infoChIndex.channel_index[count]);
             if(infoChIndex.channel_index[count])
                 (*channel)++;
         }
@@ -778,12 +778,12 @@ int checkAudioInfo(rtk_runtime_stream_t *stream) {
         ret = getAudioInfo(stream, &numChannel, &numRate);
 
         if (numChannel > 0) {
-            TRACE_CODE("[RTK Codec] nChannels      %u\n", numChannel);
-            TRACE_CODE("[RTK Codec] nSamplesPerSec %u\n", numRate);
+            pr_debug("rtk-alsa: " "[RTK Codec] nChannels      %u\n", numChannel);
+            pr_debug("rtk-alsa: " "[RTK Codec] nSamplesPerSec %u\n", numRate);
             stream->isGetInfo = true;
             printk("snd_compress got stream.info isGetInfo set to true\n");
             if( numChannel != stream->audioChannel || numRate != stream->audioSamplingRate) {
-                TRACE_CODE("[RTK] INFO CHANGE\n");
+                pr_debug("rtk-alsa: " "[RTK] INFO CHANGE\n");
                 stream->audioChannel = numChannel;
                 stream->audioSamplingRate = numRate;
             }
@@ -872,7 +872,7 @@ int snd_monitor_raw_data_queue_new(rtk_runtime_stream_t *stream) {
         rawOutDelay = *rawdelay_mem;
         rawOutDelay = htonl(rawOutDelay);
     } else {
-        ALSA_WARNING("NO exist share memory %s %d!!\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "NO exist share memory %s %d!!\n", __FUNCTION__, __LINE__);
     }
 
     mtotal_latency = rawOutDelay;
@@ -888,16 +888,16 @@ static int snd_card_compr_open(struct snd_compr_stream *cstream) {
     phys_addr_t dat;
     size_t len;
 
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
     rtk_compress_handle = ion_alloc(alsa_client, sizeof(rtk_runtime_stream_t), 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(rtk_compress_handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto fail;
     }
 
     if (ion_phys(alsa_client, rtk_compress_handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
         goto fail;
     }
 
@@ -905,16 +905,16 @@ static int snd_card_compr_open(struct snd_compr_stream *cstream) {
     memset(stream, 0, len);
     stream->phy_addr = dat;
 
-    //TRACE_CODE("stream phy %p virtual %p\n", stream->phy_addr, stream);
+    //pr_debug("rtk-alsa: " "stream phy %p virtual %p\n", stream->phy_addr, stream);
 
     if (createAudioComponent(stream)) {
-        ALSA_WARNING("[%s %d] create Audio Component failed\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d] create Audio Component failed\n", __FUNCTION__, __LINE__);
         goto fail;
     }
 
 /*  move to snd_card_compr_set_params
     if (createRingBuf(stream)) {
-        ALSA_WARNING("[%s %d] create Audio Component failed\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d] create Audio Component failed\n", __FUNCTION__, __LINE__);
         goto fail;
     }
 */
@@ -927,7 +927,7 @@ static int snd_card_compr_open(struct snd_compr_stream *cstream) {
         rawdelay_handle = ion_alloc(alsa_client, RAWDELAY_MEM_SIZE, 32, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
         if (IS_ERR(rawdelay_handle)) {
-            ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
             goto fail;
         }
 
@@ -946,7 +946,7 @@ static int snd_card_compr_open(struct snd_compr_stream *cstream) {
         rawdelay_handle2 = ion_alloc(alsa_client, SHARE_MEM_SIZE_RAW_LATENCY, 32, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
         if (IS_ERR(rawdelay_handle2)) {
-            ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
             goto fail;
         }
 
@@ -1000,7 +1000,7 @@ static int snd_card_compr_free(struct snd_compr_stream *cstream) {
     int ret_val;
     rtk_runtime_stream_t *stream = cstream->runtime->private_data;
 
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
 
     if (rawdelay_mem) {
         //RPC_TOAGENT_PUT_SHARE_MEMORY(NULL, ENUM_PRIVATEINFO_AUDIO_PROVIDE_RAWOUT_LATENCY);
@@ -1033,7 +1033,7 @@ static int snd_card_compr_free(struct snd_compr_stream *cstream) {
     destroyRingBuf(stream);
 
     if (alsa_client != NULL && rtk_compress_handle != NULL) {
-        TRACE_CODE("%s %d free rtk_compress_handle\n", __FUNCTION__, __LINE__);
+        pr_debug("rtk-alsa: " "%s %d free rtk_compress_handle\n", __FUNCTION__, __LINE__);
         ion_unmap_kernel(alsa_client, rtk_compress_handle);
         ion_free(alsa_client, rtk_compress_handle);
         rtk_compress_handle = NULL;
@@ -1100,10 +1100,10 @@ static int writeData(rtk_runtime_stream_t *stream, void *data, int len)
     limit = base + ntohl(stream->decInRingHeader.size);// sizeof(stream->phyDecInbandRing);
     wp = base + (unsigned long)(ntohl(stream->decInRingHeader.writePtr) - ntohl(stream->decInRingHeader.beginAddr));
 
-    ALSA_VitalPrint("base %x limit %x wp %x\n", (long)base, (long)limit, (long)wp);
+    pr_debug("rtk-alsa: " "base %x limit %x wp %x\n", (long)base, (long)limit, (long)wp);
     wp = buf_memcpy2_ring(base, limit, wp, (char *)data, (unsigned long)len);
     stream->decInRingHeader.writePtr = ntohl((int)(wp - base) + ntohl(stream->decInRingHeader.beginAddr));
-    //TRACE_CODE("[INBAND RING] writeAddr %x\n", stream->decInRingHeader.writePtr);
+    //pr_debug("rtk-alsa: " "[INBAND RING] writeAddr %x\n", stream->decInRingHeader.writePtr);
     return len;
 }
 
@@ -1114,10 +1114,10 @@ static int writeInbandCmd2(rtk_runtime_stream_t *stream, void *data, int len)
     limit = base + ntohl(stream->decInbandRingHeader.size);// sizeof(stream->phyDecInbandRing);
     wp = base + (unsigned long)(ntohl(stream->decInbandRingHeader.writePtr) - ntohl(stream->decInbandRingHeader.beginAddr));
 
-    ALSA_VitalPrint("base %x limit %x wp %x\n", (long)base, (long)limit, (long)wp);
+    pr_debug("rtk-alsa: " "base %x limit %x wp %x\n", (long)base, (long)limit, (long)wp);
     wp = buf_memcpy3_ring(base, limit, wp, (char *)data, (unsigned long)len);
     stream->decInbandRingHeader.writePtr = ntohl((int)(wp - base) + ntohl(stream->decInbandRingHeader.beginAddr));
-    //TRACE_CODE("[INBAND RING] writeAddr %x\n", stream->decInbandRingHeader.writePtr);
+    //pr_debug("rtk-alsa: " "[INBAND RING] writeAddr %x\n", stream->decInbandRingHeader.writePtr);
     return len;
 }
 
@@ -1429,7 +1429,7 @@ static int snd_card_compr_set_params(struct snd_compr_stream *cstream, struct sn
 	}
 
     if (createRingBuf(stream, buffer_size)) {
-        ALSA_WARNING("[%s %d] create Audio Component failed\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d] create Audio Component failed\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -1442,14 +1442,14 @@ static int snd_card_compr_set_params(struct snd_compr_stream *cstream, struct sn
         AUDIO_RPC_REFCLOCK audioRefClock;
         refclock_handle = ion_import_dma_buf_fd(alsa_client, params->codec.reserved[0]);
         if (IS_ERR(refclock_handle)) {
-            ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
             return -1;
         } else {
             pr_emerg("\033[0;32m handle:%p \033[m\n", refclock_handle);
         }
 
         if (ion_phys(alsa_client, refclock_handle, &stream->phyRefclock, &len) != 0) {
-            ALSA_WARNING("[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
             return -1;
         }
         pr_emerg("\033[0;32m len:%d phy:%lx \033[m\n", (int)len, stream->phyRefclock);
@@ -1477,7 +1477,7 @@ static int snd_card_compr_set_params(struct snd_compr_stream *cstream, struct sn
         audioRefClock.pRefClock = (long)stream->phyRefclock;
 
         if (RPC_TOAGENT_SETREFCLOCK(&audioRefClock)) {
-            ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
             return -1;
         }
         hw_avsync_header_offset = 0;
@@ -1488,11 +1488,11 @@ static int snd_card_compr_set_params(struct snd_compr_stream *cstream, struct sn
         AUDIO_RPC_REFCLOCK audioRefClock;
         refclock_handle = ion_alloc(alsa_client, sizeof(stream->refclock), 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
         if (IS_ERR(refclock_handle)) {
-            ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
             return -1;
         }
         if (ion_phys(alsa_client, refclock_handle, &stream->phyRefclock, &len) != 0) {
-            ALSA_WARNING("[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d] alloc memory faild\n", __FUNCTION__, __LINE__);
             return -1;
         }
         stream->refclock = (REFCLOCK*)ion_map_kernel(alsa_client, refclock_handle);
@@ -1510,18 +1510,18 @@ static int snd_card_compr_set_params(struct snd_compr_stream *cstream, struct sn
         audioRefClock.pRefClock = (long)stream->phyRefclock;
 
         if (RPC_TOAGENT_SETREFCLOCK(&audioRefClock)) {
-            ALSA_WARNING("[%s %d]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d]\n", __FUNCTION__, __LINE__);
             return -1;
         }
 
         hw_avsync_header_offset = -1;
-        //ALSA_WARNING("\033[0;32m shareFd:%d do nothing\033[m\n", params->codec.reserved[0]);
+        //pr_warn("rtk-alsa: " "\033[0;32m shareFd:%d do nothing\033[m\n", params->codec.reserved[0]);
     }
 
-    TRACE_CODE("[+] %s %d\n", __FUNCTION__, __LINE__);
-    TRACE_CODE("codec id   %x\n", params->codec.id);
-    TRACE_CODE("codec ch   %d\n", params->codec.ch_in);
-    TRACE_CODE("codec rate %d\n", params->codec.sample_rate);
+    pr_debug("rtk-alsa: " "[+] %s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "codec id   %x\n", params->codec.id);
+    pr_debug("rtk-alsa: " "codec ch   %d\n", params->codec.ch_in);
+    pr_debug("rtk-alsa: " "codec rate %d\n", params->codec.sample_rate);
 
     stream->codecId = params->codec.id;
     stream->audioChannel = params->codec.ch_in;
@@ -1531,7 +1531,7 @@ static int snd_card_compr_set_params(struct snd_compr_stream *cstream, struct sn
     sendio.instanceID = stream->audioDecId;
     sendio.pinID = stream->audioDecPinId;
     if (RPC_TOAGENT_FLUSH_SVC(&sendio)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         return -1;
     }
 
@@ -1555,11 +1555,11 @@ static int snd_card_compr_set_params(struct snd_compr_stream *cstream, struct sn
             cmd.privateInfo[7] = htonl(AUDIO_LITTLE_ENDIAN);
             break;
         case SND_AUDIOCODEC_MP3:
-            TRACE_CODE("SND_AUDIO_MP3\n");
+            pr_debug("rtk-alsa: " "SND_AUDIO_MP3\n");
             cmd.audioType = htonl(AUDIO_MPEG_DECODER_TYPE);
             break;
         case SND_AUDIOCODEC_AAC:
-            TRACE_CODE("SND_AUDIO_AAC\n");
+            pr_debug("rtk-alsa: " "SND_AUDIO_AAC\n");
 #if 0
             cmd.audioType = htonl(AUDIO_AAC_DECODER_TYPE);
 #else
@@ -1604,7 +1604,7 @@ static int snd_card_compr_set_params(struct snd_compr_stream *cstream, struct sn
             cmd.privateInfo[7] = htonl(AUDIO_LITTLE_ENDIAN);
             break;
         default:
-            ALSA_WARNING("[%s %d] audio format not support\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[%s %d] audio format not support\n", __FUNCTION__, __LINE__);
             break;
     }
 
@@ -1628,27 +1628,27 @@ static int snd_card_compr_set_params(struct snd_compr_stream *cstream, struct sn
         (unsigned long)stream->virInbandRing - (unsigned long)stream->phyDecInbandRing);
 #endif
 
-    TRACE_CODE("[-] %s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[-] %s %d\n", __FUNCTION__, __LINE__);
     return 0;
 }
 
 static int snd_card_compr_set_metadata(struct snd_compr_stream *cstream, struct snd_compr_metadata *metadata) {
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
     return 0;
 }
 /*
 static int snd_card_compr_get_params(struct snd_compr_stream *cstream, struct snd_codec *params) {
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
     return 0;
 }
 
 static int snd_card_compr_get_metadata(struct snd_compr_stream *cstream, struct snd_compr_metadata *metadata) {
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
     return 0;
 }
 */
 static int snd_card_compr_trigger(struct snd_compr_stream *cstream, int cmd) {
-    //TRACE_CODE("%s %d cmd %d\n", __FUNCTION__, __LINE__, cmd);
+    //pr_debug("rtk-alsa: " "%s %d cmd %d\n", __FUNCTION__, __LINE__, cmd);
 
     int rawDelay;
     rtk_runtime_stream_t *stream = cstream->runtime->private_data;
@@ -1659,13 +1659,13 @@ static int snd_card_compr_trigger(struct snd_compr_stream *cstream, int cmd) {
         case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
         case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
             if (triggerAudio(stream, cmd)) {
-                ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+                pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
             }
             break;
         case SND_COMPR_TRIGGER_DRAIN:
         case SND_COMPR_TRIGGER_PARTIAL_DRAIN:
             {
-                TRACE_CODE("TRIGGER_DRAIN/TRIGGER_PARTIAL_DRAIN\n");
+                pr_debug("rtk-alsa: " "TRIGGER_DRAIN/TRIGGER_PARTIAL_DRAIN\n");
 #if 0
                 AUDIO_DEC_EOS cmd;
                 cmd.header.type = htonl(AUDIO_DEC_INBAND_CMD_TYPE_EOS);
@@ -1677,7 +1677,7 @@ static int snd_card_compr_trigger(struct snd_compr_stream *cstream, int cmd) {
 #endif
             } break;
         case SND_COMPR_TRIGGER_NEXT_TRACK:
-            TRACE_CODE("TRIGGER_NEXT_TRACK\n");
+            pr_debug("rtk-alsa: " "TRIGGER_NEXT_TRACK\n");
             break;
         case SND_COMPR_TRIGGER_GET_LATENCY:
             //rawDelay = snd_monitor_raw_data_queue();
@@ -1691,7 +1691,7 @@ static int snd_card_compr_trigger(struct snd_compr_stream *cstream, int cmd) {
 }
 
 static int snd_card_compr_pointer(struct snd_compr_stream *cstream, struct snd_compr_tstamp *tstamp) {
-    //TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
 
     rtk_runtime_stream_t *stream = cstream->runtime->private_data;
 
@@ -1700,7 +1700,7 @@ static int snd_card_compr_pointer(struct snd_compr_stream *cstream, struct snd_c
     unsigned char* ptsrp = stream->virDwnRing +
         (ntohl(stream->dwnstrmRingHeader.readPtr[0]) - ntohl(stream->dwnstrmRingHeader.beginAddr));
     unsigned long space = 0;
-    //TRACE_CODE("dwnstrm inband wp %x rp %x\n", ptswp, ptsrp);
+    //pr_debug("rtk-alsa: " "dwnstrm inband wp %x rp %x\n", ptswp, ptsrp);
     unsigned long frameSize = 0;
     unsigned int decfrm = 0;
     long cosume_Size = 0;
@@ -1710,14 +1710,14 @@ static int snd_card_compr_pointer(struct snd_compr_stream *cstream, struct snd_c
     if (!stream->isGetInfo) {
         if (!checkAudioInfo(stream)) {
             stream->isGetInfo = false;
-            //TRACE_CODE("dsp need more data\n");
+            //pr_debug("rtk-alsa: " "dsp need more data\n");
             //return 0;
         } else {
             ptswp = stream->virDwnRing +
                 (ntohl(stream->dwnstrmRingHeader.writePtr) - ntohl(stream->dwnstrmRingHeader.beginAddr));
             ptsrp = stream->virDwnRing +
                 (ntohl(stream->dwnstrmRingHeader.readPtr[0]) - ntohl(stream->dwnstrmRingHeader.beginAddr));
-            //TRACE_CODE("dwnstrm inband wp %x rp %x\n", ptswp, ptsrp);
+            //pr_debug("rtk-alsa: " "dwnstrm inband wp %x rp %x\n", ptswp, ptsrp);
         }
     }
 
@@ -1738,14 +1738,14 @@ static int snd_card_compr_pointer(struct snd_compr_stream *cstream, struct snd_c
                     ptsrp = stream->virDwnRing + (ntohl(stream->dwnstrmRingHeader.readPtr[0]) - ntohl(stream->dwnstrmRingHeader.beginAddr));
                     space = stream->virDwnRingUpper - ptsrp;
                     UpdateRingPtr(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp, stream, INBAND_PCM_SIZE, space);
-                    TRACE_CODE("skip INBAND CMD PRIVATE PCM FMT\n");
+                    pr_debug("rtk-alsa: " "skip INBAND CMD PRIVATE PCM FMT\n");
                 } else if (inbandInfo.infoType == AUDIO_INBAND_CMD_PRIVATE_CH_IDX) {
                     ptsrp = stream->virDwnRing + (ntohl(stream->dwnstrmRingHeader.readPtr[0]) - ntohl(stream->dwnstrmRingHeader.beginAddr));
                     space = stream->virDwnRingUpper - ptsrp;
                     UpdateRingPtr(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp, stream, INBAND_INDEX_SIZE, space);
-                    TRACE_CODE("skip INBAND CMD PRIVATE CH IDX\n");
+                    pr_debug("rtk-alsa: " "skip INBAND CMD PRIVATE CH IDX\n");
                 } else {
-                    TRACE_CODE("should not be there %d\n", __LINE__);
+                    pr_debug("rtk-alsa: " "should not be there %d\n", __LINE__);
                     break;
                 }
             } else if (infoType == AUDIO_DEC_INBAND_CMD_TYPE_PTS) {
@@ -1753,34 +1753,34 @@ static int snd_card_compr_pointer(struct snd_compr_stream *cstream, struct snd_c
                 AUDIO_DEC_PTS_INFO pPTSInfo;
                 memset(&pPTSInfo, 0, INBAND_PTS_INFO_SIZE);
                 space = GetBufferFromRing(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp, (unsigned char*)&pPTSInfo, INBAND_PTS_INFO_SIZE);
-                //TRACE_CODE("Get pts form ACPU PTSH %d PTSL %d\n", pPTSInfo.PTSH, pPTSInfo.PTSL);
+                //pr_debug("rtk-alsa: " "Get pts form ACPU PTSH %d PTSL %d\n", pPTSInfo.PTSH, pPTSInfo.PTSL);
                 //            frame->nTimeStamp = (OMX_S64)(((OMX_U64)pPTSInfo.PTSH << 32) | pPTSInfo.PTSL);
                 //            frame->nTimeStamp = (OMX_S64)(((float)frame->nTimeStamp / 90000.0)*1E6);
 
                 //wPtr is used to indicate the audio frame length
-                //            TRACE_CODE("get frameSize from audio fw %d ptswp %p ptsrp %p\n", pPTSInfo.wPtr, ptswp, ptsrp);
+                //            pr_debug("rtk-alsa: " "get frameSize from audio fw %d ptswp %p ptsrp %p\n", pPTSInfo.wPtr, ptswp, ptsrp);
                 if (pPTSInfo.wPtr != 0) {
                     frameSize += pPTSInfo.wPtr;
                     UpdateRingPtr(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp, stream, INBAND_PTS_INFO_SIZE, space);
                 } else {
-                    TRACE_CODE("should not be there %d\n", __LINE__);
+                    pr_debug("rtk-alsa: " "should not be there %d\n", __LINE__);
                     break;
                 }
             } else if (infoType == AUDIO_DEC_INBAND_CMD_TYPE_EOS) {
                 AUDIO_DEC_EOS pEOSInfo;
 
-                TRACE_CODE("RECEIVE AUDIO_DEC_INBAND_CMD_TYPE_EOS\n");
+                pr_debug("rtk-alsa: " "RECEIVE AUDIO_DEC_INBAND_CMD_TYPE_EOS\n");
                 memset(&pEOSInfo, 0, INBAND_EOS_SIZE);
                 space = GetBufferFromRing(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp, (unsigned char*)&pEOSInfo, INBAND_EOS_SIZE);
                 UpdateRingPtr(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp, stream, INBAND_EOS_SIZE, space);
                 if (pEOSInfo.header.size == INBAND_EOS_SIZE && pEOSInfo.EOSID == 0) {
                     printk(KERN_ALERT "get audio eos\n");
                 } else if (pEOSInfo.header.size == INBAND_EOS_SIZE && pEOSInfo.EOSID == -1) {
-                    TRACE_CODE("should not be there %d\n", __LINE__);
+                    pr_debug("rtk-alsa: " "should not be there %d\n", __LINE__);
                     break;
                 }
             } else {
-                TRACE_CODE("should not be there %d\n", __LINE__);
+                pr_debug("rtk-alsa: " "should not be there %d\n", __LINE__);
                 break;
             }
             ptswp = stream->virDwnRing +
@@ -1790,7 +1790,7 @@ static int snd_card_compr_pointer(struct snd_compr_stream *cstream, struct snd_c
 
         } while (ptswp != ptsrp);
     } else {
-        TRACE_CODE("need more data %d\n", __LINE__);
+        pr_debug("rtk-alsa: " "need more data %d\n", __LINE__);
         //usleep_range(500,1000);
     }
 
@@ -1812,8 +1812,8 @@ static int snd_card_compr_pointer(struct snd_compr_stream *cstream, struct snd_c
     if (frameSize) {
         //UpdateRingPtr(stream->virDwnRingUpper, stream->virDwnRingLower, ptsrp, stream, INBAND_PTS_INFO_SIZE, space);
         stream->outFrames += (frameSize >> 2);
-        //TRACE_CODE("stream out frames %d\n", stream->outFrames);
-        TRACE_CODE("stream out frames %ld wp %p rp %p\n", frameSize, ptswp, ptsrp);
+        //pr_debug("rtk-alsa: " "stream out frames %d\n", stream->outFrames);
+        pr_debug("rtk-alsa: " "stream out frames %ld wp %p rp %p\n", frameSize, ptswp, ptsrp);
     }
 
     //for IOCTL TSTAMP to get render position in user space
@@ -1844,13 +1844,13 @@ static int snd_card_compr_pointer(struct snd_compr_stream *cstream, struct snd_c
         //printk(KERN_ALERT "renderedFrames %u samplerate %d\n", tstamp->pcm_io_frames, stream->audioSamplingRate);
     }
 #endif
-    //TRACE_CODE("calc bytes offset/copied bytes as %d runtime->buffer_size %d\n", tstamp->byte_offset, cstream->runtime->buffer_size);
+    //pr_debug("rtk-alsa: " "calc bytes offset/copied bytes as %d runtime->buffer_size %d\n", tstamp->byte_offset, cstream->runtime->buffer_size);
 
     return 0;
 }
 
 static int snd_card_compr_copy(struct snd_compr_stream *cstream, char __user *buf, size_t count) {
-    //TRACE_CODE("%s %d buf %p size %d\n", __FUNCTION__, __LINE__, buf, count);
+    //pr_debug("rtk-alsa: " "%s %d buf %p size %d\n", __FUNCTION__, __LINE__, buf, count);
 
     rtk_runtime_stream_t *stream = cstream->runtime->private_data;
 
@@ -1863,7 +1863,7 @@ static int snd_card_compr_copy(struct snd_compr_stream *cstream, char __user *bu
     int bufFullCount = 0;
     int write_frame = 0;
 
-    //TRACE_CODE("decInring wp %lx rp %lx\n", wp, rp);
+    //pr_debug("rtk-alsa: " "decInring wp %lx rp %lx\n", wp, rp);
 
     writableSize = validFreeSize(lower, upper, rp, wp);
     while(count > writableSize) {
@@ -1891,13 +1891,13 @@ static int snd_card_compr_copy(struct snd_compr_stream *cstream, char __user *bu
      * Without hw av sync header    : count = write_frame
      */
     stream->comsume_total += (count - write_frame);
-    //TRACE_CODE("copy %zu bufFullCount %d return\n", count ,bufFullCount);
+    //pr_debug("rtk-alsa: " "copy %zu bufFullCount %d return\n", count ,bufFullCount);
     return count;
 }
 
 #if 0
 static int snd_card_compr_ack(struct snd_compr_stream *cstream, size_t bytes) {
-    TRACE_CODE("%s %d bytes %d\n", __FUNCTION__, __LINE__, bytes);
+    pr_debug("rtk-alsa: " "%s %d bytes %d\n", __FUNCTION__, __LINE__, bytes);
 
     rtk_runtime_stream_t *stream = cstream->runtime->private_data;
     stream->bytes_written += bytes;
@@ -1906,7 +1906,7 @@ static int snd_card_compr_ack(struct snd_compr_stream *cstream, size_t bytes) {
 #endif
 
 static int snd_card_compr_get_caps(struct snd_compr_stream *cstream, struct snd_compr_caps *caps) {
-    TRACE_CODE("%s %d\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "%s %d\n", __FUNCTION__, __LINE__);
 
     caps->num_codecs = NUM_CODEC;
     caps->direction = SND_COMPRESS_PLAYBACK;
@@ -2050,7 +2050,7 @@ static struct snd_compr_codec_caps caps_trueHD = {
 };
 
 static int snd_card_compr_get_codec_caps(struct snd_compr_stream *cstream, struct snd_compr_codec_caps *codec) {
-    TRACE_CODE("%s %d codec %x\n", __FUNCTION__, __LINE__, codec->codec);
+    pr_debug("rtk-alsa: " "%s %d codec %x\n", __FUNCTION__, __LINE__, codec->codec);
 
     switch (codec->codec) {
         case SND_AUDIOCODEC_MP3:
@@ -2145,7 +2145,7 @@ int snd_card_create_compress_instance(RTK_snd_card_t *pSnd, int instance_idx) {
     pSnd->compr = compr;
     compr->private_data = pSnd;
 
-    TRACE_CODE("[%s %d] snd_card_create_compress_instance success\n", __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %d] snd_card_create_compress_instance success\n", __FUNCTION__, __LINE__);
 
     return 0;
 

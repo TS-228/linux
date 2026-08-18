@@ -633,7 +633,7 @@ vic_to_vo_standard(unsigned char vic, unsigned char freq_shift,
 	} /* end of switch (vic) */
 
 	if (ret_val >= VO_STANDARD_ERROR)
-		HDMI_ERROR("Convert VO_STANDARD fail, vic(%u) freq_shift(%u) color(%u) 3d(%u)",
+		pr_err("rtk-hdmitx: " "Convert VO_STANDARD fail, vic(%u) freq_shift(%u) color(%u) 3d(%u)",
 			vic, freq_shift, color, en_3d);
 
 	return ret_val;
@@ -751,7 +751,7 @@ unsigned char vo_standard_to_vic(unsigned int vo_standard, unsigned char is_inte
 		break;
 	default:
 		vic = 0;
-		HDMI_ERROR("%s fail", __func__);
+		pr_err("rtk-hdmitx: " "%s fail", __func__);
 	}
 
 	return vic;
@@ -897,7 +897,7 @@ void config_avi_infoframe(unsigned int vic, unsigned int color_mode, struct VIDE
 		break;
 	default:
 		data_byte1 = 0x0;
-		HDMI_ERROR("Unknown color_mode");
+		pr_err("rtk-hdmitx: " "Unknown color_mode");
 		break;
 	}
 
@@ -1017,7 +1017,7 @@ void config_hdr_mode(unsigned char hdr_mode, struct VIDEO_RPC_VOUT_CONFIG_TV_SYS
 		tv_system->hdmiInfo.hdr_ctrl_mode = VO_HDR_CTRL_DV_ON_LOW_LATENCY_12b422_INPUT;
 		break;
 	default:
-		HDMI_ERROR("Unknown HDR mode %u", hdr_mode);
+		pr_err("rtk-hdmitx: " "Unknown HDR mode %u", hdr_mode);
 		break;
 	}
 
@@ -1031,7 +1031,7 @@ void config_dp_related(struct VIDEO_RPC_VOUT_CONFIG_TV_SYSTEM *tv_system)
 	struct VIDEO_RPC_VOUT_CONFIG_TV_SYSTEM cur_tv_system;
 
 	if (!displayport_exist) {
-		HDMI_INFO("Skip config dp related");
+		pr_info("rtk-hdmitx: " "Skip config dp related");
 		goto exit;
 	}
 
@@ -1045,7 +1045,7 @@ void config_dp_related(struct VIDEO_RPC_VOUT_CONFIG_TV_SYSTEM *tv_system)
 		goto config;
 	}
 
-	HDMI_INFO("Auto select interface type");
+	pr_info("rtk-hdmitx: " "Auto select interface type");
 	hdmiMode = tv_system->hdmiInfo.hdmiMode;
 
 	switch (cur_tv_system.interfaceType) {
@@ -1080,7 +1080,7 @@ void config_dp_related(struct VIDEO_RPC_VOUT_CONFIG_TV_SYSTEM *tv_system)
 		interfaceType = cur_tv_system.interfaceType;
 		break;
 	default:
-		HDMI_INFO("%s, unknown interfaceType %u", __func__,
+		pr_info("rtk-hdmitx: " "%s, unknown interfaceType %u", __func__,
 			cur_tv_system.interfaceType);
 		break;
 	}
@@ -1089,12 +1089,12 @@ config:
 	tv_system->interfaceType = interfaceType;
 	tv_system->videoInfo.pedType = cur_tv_system.videoInfo.pedType;
 
-	HDMI_INFO("interfaceType %u -> %u, pedType %u",
+	pr_info("rtk-hdmitx: " "interfaceType %u -> %u, pedType %u",
 		cur_tv_system.interfaceType, tv_system->interfaceType, tv_system->videoInfo.pedType);
 exit:
 	return;
 fail:
-	HDMI_ERROR("%s fail", __func__);
+	pr_err("rtk-hdmitx: " "%s fail", __func__);
 }
 
 /**
@@ -1128,7 +1128,7 @@ int tv_system_to_hdmi_format(struct VIDEO_RPC_VOUT_CONFIG_TV_SYSTEM *tv_system,
 		break;
 	default:
 		ret = -1;
-		HDMI_ERROR("Convert fail, unknown hdmiMode");
+		pr_err("rtk-hdmitx: " "Convert fail, unknown hdmiMode");
 	}
 
 	if (tv_system->videoInfo.enProg)
@@ -1179,7 +1179,7 @@ int tv_system_to_hdmi_format(struct VIDEO_RPC_VOUT_CONFIG_TV_SYSTEM *tv_system,
 		break;
 	default:
 		format->_3d_format = FORMAT_3D_OFF;
-		HDMI_ERROR("Unknown 3D mode");
+		pr_err("rtk-hdmitx: " "Unknown 3D mode");
 	}
 
 	format->hdr = tv_system->hdmiInfo.hdr_ctrl_mode;
@@ -1197,7 +1197,7 @@ int set_hdmitx_format(struct hdmi_format_setting *format)
 	unsigned char en_3d;
 	unsigned char scramble;
 
-	HDMI_INFO("Set format: vic=%u color_mode=%u color_depth=%u 3D=%u HDR=%u",
+	pr_info("rtk-hdmitx: " "Set format: vic=%u color_mode=%u color_depth=%u 3D=%u HDR=%u",
 		format->vic, format->color, format->color_depth,
 		format->_3d_format, format->hdr);
 
@@ -1212,12 +1212,12 @@ int set_hdmitx_format(struct hdmi_format_setting *format)
 		tv_system.hdmiInfo.hdmiMode = VO_HDMI_OFF;
 
 		if (hdmi_clk_always_on) {
-			HDMI_INFO("Keep clock always on");
+			pr_info("rtk-hdmitx: " "Keep clock always on");
 			tv_system.hdmiInfo.hdmi_off_mode = VO_HDMI_OFF_CLOCK_ON;
 		} else {
 #if HDMI_RX_SENSE_SUPPORT
 			if (hdmitx_switch_get_hpd()) {
-				HDMI_INFO("Keep clock on when cable still connected");
+				pr_info("rtk-hdmitx: " "Keep clock on when cable still connected");
 				tv_system.hdmiInfo.hdmi_off_mode = VO_HDMI_OFF_CLOCK_ON;
 			}
 #endif
@@ -1271,7 +1271,7 @@ int set_hdmitx_format(struct hdmi_format_setting *format)
 		dataint0 |= 0x1A;
 		break;
 	default:
-		HDMI_ERROR("Unknown color_depth");
+		pr_err("rtk-hdmitx: " "Unknown color_depth");
 		break;
 	}
 
@@ -1386,7 +1386,7 @@ ssize_t config_tv_system_store(struct device *dev, struct device_attribute *attr
 	struct hdmi_format_setting format;
 	void __iomem *vaddr;
 
-	HDMI_DEBUG("[%s] Enter", __func__);
+	pr_debug("rtk-hdmitx: " "[%s] Enter", __func__);
 
 	val4 = 0;
 	val5 = 0;
@@ -1464,7 +1464,7 @@ skip_fs:
 
 	return size;
 ret_error:
-	HDMI_ERROR("[%s] Wrong argumet", __func__);
+	pr_err("rtk-hdmitx: " "[%s] Wrong argumet", __func__);
 	return -ENOMEM;
 }
 

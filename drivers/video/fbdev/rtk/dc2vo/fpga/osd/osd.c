@@ -14,17 +14,14 @@
 #include "../include/hdmi_reg.h"
 #include "../example/example.h"
 #include "osd.h"
-#include "../../../debug.h"
 #include "../../dc_rpc.h"
 
 static int debug    = 0;
 static int error    = 1;
-#define dprintk(msg...) if (debug)   { dbg_info(KERN_DEBUG    "D/OSD: " msg); }
-#define eprintk(msg...) if (error)   { dbg_info(KERN_DEBUG    "E/OSD: " msg); }
 
 #define OSD_WRITE_REG_INT32U(addr,val) {                                            \
     WRITE_REG_INT32U(addr,val);                                                     \
-    dprintk(" [0x%08x] w:0x%08x => r:0x%08x",(addr),(val),READ_REG_INT32U(addr));   \
+    pr_debug("rtk_fb: " " [0x%08x] w:0x%08x => r:0x%08x",(addr),(val),READ_REG_INT32U(addr));   \
 }
 
 
@@ -189,7 +186,7 @@ int OSDShowPic(unsigned int srcW,unsigned int srcH,unsigned int pImage)
 #endif
 
 
-    dprintk(" Image phyaddr = 0x%08x\n",pImage);
+    pr_debug("rtk_fb: " " Image phyaddr = 0x%08x\n",pImage);
     win->nxtAddr.addr         = 0;
     win->nxtAddr.last         = 1;
     win->winXY.x              = 0;
@@ -307,7 +304,7 @@ int OSDShowPic(unsigned int srcW,unsigned int srcH,unsigned int pImage)
      * TODO: window infomation addr
      * vo->OSD1_wi.a = ((unsigned int) &win ) & ~0xe0000000 ; //window infomation addr
      */
-    dprintk("set window infomation addr = 0x%08x\n",(unsigned int)(virt_to_phys(win)));
+    pr_debug("rtk_fb: " "set window infomation addr = 0x%08x\n",(unsigned int)(virt_to_phys(win)));
 
     OSD_WRITE_REG_INT32U(VO_OSD1_WI,
             VO_OSD1_WI_endian(0)|
@@ -441,14 +438,14 @@ int OSDShowPic2(unsigned int srcW,unsigned int srcH,unsigned int pImage)
                 VO_RETURN _vo_return;
                 pli_ipcCopyMemory((unsigned char*)&_vo_return,(unsigned char*)vo_return,sizeof(VO_RETURN));
                 if (_vo_return.phyAddr == pImage) {
-                    dprintk("[%s] OSD Complete. (%d, 0x%08x)",__func__,waitCount,pImage);
+                    pr_debug("rtk_fb: " "[%s] OSD Complete. (%d, 0x%08x)",__func__,waitCount,pImage);
                     break;
                 }
                 waitCount++;
             } while (waitCount <= MaxWaitCount);
 
             if (waitCount >= MaxWaitCount) {
-                //eprintk("[%s] Wait OSD Complete. Time Out!",__func__);
+                //pr_err("rtk_fb: " "[%s] Wait OSD Complete. Time Out!",__func__);
             }
         }
 #endif
@@ -474,7 +471,7 @@ int OSD_Ioctl (unsigned int cmd, unsigned int arg)
                 OSD_STATE osd_state_;
                 if (_osd_state == NULL) goto err;
                 if (copy_from_user(&osd_state_, (void *)arg,sizeof(OSD_STATE)) != 0) goto err;
-                dprintk("[%s] SET state=%d order=%d",__func__,osd_state_.state,osd_state_.order);
+                pr_debug("rtk_fb: " "[%s] SET state=%d order=%d",__func__,osd_state_.state,osd_state_.order);
                 _osd_state->state = osd_state_.state;
                 _osd_state->order = osd_state_.order;
                 pli_ipcCopyMemory((unsigned char*)osd_state, (unsigned char*)_osd_state,sizeof(OSD_STATE));
@@ -486,7 +483,7 @@ int OSD_Ioctl (unsigned int cmd, unsigned int arg)
                 if (_osd_state == NULL) goto err;
                 _osd_state->state = DEAFULT_OSD_STATE;
                 _osd_state->order = DEAFULT_OSD_ORDER;
-                dprintk("[%s] RESET state=%d order=%d",__func__,_osd_state->state,_osd_state->order);
+                pr_debug("rtk_fb: " "[%s] RESET state=%d order=%d",__func__,_osd_state->state,_osd_state->order);
                 pli_ipcCopyMemory((unsigned char*)osd_state, (unsigned char*)_osd_state,sizeof(OSD_STATE));
                 retval = 0;
                 break;
@@ -497,7 +494,7 @@ int OSD_Ioctl (unsigned int cmd, unsigned int arg)
                 if (_osd_state == NULL) goto err;
                 //_osd_state->state = 0;
                 _osd_state->order = 2;
-                dprintk("[%s] CLOSE state=%d order=%d",__func__,_osd_state->state,_osd_state->order);
+                pr_debug("rtk_fb: " "[%s] CLOSE state=%d order=%d",__func__,_osd_state->state,_osd_state->order);
                 pli_ipcCopyMemory((unsigned char*)osd_state, (unsigned char*)_osd_state,sizeof(OSD_STATE));
                 retval = 0;
                 break;
@@ -507,7 +504,7 @@ int OSD_Ioctl (unsigned int cmd, unsigned int arg)
                 if (_osd_state == NULL) goto err;
                 //_osd_state->state = 1;
                 _osd_state->order = DEAFULT_OSD_ORDER;
-                dprintk("[%s] OPEN state=%d order=%d",__func__,_osd_state->state,_osd_state->order);
+                pr_debug("rtk_fb: " "[%s] OPEN state=%d order=%d",__func__,_osd_state->state,_osd_state->order);
                 pli_ipcCopyMemory((unsigned char*)osd_state, (unsigned char*)_osd_state,sizeof(OSD_STATE));
                 retval = 0;
                 break;

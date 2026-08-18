@@ -82,14 +82,14 @@ static bool rtk_cs_registered;
 #define rtk_clearbits(offset, Mask) \
 	__raw_writel(((__raw_readl(offset) & ~Mask)), offset)
 
-unsigned char rtk_timer_get_mode(unsigned char id)
+static unsigned char rtk_timer_get_mode(unsigned char id)
 {
 	unsigned int reg = __raw_readl(MISC_BASE(TCCR_OFFSET + (id << 2)));
 
 	return (reg & TR_MODE) ? TIMER : COUNTER;
 }
 
-int rtk_timer_control(unsigned char id, unsigned int cmd)
+static int rtk_timer_control(unsigned char id, unsigned int cmd)
 {
 	switch (cmd) {
 	case HWT_INT_CLEAR:
@@ -122,20 +122,20 @@ int rtk_timer_control(unsigned char id, unsigned int cmd)
 	return 0;
 }
 
-int rtk_timer_get_value(unsigned char id)
+static int rtk_timer_get_value(unsigned char id)
 {
 	/* get the current timer's value */
 	return __raw_readl(MISC_BASE(TCCVR_OFFSET + (id << 2)));
 }
 
-int rtk_timer_set_value(unsigned char id, unsigned int value)
+static int rtk_timer_set_value(unsigned char id, unsigned int value)
 {
 	/* set the timer's initial value */
 	__raw_writel(value, MISC_BASE(TCCVR_OFFSET + (id << 2)));
 	return 0;
 }
 
-int rtk_timer_set_target(unsigned char id, unsigned int value)
+static int rtk_timer_set_target(unsigned char id, unsigned int value)
 {
 	/* set the timer's initial value */
 	__raw_writel(value, MISC_BASE(TCTVR_OFFSET + (id << 2)));
@@ -419,7 +419,7 @@ static struct rtk_clock_event_device rtk_evt[] = {
 	{ 1, &timer1_clockevent, &timer1_irq },
 };
 
-void rtk_clockevent_init(int index, const char *name, void __iomem *base,
+static void rtk_clockevent_init(int index, const char *name, void __iomem *base,
 	int irq, unsigned long freq)
 {
 	struct rtk_clock_event_device *clkevt = &rtk_evt[index];
@@ -448,7 +448,7 @@ void rtk_clockevent_init(int index, const char *name, void __iomem *base,
 	clockevents_config_and_register(evt, clk_freq, 0xF, UINT_MAX);
 }
 
-void rtk_clocksource_init(void)
+static void rtk_clocksource_init(void)
 {
 	if (rtk_cs_registered || !timer_base || !clk_freq)
 		return;

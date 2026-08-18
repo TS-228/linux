@@ -14,9 +14,13 @@
 #define PLL_BUS1                        (0x164)
 #define PLL_BUS2                        (0x168)
 #define PLL_BUS3                        (0x16C)
-#define PLL_DCSB1                       (0x1B4)
-#define PLL_DCSB2                       (0x1B8)
-#define PLL_DCSB3                       (0x1BC)
+/* DCSB PLL block starts at 0x1B0 (same layout as BUS: CTL1/CTL2/POW).
+ * Older headers listed 0x1B4 as PLL_DCSB1; using that makes POW_LOC_CTL3
+ * land on 0x1BC, which SB2 treats as an invalid access on RTD119x.
+ */
+#define PLL_DCSB1                       (0x1B0)
+#define PLL_DCSB2                       (0x1B4)
+#define PLL_DCSB3                       (0x1B8)
 #define PLL_GPU1                        (0x1C0)
 #define PLL_GPU2                        (0x1C4)
 

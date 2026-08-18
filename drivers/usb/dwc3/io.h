@@ -26,9 +26,12 @@ static inline u32 dwc3_readl(void __iomem *base, u32 offset)
 	u32 value;
 
 #ifdef CONFIG_USB_PATCH_ON_RTK
-	/* Add global lock for emmc issue*/
+#if defined(CONFIG_ARCH_RTD129x)
+	/* Add global lock for emmc issue */
 	unsigned long flags;
-	rtk_lockapi_lock(flags, __FUNCTION__);
+
+	rtk_lockapi_lock(flags, __func__);
+#endif
 #endif
 
 	/*
@@ -39,8 +42,9 @@ static inline u32 dwc3_readl(void __iomem *base, u32 offset)
 	value = readl(base + offset - DWC3_GLOBALS_REGS_START);
 
 #ifdef CONFIG_USB_PATCH_ON_RTK
-	/* Add global lock for emmc issue*/
-	rtk_lockapi_unlock(flags,__FUNCTION__);
+#if defined(CONFIG_ARCH_RTD129x)
+	rtk_lockapi_unlock(flags, __func__);
+#endif
 #endif
 
 	/*
@@ -56,8 +60,11 @@ static inline u32 dwc3_readl(void __iomem *base, u32 offset)
 static inline void dwc3_writel(void __iomem *base, u32 offset, u32 value)
 {
 #ifdef CONFIG_USB_PATCH_ON_RTK
+#if defined(CONFIG_ARCH_RTD129x)
 	unsigned long flags;
-	rtk_lockapi_lock(flags, __FUNCTION__);
+
+	rtk_lockapi_lock(flags, __func__);
+#endif
 #endif
 
 	/*
@@ -68,7 +75,9 @@ static inline void dwc3_writel(void __iomem *base, u32 offset, u32 value)
 	writel(value, base + offset - DWC3_GLOBALS_REGS_START);
 
 #ifdef CONFIG_USB_PATCH_ON_RTK
-	rtk_lockapi_unlock(flags,__FUNCTION__);
+#if defined(CONFIG_ARCH_RTD129x)
+	rtk_lockapi_unlock(flags, __func__);
+#endif
 #endif
 
 	/*

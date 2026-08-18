@@ -22,9 +22,6 @@
 
 #define TX_SUPPORT_MAX 25
 
-#define DPTX_DEBUG(format, ...)
-#define DPTX_ERR(format, ...) printk(KERN_ERR "[DPTX_ERR] " format, ## __VA_ARGS__)
-
 enum {
 	DPTX_GET_SINK_CAPABILITY,
 	DPTX_GET_RAW_EDID,

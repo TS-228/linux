@@ -245,7 +245,7 @@ char  Hdmi_HDCP2_2_Write_Data_to_TX(unsigned char *bSendData, unsigned int wLen)
 	if (bSendData == NULL)
 		return FALSE;
 
-	HDMI_PRINTF("[HDCP2.2] bSendData(%d)\n", bSendData[0]);
+	pr_debug("rtk-hdmirx: " "[HDCP2.2] bSendData(%d)\n", bSendData[0]);
 
 	mutex_lock(&hdcprx2p2_lock);
 
@@ -309,7 +309,7 @@ void  Hdmi_HDCP_2_2_msg_hander(void)
 		hdmi_rx_reg_write32(HDMI_HDCP_MSAP, 0, HDMI_RX_MAC);
 		g_bmsg_id = hdmi_rx_reg_read32(HDMI_HDCP_MSDP, HDMI_RX_MAC);
 		TX_msg_id[0] = g_bmsg_id;
-		HDMI_PRINTF("[HDCP2.2] bmsg_id  =%x\n", g_bmsg_id);
+		pr_debug("rtk-hdmirx: " "[HDCP2.2] bmsg_id  =%x\n", g_bmsg_id);
 
 		g_Rx_Send_State = RX_FSM_SEND_START;
 		switch (g_bmsg_id) {
@@ -354,7 +354,7 @@ void  Hdmi_HDCP_2_2_msg_hander(void)
 			break;
 		default:
 			bLen = 0;
-			HDMI_PRINTF("[HDCP2.2] Unknown message\n");
+			pr_debug("rtk-hdmirx: " "[HDCP2.2] Unknown message\n");
 			break;
 		}
 

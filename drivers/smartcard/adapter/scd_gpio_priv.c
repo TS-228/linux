@@ -148,7 +148,7 @@ int venus_uart_config(unsigned long baud_rate, UART_PARITY parity, UART_STB stop
     rtd_outl(0xb801bc04, (div >> 8) & 0xff);
     rtd_outl(0xb801bc0c, (rtd_inl(0xb801bc0c) & ULCR_BRK) | lcr);
 
-    //SC_INFO("UART1 Baud=%ld, Div=%lx\n", baud_rate, div);
+    //pr_info("rtk-scd: " "UART1 Baud=%ld, Div=%lx\n", baud_rate, div);
 
     return 0;
 }
@@ -227,7 +227,7 @@ static void gpio_scd_timer(unsigned long arg)
     gpio_scd* p_this = (gpio_scd*) arg;
 
     if (gpio_scd_card_detect(p_this)) {
-        //SC_WARNING("SC%d - gpio_scd_timer, pull high rst...\n", p_this->id);
+        //pr_warn("rtk-scd: " "SC%d - gpio_scd_timer, pull high rst...\n", p_this->id);
         _gpio_scd_reset(p_this, 0);
     }
 }
@@ -256,7 +256,7 @@ int gpio_scd_set_state(
     {
     case IFD_FSM_DISABLE:
 
-        SC_INFO("SC%d - FSM = DISABLE\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = DISABLE\n", id);
 
         // Deactivate flow : should be complete within 100ms
         // 1. Pull RST down
@@ -277,7 +277,7 @@ int gpio_scd_set_state(
 
     case IFD_FSM_DEACTIVATE:
 
-        SC_INFO("SC%d - FSM = DEACTIVATE\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = DEACTIVATE\n", id);
         _gpio_scd_reset(p_this, 1);
         gpio_scd_set_etu(p_this, 372);
         _gpio_scd_io_mode(p_this, SCD_IO_OFF);
@@ -293,7 +293,7 @@ int gpio_scd_set_state(
         p_this->atr.length = -1;
         if (!gpio_scd_card_detect(p_this))
         {
-            SC_WARNING("SC%d - RESET gpio scd failed, no ICC exist\n", id);
+            pr_warn("rtk-scd: " "SC%d - RESET gpio scd failed, no ICC exist\n", id);
             gpio_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
             return -1;
         }
@@ -319,11 +319,11 @@ int gpio_scd_set_state(
 
         p_this->atr_timeout = jiffies + HZ;
 
-        SC_INFO("SC%d - FSM = RESET & ATR\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = RESET & ATR\n", id);
         break;
 
     case IFD_FSM_ACTIVATE:
-        SC_INFO("SC%d - FSM = ACTIVATE\n", id);
+        pr_info("rtk-scd: " "SC%d - FSM = ACTIVATE\n", id);
         break;
 
     default:
@@ -376,7 +376,7 @@ void gpio_scd_fsm_reset(gpio_scd* p_this)
                                   sizeof(p_this->atr.data) - p_this->atr.length,
                                   &p_this->rx_fifo_lock);
 
-        SC_INT_DBG("fifo_len=%d, atr_remain=%d, p_this->atr.lengt=%d\n",
+        pr_debug("rtk-scd: " "fifo_len=%d, atr_remain=%d, p_this->atr.lengt=%d\n",
                 kfifo_len(&p_this->rx_fifo),
                 sizeof(p_this->atr.data - p_this->atr.length),
                 p_this->atr.length);
@@ -388,7 +388,7 @@ void gpio_scd_fsm_reset(gpio_scd* p_this)
             // check atr
             if (is_atr_complete(&p_this->atr))
             {
-                SC_INFO("SC%d - Got ATR Completed\n", p_this->id);
+                pr_info("rtk-scd: " "SC%d - Got ATR Completed\n", p_this->id);
 
                 if (decompress_atr(&p_this->atr, &p_this->atr_info)<0)
                     goto err_atr_failed;
@@ -406,38 +406,38 @@ err_atr_failed:
 
     if (!gpio_scd_card_detect(p_this))
     {
-        SC_WARNING("SC%d - RESET ICC failed, no ICC detected\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, no ICC detected\n", p_this->id);
     }
 
     if (event & SC_RXP_INT)
     {
-        SC_WARNING("SC%d - RESET ICC failed, RX Parity Error\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, RX Parity Error\n", p_this->id);
     }
 
     if (time_after(jiffies, p_this->atr_timeout))
     {
-        SC_WARNING("SC%d - RESET ICC failed, timeout\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, timeout\n", p_this->id);
     }
 
     if (p_this->atr.length <0)
     {
-        SC_WARNING("SC%d - RESET ICC failed, wait ATR failed\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, wait ATR failed\n", p_this->id);
     }
     else if (p_this->atr.length >= MAX_ATR_SIZE)
     {
-        SC_WARNING("SC%d - RESET ICC failed, atr length %d more then %d\n", p_this->id, p_this->atr.length, MAX_ATR_SIZE);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, atr length %d more then %d\n", p_this->id, p_this->atr.length, MAX_ATR_SIZE);
     }
     else if (!is_atr_complete(&p_this->atr))
     {
-        SC_WARNING("SC%d - RESET ICC failed, incomplete atr\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, incomplete atr\n", p_this->id);
     }
     else if (decompress_atr(&p_this->atr, &p_this->atr_info)<0)
     {
-        SC_WARNING("SC%d - RESET ICC failed, decompress atr failed\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, decompress atr failed\n", p_this->id);
     }
     else
     {
-        SC_WARNING("SC%d - RESET ICC failed, parse protocol faield\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - RESET ICC failed, parse protocol faield\n", p_this->id);
     }
 
     gpio_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
@@ -462,11 +462,11 @@ void gpio_scd_work(gpio_scd* p_this)
     {
         if (gpio_scd_card_detect(p_this))
         {
-            SC_INFO("SC%d - ICC detected!!\n", p_this->id);
+            pr_info("rtk-scd: " "SC%d - ICC detected!!\n", p_this->id);
         }
         else
         {
-            SC_INFO("SC%d - ICC removed!!\n", p_this->id);
+            pr_info("rtk-scd: " "SC%d - ICC removed!!\n", p_this->id);
             gpio_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
         }
 
@@ -580,7 +580,7 @@ gpio_scd_io_isr(
                     p_this->conv = SC_INVERSE_CONV;
                 else
                 {
-                    SC_WARNING("invalid TS %02x, drop it...\n", sdata);
+                    pr_warn("rtk-scd: " "invalid TS %02x, drop it...\n", sdata);
                     continue; // drop it
                 }
             }
@@ -651,13 +651,13 @@ int gpio_scd_enable(gpio_scd* p_this, unsigned char on_off)
 int gpio_scd_set_clock(gpio_scd* p_this, unsigned long clk)
 {
     if (clk > MAX_SC_CLK) {
-        SC_WARNING("clock %lu out of range, using minimum value to instead %lu\n",
+        pr_warn("rtk-scd: " "clock %lu out of range, using minimum value to instead %lu\n",
                     (unsigned long)clk, (unsigned long)MAX_SC_CLK);
         clk = MAX_SC_CLK;
     }
 
     if (clk < MIN_SC_CLK) {
-        SC_WARNING("clock %lu out of range, using minimum value to instead %lu\n",
+        pr_warn("rtk-scd: " "clock %lu out of range, using minimum value to instead %lu\n",
                     (unsigned long)clk, (unsigned long)MIN_SC_CLK);
         clk = MIN_SC_CLK;
     }
@@ -754,33 +754,33 @@ int gpio_scd_activate(gpio_scd* p_this)
     switch(p_this->fsm)
     {
     case IFD_FSM_DISABLE:
-        SC_WARNING("activate ICC failed, please enable IFD first\n");
+        pr_warn("rtk-scd: " "activate ICC failed, please enable IFD first\n");
         return -1;
 
     case IFD_FSM_DEACTIVATE:
 
         if (gpio_scd_reset(p_this)==0)
         {
-            SC_INFO("activate ICC success\n");
+            pr_info("rtk-scd: " "activate ICC success\n");
             return 0;
         }
         else
         {
-            SC_WARNING("activate ICC failed\n");
+            pr_warn("rtk-scd: " "activate ICC failed\n");
             return -1;
         }
         break;
 
     case IFD_FSM_RESET:
-        SC_INFO("ICC has is reseting\n");
+        pr_info("rtk-scd: " "ICC has is reseting\n");
         return 0;
 
     case IFD_FSM_ACTIVATE:
-        SC_INFO("ICC has been activated already\n");
+        pr_info("rtk-scd: " "ICC has been activated already\n");
         return 0;
 
     default:
-        SC_WARNING("activate ICC failed, unknown state\n");
+        pr_warn("rtk-scd: " "activate ICC failed, unknown state\n");
         return -1;
     }
 }
@@ -833,12 +833,12 @@ int gpio_scd_reset(gpio_scd* p_this)
 
     if (p_this->fsm!=IFD_FSM_ACTIVATE)
     {
-        SC_WARNING("SC%d - Reset ICC failed\n", p_this->id);
+        pr_warn("rtk-scd: " "SC%d - Reset ICC failed\n", p_this->id);
         gpio_scd_set_state(p_this, IFD_FSM_DEACTIVATE);
         return -1;
     }
 
-    SC_INFO("SC%d - Reset ICC Complete\n", p_this->id);
+    pr_info("rtk-scd: " "SC%d - Reset ICC Complete\n", p_this->id);
     return 0;
 }
 
@@ -994,7 +994,7 @@ gpio_scd* gpio_scd_open(unsigned char id)
     gpio_scd* p_this;
 
     if (id >= 1) {
-        SC_WARNING("scd : open gpio scd failed, invalid id - %d\n", id);
+        pr_warn("rtk-scd: " "scd : open gpio scd failed, invalid id - %d\n", id);
         return NULL;
     }
 
@@ -1009,14 +1009,14 @@ gpio_scd* gpio_scd_open(unsigned char id)
         p_this->atr.length       = -1;
         if (kfifo_alloc(&p_this->rx_fifo, 512, GFP_KERNEL)<0)
         {
-            SC_WARNING("scd : open gpio scd(%d) failed, create rx fifo failed\n", id);
+            pr_warn("rtk-scd: " "scd : open gpio scd(%d) failed, create rx fifo failed\n", id);
             kfree(p_this);
             return NULL;
         }
 
         if (kfifo_alloc(&p_this->tx_fifo, 512, GFP_KERNEL)<0)
         {
-            SC_WARNING("scd : open gpio scd(%d) failed, create rx fifo failed\n", id);
+            pr_warn("rtk-scd: " "scd : open gpio scd(%d) failed, create rx fifo failed\n", id);
             kfree(p_this);
             return NULL;
         }
@@ -1053,7 +1053,7 @@ gpio_scd* gpio_scd_open(unsigned char id)
             _gpio_scd_pwrsel_init(p_this) < 0 ||
             _gpio_scd_io_init(p_this)<0)
         {
-            SC_WARNING("scd : open gpio scd failed, init io pin failed\n");
+            pr_warn("rtk-scd: " "scd : open gpio scd failed, init io pin failed\n");
             kfree(p_this);
             return NULL;
         }
@@ -1061,7 +1061,7 @@ gpio_scd* gpio_scd_open(unsigned char id)
         gpio_scd_set_state(p_this, IFD_FSM_DISABLE);
     }
     else
-        SC_WARNING("scd : open gpio scd failed, out of memory\n");
+        pr_warn("rtk-scd: " "scd : open gpio scd failed, out of memory\n");
 
     return p_this;
 }
@@ -1196,7 +1196,7 @@ void _gpio_scd_io_mode(gpio_scd* p_this, SCD_IO_MODE mode)
  *------------------------------------------------------------------*/
 void _gpio_scd_io_config(gpio_scd* p_this)
 {
-    //SC_INFO("SC%d - baud rate=%ld (etu=%ld, freq=%ld Hz)\n",
+    //pr_info("rtk-scd: " "SC%d - baud rate=%ld (etu=%ld, freq=%ld Hz)\n",
     //    p_this->id, p_this->clock_freq / p_this->etu,
     //    p_this->etu, p_this->clock_freq);
 
@@ -1228,7 +1228,7 @@ int _gpio_scd_io_init(gpio_scd* p_this)
 
     if (request_irq(MISC_IRQ, gpio_scd_io_isr, SA_SHIRQ, "SCD_IO", (void *) p_this) < 0)
     {
-        SC_WARNING("scd : init scd io pin failed, unable to request irq#%d\n", MISC_IRQ);
+        pr_warn("rtk-scd: " "scd : init scd io pin failed, unable to request irq#%d\n", MISC_IRQ);
         ret = -1;
     }
 

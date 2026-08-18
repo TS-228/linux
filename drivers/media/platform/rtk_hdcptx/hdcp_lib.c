@@ -104,14 +104,14 @@ static int hdcp_lib_initiate_step1(void)
 	uint8_t rx_type;
 	uint8_t genAn[8];
 
-	/* HDCP_DEBUG("[%s] %s  %d :%u\n", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies)); */
+	/* pr_debug("rtk-hdcp: " "[%s] %s  %d :%u\n", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies)); */
 	/* Generate An */
 	status = hdcp_lib_generate_an(genAn);
 
 	if (status != HDCP_OK)
 		return status;
 
-	HDCP_DEBUG("AN: %x %x %x %x %x %x %x %x",
+	pr_debug("rtk-hdcp: " "AN: %x %x %x %x %x %x %x %x",
 		genAn[0], genAn[1], genAn[2], genAn[3],
 		genAn[4], genAn[5], genAn[6], genAn[7]);
 
@@ -119,14 +119,14 @@ static int hdcp_lib_initiate_step1(void)
 	if (status != HDCP_OK)
 		return status;
 
-	HDCP_DEBUG("AKSV: %02x %02x %02x %02x %02x",
+	pr_debug("rtk-hdcp: " "AKSV: %02x %02x %02x %02x %02x",
 		an_ksv_data[0], an_ksv_data[1], an_ksv_data[2],
 		an_ksv_data[3], an_ksv_data[4]);
 
 	status = hdcp_lib_check_ksv(an_ksv_data);
 	if (status != HDCP_OK) {
-		HDCP_ERROR("AKSV error (number of,0 and 1)\n");
-		HDCP_ERROR("AKSV: %02x %02x %02x %02x %02x",
+		pr_err("rtk-hdcp: " "AKSV error (number of,0 and 1)\n");
+		pr_err("rtk-hdcp: " "AKSV: %02x %02x %02x %02x %02x",
 			an_ksv_data[0], an_ksv_data[1], an_ksv_data[2],
 			an_ksv_data[3], an_ksv_data[4]);
 		return status;
@@ -152,12 +152,12 @@ static int hdcp_lib_initiate_step1(void)
 
 		hdcp_lib_set_repeater_bit_in_tx(HDCP_REPEATER);
 
-		HDCP_DEBUG("HDCP RX is a repeater");
+		pr_debug("rtk-hdcp: " "HDCP RX is a repeater");
 	} else {
 
 		hdcp_lib_set_repeater_bit_in_tx(HDCP_RECEIVER);
 
-		HDCP_DEBUG("HDCP RX is a receiver");
+		pr_debug("rtk-hdcp: " "HDCP RX is a receiver");
 	}
 
 	/* DDC: Read BKSV from RX */
@@ -166,7 +166,7 @@ static int hdcp_lib_initiate_step1(void)
 			return -DDC_ERROR;
 		} else {
 			if (hdcp_lib_check_ksv(an_bksv_data) && (i == 1)) {
-				HDCP_ERROR("BKSV: %02x %02x %02x %02x %02x",
+				pr_err("rtk-hdcp: " "BKSV: %02x %02x %02x %02x %02x",
 					an_bksv_data[0], an_bksv_data[1], an_bksv_data[2],
 					an_bksv_data[3], an_bksv_data[4]);
 				return -HDCP_AKSV_ERROR;
@@ -176,11 +176,11 @@ static int hdcp_lib_initiate_step1(void)
 
 	memcpy(ksvlist_info.Bksv, an_bksv_data, sizeof(an_bksv_data));
 
-	HDCP_DEBUG("BKSV: %02x %02x %02x %02x %02x",
+	pr_debug("rtk-hdcp: " "BKSV: %02x %02x %02x %02x %02x",
 		an_bksv_data[0], an_bksv_data[1], an_bksv_data[2],
 		an_bksv_data[3], an_bksv_data[4]);
 
-	HDCP_DEBUG("PK: %02x %02x %02x %02x %02x",
+	pr_debug("rtk-hdcp: " "PK: %02x %02x %02x %02x %02x",
 		hdcp.en_ctrl->PK[0], hdcp.en_ctrl->PK[1], hdcp.en_ctrl->PK[2],
 		hdcp.en_ctrl->PK[3], hdcp.en_ctrl->PK[4]);
 
@@ -198,7 +198,7 @@ int hdcp_lib_step1_start(void)
 {
 	int status;
 
-	/* HDCP_DEBUG("[%s] %s  %d :%u\n", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies)); */
+	/* pr_debug("rtk-hdcp: " "[%s] %s  %d :%u\n", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies)); */
 
 #if 0
 	/* Set AV Mute if needed */
@@ -231,10 +231,10 @@ int hdcp_lib_r0_check(void)
 
 	/* Compare values */
 	if ((ro_rx[0] == ro_tx[0]) && (ro_rx[1] == ro_tx[1])) {
-		HDCP_DEBUG("ROTX: %x%x RORX:%x%x\n", ro_tx[0], ro_tx[1], ro_rx[0], ro_rx[1]);
+		pr_debug("rtk-hdcp: " "ROTX: %x%x RORX:%x%x\n", ro_tx[0], ro_tx[1], ro_rx[0], ro_rx[1]);
 		return HDCP_OK;
 	} else {
-		HDCP_ERROR("ROTX: %x%x RORX:%x%x\n", ro_tx[0], ro_tx[1], ro_rx[0], ro_rx[1]);
+		pr_err("rtk-hdcp: " "ROTX: %x%x RORX:%x%x\n", ro_tx[0], ro_tx[1], ro_rx[0], ro_rx[1]);
 		return -HDCP_AUTH_FAILURE;
 	}
 
@@ -253,9 +253,9 @@ void hdcp_lib_auto_ri_check(bool state)
 		hdcp_lib_set_wider_window();
 
 		if (request_irq(hdcp.hdcp_irq_num, HDCP_interrupt_handler, IRQF_SHARED, "rtk_hdcp", irq_dev_id)) {
-			HDCP_ERROR("request HDCP irq failed");
+			pr_err("rtk-hdcp: " "request HDCP irq failed");
 		} else {
-			HDCP_DEBUG("request HDCP irq %d", hdcp.hdcp_irq_num);
+			pr_debug("rtk-hdcp: " "request HDCP irq %d", hdcp.hdcp_irq_num);
 
 			hdcp_lib_set_ri_interrupt(HDCP_RI_ON);
 		}
@@ -263,7 +263,7 @@ void hdcp_lib_auto_ri_check(bool state)
 		hdcp_lib_set_ri_interrupt(HDCP_RI_OFF);
 	}
 
-	HDCP_DEBUG("[%s] %s  %d :%u ,state=%s\n", __FILE__, __func__, __LINE__,
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u ,state=%s\n", __FILE__, __func__, __LINE__,
 		jiffies_to_msecs(jiffies), state == true ? "ON" : "OFF");
 }
 
@@ -283,10 +283,10 @@ int hdcp_lib_polling_bcaps_rdy_check(void)
 	for (i = 0; i < 50; i++) {
 		ready_bit = 0;
 		if (ddc_read(DDC_BCAPS_LEN, DDC_BCAPS_ADDR, &ready_bit))
-			HDCP_ERROR("I2c error, read Bcaps failed");
+			pr_err("rtk-hdcp: " "I2c error, read Bcaps failed");
 
 		if (FLD_GET(ready_bit, DDC_BIT_READY, DDC_BIT_READY)) {
-			HDCP_DEBUG("Bcaps ready bit asserted");
+			pr_debug("rtk-hdcp: " "Bcaps ready bit asserted");
 			return HDCP_OK;
 		} else {
 			usleep_range(100000, 110000);
@@ -316,7 +316,7 @@ int hdcp_lib_step1_r0_check(void)
 	 *     Disable AV mute
 	 */
 
-	/* HDCP_DEBUG("[%s] %s  %d :%u\n", __FILE__,__FUNCTION__,__LINE__,jiffies_to_msecs(jiffies)); */
+	/* pr_debug("rtk-hdcp: " "[%s] %s  %d :%u\n", __FILE__,__FUNCTION__,__LINE__,jiffies_to_msecs(jiffies)); */
 
 	status = hdcp_lib_r0_check();
 	if (status < 0)
@@ -373,7 +373,7 @@ hdcp_lib_dump_SHA_block(uint8_t *sha_blk)
 	int i;
 
 	for (i = 0; i < SHA_BLK_SIZE/4; i++)
-		HDCP_DEBUG("sha_blk[%2d,%2d,%2d,%2d]= %2x, %2x, %2x, %2x,",
+		pr_debug("rtk-hdcp: " "sha_blk[%2d,%2d,%2d,%2d]= %2x, %2x, %2x, %2x,",
 			4*i+0, 4*i+1, 4*i+2, 4*i+3,
 			sha_blk[4*i+0], sha_blk[4*i+1], sha_blk[4*i+2], sha_blk[4*i+3]);
 
@@ -394,11 +394,11 @@ int hdcp_lib_step2(void)
 	int status = HDCP_OK;
 	int i;
 
-	HDCP_DEBUG("[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
+	pr_debug("rtk-hdcp: " "[%s] %s  %d :%u", __FILE__, __func__, __LINE__, jiffies_to_msecs(jiffies));
 
 	status = hdcp_lib_polling_bcaps_rdy_check();
 	if (status != HDCP_OK) {
-		HDCP_ERROR("polling Bcaps ready failed\n");
+		pr_err("rtk-hdcp: " "polling Bcaps ready failed\n");
 #ifndef CONFIG_RTK_HDCP1x_REPEATER
 		return status;
 #endif
@@ -408,7 +408,7 @@ int hdcp_lib_step2(void)
 	if (ddc_read(DDC_BSTATUS_LEN, DDC_BSTATUS_ADDR, bstatus))
 		return -DDC_ERROR;
 
-	HDCP_DEBUG("bstatus=0x%x,0x%x", bstatus[0], bstatus[1]);
+	pr_debug("rtk-hdcp: " "bstatus=0x%x,0x%x", bstatus[0], bstatus[1]);
 
 #ifdef CONFIG_RTK_HDCP1x_REPEATER
 		HdmiRx_set_bstatus(bstatus[1], bstatus[0]);
@@ -419,16 +419,16 @@ int hdcp_lib_step2(void)
 
 	/* Check BStatus topology errors */
 	if (bstatus[0] & DDC_BSTATUS0_MAX_DEVS) {
-		HDCP_ERROR("MAX_DEV_EXCEEDED set");
+		pr_err("rtk-hdcp: " "MAX_DEV_EXCEEDED set");
 		return -HDCP_AUTH_FAILURE;
 	}
 
 	if (bstatus[1] & DDC_BSTATUS1_MAX_CASC) {
-		HDCP_ERROR("MAX_CASCADE_EXCEEDED set");
+		pr_err("rtk-hdcp: " "MAX_CASCADE_EXCEEDED set");
 		return -HDCP_AUTH_FAILURE;
 	}
 
-	HDCP_DEBUG("Retrieving KSV list...");
+	pr_debug("rtk-hdcp: " "Retrieving KSV list...");
 	/* Get KSV list size */
 	sha_input.byte_counter = (bstatus[0] & DDC_BSTATUS0_DEV_COUNT) * 5;
 
@@ -459,7 +459,7 @@ int hdcp_lib_step2(void)
 		if (ddc_read(DDC_V_LEN, DDC_V_ADDR+DDC_V_LEN*i, sha_input.vprime+DDC_V_LEN*i))
 			return -DDC_ERROR;
 
-		HDCP_DEBUG("sha_input.vprime[%d]=%x,%x,%x,%x\n", DDC_V_LEN*i,
+		pr_debug("rtk-hdcp: " "sha_input.vprime[%d]=%x,%x,%x,%x\n", DDC_V_LEN*i,
 			sha_input.vprime[DDC_V_LEN*i+0], sha_input.vprime[DDC_V_LEN*i+1],
 			sha_input.vprime[DDC_V_LEN*i+2], sha_input.vprime[DDC_V_LEN*i+3]);
 	}
@@ -496,11 +496,11 @@ int hdcp_lib_query_sink_hdcp_capable(void)
 	/* HDCP CTS 1A-04: Continue to read the HDCP port for 20 seconds */
 	for (i = 0; i < retry; i++) {
 		if (ddc_read(DDC_BKSV_LEN, DDC_BKSV_ADDR, an_bksv_data)) {
-			HDCP_ERROR("Read BKSV error %d time(s)", i);
+			pr_err("rtk-hdcp: " "Read BKSV error %d time(s)", i);
 		} else {
 
 			if (hdcp_lib_check_ksv(an_bksv_data))
-				HDCP_ERROR("Check BKSV error(%d)", i);
+				pr_err("rtk-hdcp: " "Check BKSV error(%d)", i);
 			else
 				return 0;
 		}
@@ -512,37 +512,37 @@ int hdcp_lib_query_sink_hdcp_capable(void)
 
 void hdcp_lib_dump_22_cipher_setting(void)
 {
-	HDCP_DEBUG("HDCP_2_2_HW_RIV_1=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_HW_RIV_1=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_HW_RIV_1));
-	HDCP_DEBUG("HDCP_2_2_HW_RIV_2=0x08%x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_HW_RIV_2=0x08%x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_HW_RIV_2));
 
-	HDCP_DEBUG("HDCP_2_2_SW_KEY_1_1=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_SW_KEY_1_1=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_SW_KEY_1_1));
-	HDCP_DEBUG("HDCP_2_2_SW_KEY_1_2=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_SW_KEY_1_2=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_SW_KEY_1_2));
-	HDCP_DEBUG("HDCP_2_2_SW_KEY_1_3=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_SW_KEY_1_3=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_SW_KEY_1_3));
-	HDCP_DEBUG("HDCP_2_2_SW_KEY_1_4=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_SW_KEY_1_4=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_SW_KEY_1_4));
 
-	HDCP_DEBUG("HDCP_2_2_HW_FRAME_NUM_1=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_HW_FRAME_NUM_1=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_HW_FRAME_NUM_1));
-	HDCP_DEBUG("HDCP_2_2_HW_FRAME_NUM_2=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_HW_FRAME_NUM_2=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_HW_FRAME_NUM_2));
 
-	HDCP_DEBUG("HDCP_2_2_HW_FRAME_NUM_ADD_1=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_HW_FRAME_NUM_ADD_1=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_HW_FRAME_NUM_ADD_1));
-	HDCP_DEBUG("HDCP_2_2_HW_FRAME_NUM_ADD_2=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_HW_FRAME_NUM_ADD_2=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_HW_FRAME_NUM_ADD_2));
 
-	HDCP_DEBUG("HDCP_2_2_HW_DATA_NUM=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_HW_DATA_NUM=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_HW_DATA_NUM));
 
-	HDCP_DEBUG("HDCP_2_2_HW_DATA_NUM_ADD=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_HW_DATA_NUM_ADD=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_HW_DATA_NUM_ADD));
 
-	HDCP_DEBUG("HDCP_2_2_CTRL=0x%08x",
+	pr_debug("rtk-hdcp: " "HDCP_2_2_CTRL=0x%08x",
 		RD_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_2_2_CTRL));
 
 }
@@ -630,11 +630,11 @@ void hdcp_lib_control_22_cipher(int control_flag)
 		WR_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_CR,
 			HDMI_HDCP_CR_write_en4(1)|HDMI_HDCP_CR_en1_1_feature(1)|
 			HDMI_HDCP_CR_write_en1(1)|HDMI_HDCP_CR_hdcp_encryptenable(1));
-		HDCP_INFO("Enable 22 enc");
+		pr_info("rtk-hdcp: " "Enable 22 enc");
 	} else {
 		WR_REG_32(hdcp.hdcp_base_addr, HDMI_HDCP_CR,
 			HDMI_HDCP_CR_write_en1(1)|HDMI_HDCP_CR_hdcp_encryptenable(0));
-		HDCP_INFO("Disable 22 enc");
+		pr_info("rtk-hdcp: " "Disable 22 enc");
 	}
 
 }

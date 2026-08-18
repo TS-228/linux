@@ -118,10 +118,10 @@ void HdmiRx_save_tx_ksv(struct hdcp_ksvlist_info *tx_ksv)
 	hdmi.tx_hdcp_state = 1;
 	HDMIRX_INFO("TX ksv ready");
 
-	HDMI_PRINTF("TX ksv info:\n");
-	HDMI_PRINTF("device_count(%u)\n", tx_ksv_info.device_count);
-	HDMI_PRINTF("Bstatus(0x%02x%02x)\n", tx_ksv_info.bstatus[1], tx_ksv_info.bstatus[0]);
-	HDMI_PRINTF("Bksv(0x%02x %02x %02x %02x %02x)\n",
+	pr_debug("rtk-hdmirx: " "TX ksv info:\n");
+	pr_debug("rtk-hdmirx: " "device_count(%u)\n", tx_ksv_info.device_count);
+	pr_debug("rtk-hdmirx: " "Bstatus(0x%02x%02x)\n", tx_ksv_info.bstatus[1], tx_ksv_info.bstatus[0]);
+	pr_debug("rtk-hdmirx: " "Bksv(0x%02x %02x %02x %02x %02x)\n",
 		tx_ksv_info.Bksv[4], tx_ksv_info.Bksv[3], tx_ksv_info.Bksv[2],
 		tx_ksv_info.Bksv[1], tx_ksv_info.Bksv[0]);
 }
@@ -138,7 +138,7 @@ void HdmiRx_disable_bcaps_ready(void)
 	if ((!mipi_top.hdmi_rx_init) || (!hdmi.tx_hdcp_state))/* Already disable */
 		return;
 
-	HDMI_PRINTF("%s\n", __func__);
+	pr_debug("rtk-hdmirx: " "%s\n", __func__);
 	/* Disable Bcaps READY(Bit5) */
 	tmp_value = Hdmi_HdcpPortRead(0x40)&0xDF;/* set bit 5 to 0 */
 	Hdmi_HdcpPortWrite(0x40, tmp_value);
@@ -149,7 +149,7 @@ void HdmiRx_set_bstatus(unsigned char byte1, unsigned char byte0)
 {
 	if (!mipi_top.hdmi_rx_init)
 		return;
-	HDMI_PRINTF("%s\n", __func__);
+	pr_debug("rtk-hdmirx: " "%s\n", __func__);
 
 	if ((byte1&0xF) < 0x7)/* less than seven levels */
 		byte1 = (0x1<<4)|((byte1&0xF)+1);
@@ -493,7 +493,7 @@ void Hdmi_HdcpInit(void)
 
 #ifdef CONFIG_RTK_HDCPRX_2P2
 	Hdmi_HDCP_2_2_Init();
-	HDMI_PRINTF("HDCP2Vision = %x", Hdmi_HdcpPortRead(0x50));
+	pr_debug("rtk-hdmirx: " "HDCP2Vision = %x", Hdmi_HdcpPortRead(0x50));
 #endif
 	hdmi_rx_reg_write32(HDCP_CR, 0x00, HDMI_RX_MAC);
 

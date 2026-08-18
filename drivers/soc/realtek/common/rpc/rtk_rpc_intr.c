@@ -31,9 +31,11 @@
 
 #include "rtk_rpc.h"
 
+#ifdef CONFIG_ION_RTK
 #include "uapi/ion.h"
 #include "ion/ion.h"
 #include "uapi/ion_rtk.h"
+#endif
 
 /*
  * dump ring buffer rate limiting:
@@ -56,6 +58,7 @@ extern void rpc_send_interrupt(int type);
 
 
 
+#ifdef CONFIG_ION_RTK
 struct ion_client *fw_rpc_ion_client;
 extern struct ion_device *rtk_phoenix_ion_device;
 
@@ -68,6 +71,7 @@ typedef struct r_program_entry
 
 static r_program_entry_t *r_program_head = NULL;
 static int r_program_count = 0;
+#endif /* CONFIG_ION_RTK */
 
 struct task_struct *acpu_r_program_kthread;
 wait_queue_head_t acpu_r_program_waitQueue;
@@ -78,6 +82,7 @@ wait_queue_head_t vcpu_r_program_waitQueue;
 int vcpu_r_program_flag = 0;
 
 
+#ifdef CONFIG_ION_RTK
 static void r_program_add(r_program_entry_t * entry)
 {
 	spin_lock_bh(&rpc_alloc_lock);
@@ -114,6 +119,8 @@ static r_program_entry_t *r_program_remove(unsigned long phys_addr)
 	spin_unlock_bh(&rpc_alloc_lock);
 	return NULL;
 }
+
+#endif /* CONFIG_ION_RTK */
 
 ssize_t r_program_read(RPC_DEV_EXTRA *extra, RPC_DEV *dev, char *buf, size_t count)
 {
@@ -322,6 +329,7 @@ out:
 
 
 void rpc_ion_handler(RPC_DEV_EXTRA *extra)
+#ifdef CONFIG_ION_RTK
 {
 	struct ion_handle *handle = NULL;
 	phys_addr_t phys_addr;
@@ -459,6 +467,66 @@ void rpc_ion_handler(RPC_DEV_EXTRA *extra)
 	}
 
 }
+#else
+{
+	char tmpbuf[sizeof(RPC_STRUCT) + sizeof(uint32_t)];
+	uint32_t *tmp;
+	char replybuf[sizeof(RPC_STRUCT) + 2 * sizeof(uint32_t)];
+	RPC_STRUCT *rpc;
+	RPC_STRUCT *rrpc;
+	RPC_DEV_EXTRA *extra_w = NULL;
+	int opt = 0;
+	unsigned long reply_value = 0;
+
+	if (!strcmp(extra->name, "AudioIntrRead")) {
+		extra_w = &rpc_intr_extra[0];
+		opt = RPC_AUDIO;
+	} else if (!strcmp(extra->name, "Video1IntrRead")) {
+		extra_w = &rpc_intr_extra[2];
+		opt = RPC_VIDEO;
+	}
+
+	if (r_program_read(extra, extra->dev, (char *)&tmpbuf,
+			   sizeof(RPC_STRUCT) + sizeof(uint32_t)) !=
+	    (sizeof(RPC_STRUCT) + sizeof(uint32_t))) {
+		pr_err("[%s] remote allocate read error...\n", __func__);
+		return;
+	}
+
+	rpc = (RPC_STRUCT *)tmpbuf;
+	pr_warn_ratelimited(
+		"RPC remote memory request ignored (ION disabled), procedure=%u\n",
+		ntohl(rpc->procedureID));
+
+	rpc->mycontext = htonl(ntohl(rpc->mycontext) & 0xfffffffc);
+
+	rrpc = (RPC_STRUCT *)replybuf;
+	rrpc->programID = htonl(REPLYID);
+	rrpc->versionID = htonl(REPLYID);
+	rrpc->procedureID = 0;
+	rrpc->taskID = 0;
+#ifdef RPC_SUPPORT_MULTI_CALLER_SEND_TID_PID
+	rrpc->sysTID = 0;
+#endif
+	rrpc->sysPID = 0;
+	rrpc->parameterSize = htonl(2 * sizeof(uint32_t));
+	rrpc->mycontext = rpc->mycontext;
+
+	tmp = (uint32_t *)(replybuf + sizeof(RPC_STRUCT));
+	*(tmp + 0) = rpc->taskID;
+	*(tmp + 1) = htonl(reply_value);
+
+	if (!extra_w)
+		return;
+
+	if (r_program_write(opt, extra_w, extra_w->dev, (char *)&replybuf,
+			    sizeof(RPC_STRUCT) + 2 * sizeof(uint32_t)) !=
+	    (sizeof(RPC_STRUCT) + 2 * sizeof(uint32_t)))
+		pr_err("[%s] remote allocate reply error...\n", __func__);
+}
+
+#endif /* CONFIG_ION_RTK */
+
 
 
 static int acpu_remote_alloc_thread(void * p)
@@ -674,12 +742,10 @@ int rpc_intr_init(void)
 	int result = 0, i;
 	is_init = 0;
 	int j = 0;
-	struct ion_handle *handle = NULL;
-	phys_addr_t phys_addr;
-	size_t alloc_val;
-
+#ifdef CONFIG_ION_RTK
 	fw_rpc_ion_client = ion_client_create(rtk_phoenix_ion_device,
 						"FW_REMOTE_ALLOC");
+#endif
 	/* Create corresponding structures for each device. */
 	rpc_intr_devices = (RPC_DEV *) AVCPU2SCPU(RPC_INTR_RECORD_ADDR);
 

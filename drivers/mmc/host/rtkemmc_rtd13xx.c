@@ -37,7 +37,6 @@
 #include "reg_iso.h"
 #include "reg_sys.h"
 #include "rtkemmc_rtd13xx.h"
-#include "mmc_debug.h"
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
 #include <linux/of_gpio.h>
@@ -246,7 +245,7 @@ static int rtkemmc_switch_user_partition(struct mmc_card *card)
 	err = SD_SendCMDGetRSP_Cmd(&cmd_info,0);
 
 	if(err){
-		mmcmsg3(KERN_WARNING "%s: MMC_SWITCH fail\n",DRIVER_NAME);
+		pr_debug("rtk-mmc: " KERN_WARNING "%s: MMC_SWITCH fail\n",DRIVER_NAME);
 	}
 	return err;
 }
@@ -1424,11 +1423,11 @@ static int rtkemmc_send_cmd13(struct rtkemmc_host *emmc_port, u16 * state)
 	gPreventRetry=0;
 
 	if(err)
-		mmcmsg3(KERN_WARNING "%s: MMC_SEND_STATUS fail\n",DRIVER_NAME);
+		pr_debug("rtk-mmc: " KERN_WARNING "%s: MMC_SEND_STATUS fail\n",DRIVER_NAME);
 	else {
 		u8 cur_state = R1_CURRENT_STATE(cmd.resp[0]);
 		*state = cur_state;
-		mmcmsg1("cur_state=%s\n",state_tlb[cur_state]);
+		pr_debug("rtk-mmc: " "cur_state=%s\n",state_tlb[cur_state]);
 	}
 
 	return err;
@@ -2335,7 +2334,7 @@ static void rtkemmc_set_ios(struct mmc_host *host, struct mmc_ios *ios)
 void rtkemmc_chk_param(u32 *pparam, u32 len, u8 *ptr)
 {
 	u32 value,i;
-	mmcrtk("\n");
+	pr_debug("rtk-mmc: " "\n");
 
 	*pparam = 0;
 	for(i=0;i<len;i++){
@@ -3087,7 +3086,7 @@ static int rtkemmc_stop_transmission(struct mmc_card *card,int bIgnore)
 	}
 
 	if(err)
-		mmcmsg3(KERN_WARNING "%s: MMC_STOP_TRANSMISSION fail\n",DRIVER_NAME);
+		pr_debug("rtk-mmc: " KERN_WARNING "%s: MMC_STOP_TRANSMISSION fail\n",DRIVER_NAME);
 
 	return err;
 }
@@ -3516,7 +3515,7 @@ static int rtkemmc_send_status(struct mmc_card *card,u8 * state,u8 divider,int b
 	}
 
 	if(err)
-		mmcmsg3(KERN_WARNING "%s: MMC_SEND_STATUS fail\n",DRIVER_NAME);
+		pr_debug("rtk-mmc: " KERN_WARNING "%s: MMC_SEND_STATUS fail\n",DRIVER_NAME);
 	else {
 		u8 cur_state = R1_CURRENT_STATE(cmd.resp[0]);
 		*state = cur_state;
@@ -3641,7 +3640,7 @@ static int SD_Stream_Cmd(u16 cmdcode,struct sd_cmd_pkt *cmd_info, unsigned int b
 	wait_done_timeout(emmc_port, (u32*)(emmc_port->emmc_membase + EMMC_PSTATE_REG), 0x3, 0x0,__func__);
 #ifdef TEST_POWER_RESCYCLE
 	cmd_info->emmc_port->test_count++;
-	mmcspec("test_count=%d\n",cmd_info->emmc_port->test_count);
+	pr_debug("rtk-mmc: " "test_count=%d\n",cmd_info->emmc_port->test_count);
 #endif
 
 	if ((g_crinit == 0)&&(cmd_idx > MMC_SET_RELATIVE_ADDR)) {
@@ -3726,7 +3725,7 @@ static int SD_Stream_Cmd(u16 cmdcode,struct sd_cmd_pkt *cmd_info, unsigned int b
 			return RTK_SUCC;
 
 		MMCPRINTF("strm cmd_idx=%d,ret_err=%d,bIgnore=%d\n",cmd_idx ,err,bIgnore);
-		mmcmsg3(KERN_WARNING "%s: %s fail\n",DRIVER_NAME,__func__);
+		pr_debug("rtk-mmc: " KERN_WARNING "%s: %s fail\n",DRIVER_NAME,__func__);
 		if (bIgnore)
 			return err;
 
@@ -3879,9 +3878,9 @@ static int SD_Stream(struct sd_cmd_pkt *cmd_info)
 
 #ifdef SHOW_MMC_PRD
 	printk("dma_addr:0x%x; dma_leng:0x%x\n",dma_addr,dma_leng);
-	mmcinfo("host=%p\n",host);
+	pr_debug("rtk-mmc: " "host=%p\n",host);
 	if(host->card){
-		mmcinfo("card=%p\n",host->card);
+		pr_debug("rtk-mmc: " "card=%p\n",host->card);
 		if(mmc_card_blockaddr(host->card))
 			printk("arg:0x%x blk\n",cmd_info->cmd->arg);
 		else

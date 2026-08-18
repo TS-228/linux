@@ -18,13 +18,6 @@
 #include "hdmirx_reg.h"
 #include "hdcp2p2_dev.h"
 
-#define HDMI_INTERNAL_DEBUG 0
-
-#if HDMI_INTERNAL_DEBUG
-#define HDMI_PRINTF(format, ...)	pr_err("[HDMI RX DBG]" format "\n", ## __VA_ARGS__)
-#else
-#define HDMI_PRINTF(format, ...)	do {} while(0)
-#endif
 
 #ifndef UINT8
 	typedef unsigned char UINT8;
@@ -106,7 +99,6 @@ typedef  unsigned char HDMI_bool;
 
 #define DISP_DEB_CNT_APPLETV   2
 #define DISP_DEB_CNT_PC40000   2
-
 
 /* lib_hdmi_z0_set */
 #define LN_Z300POW	0x10
@@ -514,7 +506,6 @@ typedef struct {
 	const char *sample_rate;
 } HDMI_AUDIO_PLL_PARAM_T;
 
-
 /**
  * HDMI_AUDIO_FREQ_T
  * @ACR_freq: Audio Frequency from ACR
@@ -625,7 +616,6 @@ typedef struct {
 	unsigned int v_active_space1;
 	unsigned int v_active_space2;
 } HDMI_TIMING_T;
-
 
 typedef struct {
 	unsigned char coding_type;/* 0=pcm; 1=nonpcm */
@@ -753,7 +743,6 @@ extern void hdmi_dump_dfe_para(void);
 extern void lib_hdmi_ck_md_ref_sel(void);
 extern void lib_hdmi_z0_set(unsigned char lane, unsigned char enable);
 
-
 /* hdmiHdmi */
 extern void Hdmi_SetHPD(char high);
 extern void hdmi_init(void);
@@ -794,7 +783,6 @@ extern unsigned char hdmi_bit_err_detection(void);
 extern void hdmi_reset_meas_counter(void);
 extern void hdmi2p0_detect_config(void);
 extern unsigned char hdmi_audio_wait_acr(void);
-
 
 /* hmi_lib*/
 extern void lib_hdmi_power(unsigned char enable);
@@ -900,7 +888,6 @@ extern void lib_hdmi_set_dc_on_delay_state(HDMI_DC_ON_STATE_E state);
 extern unsigned int lib_hdmi_get_delay_display_time(void);
 extern HDMI_SPECIFIC_DEVICE_E lib_hdmi_get_specific_device(void);
 extern u64 lib_hdmi_get_clk90k(void);
-
 
 /* hdmirx_hdcp */
 extern void Hdmi_HdcpFSM(void);

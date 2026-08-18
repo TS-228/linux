@@ -3,6 +3,10 @@
 # Makefile for the i2c bus drivers.
 #
 
+include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
+CFLAGS_i2c-rtk.o += $(rtk_vendor-ccflags)
+CFLAGS_i2c-rtk-priv.o += $(rtk_vendor-ccflags)
+
 # ACPI drivers
 obj-$(CONFIG_I2C_SCMI)		+= i2c-scmi.o
 

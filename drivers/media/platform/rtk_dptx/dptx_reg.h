@@ -161,8 +161,6 @@
 #define PBB_9B_DUMMY_2                                              0x26C
 #define PBB_9C_DUMMY_3                                              0x270
 
-
-
 //--------------------------------------
 //        DPTX HPD Detection
 //--------------------------------------
@@ -182,8 +180,6 @@
 #define PBB_7C_HPD_STATE                                            0x1F0
 #define PBB_7D_RESERVED_0                                           0x1F4
 #define PBB_7E_RESERVED_1                                           0x1F8
-
-
 
 //--------------------------------------
 //        DPTX link MAC
@@ -265,8 +261,6 @@
 #define PBB_FD_DPTX_TOP_RSV8                                        0x3F4
 #define PBB_FE_DPTX_TOP_RSV9                                        0x3F8
 #define PBB_FF_DPTX_TOP_RSV10                                       0x3FC
-
-
 
 //--------------------------------------
 //        DPTX MAC CTRL1
@@ -421,8 +415,6 @@
 #define PBC_9B_DUMMY_9B                                             0x66C
 #define PBC_9C_DUMMY_9C                                             0x670
 
-
-
 //--------------------------------------
 //        DPTX link MAC
 //--------------------------------------
@@ -438,8 +430,6 @@
 #define PBC_AA_DPTX_SFIFO_LANE_SWAP1                                0x6A8
 #define PBC_AB_DPTX_SFIFO_INT_EN                                    0x6AC
 
-
-
 //--------------------------------------
 //        DPTX AUX Analog PHY CTRL
 //--------------------------------------
@@ -452,8 +442,6 @@
 #define PBD_65_AUX_5                                                0x994
 #define PBD_66_AUX_6                                                0x998
 #define PBD_67_DIG_TX_03                                            0x99C
-
-
 
 //--------------------------------------
 //        DPTX AUX MAC CTRL
@@ -488,7 +476,6 @@
 #define PBD_F7_AUX_DIG_PHY9                                         0xBDC
 #define PBD_F8_AUX_DEBUG                                            0xBE0
 
-
 //--------------------------------------
 //        LVDS Combo AIF
 //--------------------------------------
@@ -503,7 +490,6 @@
 #define DV_TOTAL		0x418
 #define DV_VS_START_END_F1	0x41c
 #define DV_SYNC_INT		0x42c
-
 
 //--------------------------------------
 //       LVDS and EDP PLL Control Register

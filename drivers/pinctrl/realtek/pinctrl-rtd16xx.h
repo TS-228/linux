@@ -15,23 +15,12 @@
 #include <linux/kernel.h>
 #include <linux/pinctrl/pinctrl.h>
 
-//#define RTK_PINCTRL_DEBUG
-#ifdef RTK_PINCTRL_DEBUG
-#define RTK_PINCTRL_DBG(fmt, ...) pr_info("[PINCTRL] " fmt "\n", ## __VA_ARGS__)
-#else
-#define RTK_PINCTRL_DBG(fmt, ...) do {} while (0)
-#endif
-
-#define RTK_PINCTRL_INF(fmt, ...) pr_info("[PINCTRL] " fmt "\n", ## __VA_ARGS__)
-#define RTK_PINCTRL_ERR(fmt, ...) pr_err("[PINCTRL Error] " fmt "\n", ## __VA_ARGS__)
-
 #define P_ISO_BASE			 0
 
 #define RTK_PCONF_SCHM		2
 #define RTK_PCONF_PULEN		0
 #define RTK_PCONF_PULSEL	1
 #define RTK_PCONF_CURR		-1
-
 
 /* ISO muxpad0*/
 #define RTK_PINCTRL_PIN_gpio_0				PINCTRL_PIN(P_ISO_BASE + 0, "gpio_0")
@@ -70,7 +59,6 @@
 #define RTK_PINCTRL_PIN_gpio_34				PINCTRL_PIN(P_ISO_BASE + 34, "gpio_34")
 #define RTK_PINCTRL_PIN_gpio_35				PINCTRL_PIN(P_ISO_BASE + 35, "gpio_35")
 
-
 /* ISO muxpad2*/
 #define RTK_PINCTRL_PIN_gpio_40				PINCTRL_PIN(P_ISO_BASE + 40, "gpio_40")
 #define RTK_PINCTRL_PIN_gpio_41				PINCTRL_PIN(P_ISO_BASE + 41, "gpio_41")
@@ -107,7 +95,6 @@
 /* ISO muxpad4*/
 #define RTK_PINCTRL_PIN_usb_cc1				PINCTRL_PIN(P_ISO_BASE + 56, "usb_cc1")
 #define RTK_PINCTRL_PIN_usb_cc2				PINCTRL_PIN(P_ISO_BASE + 69, "usb_cc2")
-
 
 /*ISO muxpad6*/
 #define RTK_PINCTRL_PIN_ur2_loc				PINCTRL_PIN(P_ISO_BASE + 86, "ur2_loc")
@@ -158,7 +145,6 @@
 #define RTK_PINCTRL_PIN_tp_clk				PINCTRL_PIN(P_ISO_BASE + 72, "tp_clk")
 #define RTK_PINCTRL_PIN_tp_data_0			PINCTRL_PIN(P_ISO_BASE + 73, "tp_data_0")
 
-
 /*MISC muxpad2*/
 #define RTK_PINCTRL_PIN_tp_data_1			PINCTRL_PIN(P_ISO_BASE + 74, "tp_data_1")
 #define RTK_PINCTRL_PIN_tp_data_2			PINCTRL_PIN(P_ISO_BASE + 75, "tp_data_2")
@@ -167,8 +153,6 @@
 #define RTK_PINCTRL_PIN_tp_data_5			PINCTRL_PIN(P_ISO_BASE + 78, "tp_data_5")
 #define RTK_PINCTRL_PIN_tp_data_6			PINCTRL_PIN(P_ISO_BASE + 79, "tp_data_6")
 #define RTK_PINCTRL_PIN_tp_data_7			PINCTRL_PIN(P_ISO_BASE + 80, "tp_data_7")
-
-
 
 enum PMUX_BASE_TYPE {
 	PMUX_BASE_ISO,
@@ -352,7 +336,6 @@ static const struct rtk_pin_regmap pin_regmap[] = {
 	{.pmux_base = PMUX_BASE_MISC, .pmux_regoff = 0x000, .pmux_regbit = 23, .pmux_regbitmsk = 0x3,	.pcof_regoff = 0x028, .pcof_regbit = 29, .pcof_cur_strgh = PADDRI_UNSUPPORT}, /*(P_ISO_BASE + 113, "emmc_data_7")*/
 };
 
-
 struct RTK_desc_function {
 	const char	*name;
 	u8		muxval;
@@ -413,7 +396,6 @@ struct RTK_pinctrl {
 		.name = _name,					\
 		.muxval = _val,					\
 	}
-
 
 static const struct RTK_desc_pin rtk_pins[] = {
 	/*GPIO*/

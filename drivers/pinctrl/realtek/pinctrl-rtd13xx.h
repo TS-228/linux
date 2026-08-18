@@ -15,23 +15,12 @@
 #include <linux/kernel.h>
 #include <linux/pinctrl/pinctrl.h>
 
-//#define RTK_PINCTRL_DEBUG
-#ifdef RTK_PINCTRL_DEBUG
-#define RTK_PINCTRL_DBG(fmt, ...) pr_info("[PINCTRL] " fmt "\n", ## __VA_ARGS__)
-#else
-#define RTK_PINCTRL_DBG(fmt, ...) do {} while (0)
-#endif
-
-#define RTK_PINCTRL_INF(fmt, ...) pr_info("[PINCTRL] " fmt "\n", ## __VA_ARGS__)
-#define RTK_PINCTRL_ERR(fmt, ...) pr_err("[PINCTRL Error] " fmt "\n", ## __VA_ARGS__)
-
 #define P_ISO_BASE			 0
 
 #define RTK_PCONF_SCHM		2
 #define RTK_PCONF_PULEN		0
 #define RTK_PCONF_PULSEL	1
 #define RTK_PCONF_CURR		-1
-
 
 /* ISO muxpad1*/
 #define RTK_PINCTRL_PIN_gpio_0				PINCTRL_PIN(P_ISO_BASE + 0, "gpio_0")
@@ -158,9 +147,6 @@
 #define RTK_PINCTRL_PIN_ejtag_scpu_loc			PINCTRL_PIN(P_ISO_BASE + 107, "ejtag_scpu_loc")
 #define RTK_PINCTRL_PIN_dmic_loc			PINCTRL_PIN(P_ISO_BASE + 108, "dmic_loc")
 #define RTK_PINCTRL_PIN_iso_gspi_loc			PINCTRL_PIN(P_ISO_BASE + 109, "iso_gspi")
-
-
-
 
 enum PMUX_BASE_TYPE {
 	PMUX_BASE_ISO,
@@ -337,7 +323,6 @@ static const struct rtk_pin_regmap pin_regmap[] = {
 	{.pmux_base = PMUX_BASE_ISO, .pmux_regoff = 0x120, .pmux_regbit = 26, .pmux_regbitmsk = 0x3,	.pcof_regoff = PCOF_UNSUPPORT, .pcof_regbit = 0, .pcof_cur_strgh = PADDRI_UNSUPPORT}, /*(P_ISO_BASE + 109, "iso_gspi")*/
 };
 
-
 struct RTK_desc_function {
 	const char	*name;
 	u8		muxval;
@@ -397,7 +382,6 @@ struct RTK_pinctrl {
 		.name = _name,					\
 		.muxval = _val,					\
 	}
-
 
 static const struct RTK_desc_pin rtk_pins[] = {
 	/*GPIO*/

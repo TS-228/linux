@@ -58,7 +58,7 @@ void SET_IC_ENABLE(struct rtk_i2c_handler *handler, int value)
  */
 int rtk_i2c_handler_init(struct rtk_i2c_handler *handler)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 #if defined(CONFIG_OPTEE) && defined(CONFIG_ARCH_RTD16xx)
 	if (handler->id == 0)
@@ -100,7 +100,7 @@ int rtk_i2c_handler_init(struct rtk_i2c_handler *handler)
  */
 int rtk_i2c_handler_uninit(struct rtk_i2c_handler *handler)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	SET_IC_ENABLE(handler, 0);
 	SET_IC_INTR_MASK(handler, 0);
@@ -121,7 +121,7 @@ int rtk_i2c_handler_uninit(struct rtk_i2c_handler *handler)
  */
 int rtk_i2c_phy_init(struct rtk_i2c_handler *handler)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	SET_IC_ENABLE(handler, 0);
 	SET_IC_INTR_MASK(handler, 0); /* disable all interrupt*/
@@ -152,7 +152,7 @@ int rtk_i2c_set_spd(struct rtk_i2c_handler *handler, int KHz)
 	unsigned long sda_del;
 	unsigned int clk_time;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 #ifdef CONFIG_ARCH_RTD16xx
 	if (handler->id == 0) {
@@ -237,7 +237,7 @@ int rtk_i2c_set_spd(struct rtk_i2c_handler *handler, int KHz)
 
 #endif
 
-	RTK_DEBUG("[I2C%d] KHz = %d, div_h = %d, div_l = %d\n",
+	pr_debug("rtk-i2c: " "[I2C%d] KHz = %d, div_h = %d, div_l = %d\n",
 		handler->id, KHz, div_h, div_l);
 
 
@@ -287,7 +287,7 @@ int rtk_i2c_set_spd(struct rtk_i2c_handler *handler, int KHz)
 int rtk_i2c_set_tar(struct rtk_i2c_handler *handler, unsigned short addr,
 	enum ADDR_MODE mode)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	if (mode == ADDR_MODE_10BITS) {
 		if (addr > ADDR_10BITS_MASK)
@@ -323,7 +323,7 @@ int rtk_i2c_set_tar(struct rtk_i2c_handler *handler, unsigned short addr,
 int rtk_i2c_set_guard_interval(struct rtk_i2c_handler *handler,
 	unsigned long us)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 	handler->guard_interval = us;
 	return 0;
 }
@@ -341,7 +341,7 @@ int rtk_i2c_read(struct rtk_i2c_handler *handler,
 	int retry = 2;
 	unsigned int ret = 0;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	while (retry > 0) {
 		rtk_i2c_load_message(handler,
@@ -375,7 +375,7 @@ int rtk_i2c_write(struct rtk_i2c_handler *handler, unsigned char *tx_buf,
 	int retry = 2;
 	unsigned int ret = 0;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	while (retry > 0) {
 		rtk_i2c_load_message(handler, I2C_MASTER_WRITE, tx_buf,
@@ -405,7 +405,7 @@ int rtk_i2c_load_message(struct rtk_i2c_handler *handler,
 {
 	unsigned long flags;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	LOCK_RTK_I2C(&handler->lock, flags);
 
@@ -486,7 +486,7 @@ int rtk_i2c_start_xfer(struct rtk_i2c_handler *handler)
 	unsigned int ret;
 	int mode = handler->xfer.mode;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	LOG_EVENT(EVENT_START_XFER);
 
@@ -619,7 +619,7 @@ int rtk_i2c_start_xfer(struct rtk_i2c_handler *handler)
  */
 unsigned int rtk_i2c_get_tx_abort_reason(struct rtk_i2c_handler *handler)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 	return handler->xfer.tx_abort_source;
 }
 
@@ -636,7 +636,7 @@ void rtk_i2c_master_write(struct rtk_i2c_handler *handler, unsigned int event,
 {
 #define TxComplete() (handler->xfer.tx_len >= handler->xfer.tx_buff_len)
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	while (!TxComplete() && NOT_TXFULL(handler)) {
 		if (handler->xfer.tx_len == handler->xfer.tx_buff_len - 1) {
@@ -691,7 +691,7 @@ void rtk_i2c_master_read(struct rtk_i2c_handler *handler, unsigned int event,
 #define TxComplete() (handler->xfer.tx_len >= handler->xfer.rx_buff_len)
 #define RxComplete() (handler->xfer.rx_len >= handler->xfer.rx_buff_len)
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	/* TX Thread */
 	while (!TxComplete() && NOT_TXFULL(handler)) {
@@ -765,7 +765,7 @@ void rtk_i2c_master_random_read(struct rtk_i2c_handler *handler,
 (handler->xfer.rx_buff_len + handler->xfer.tx_buff_len))
 #define RxComplete() (handler->xfer.rx_len >=  handler->xfer.rx_buff_len)
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	/* TX Thread  */
 	while (!TxComplete() && NOT_TXFULL(handler)) {
@@ -816,7 +816,7 @@ void rtk_i2c_master_random_read(struct rtk_i2c_handler *handler,
 		 * incase rxfifo overflow and the datas are droped
 		 */
 		while (!RxComplete() && NOT_RXEMPTY(handler)) {
-			RTK_DEBUG("%s handler->xfer.rx_len =%d\n",
+			pr_debug("rtk-i2c: " "%s handler->xfer.rx_len =%d\n",
 				__func__, handler->xfer.rx_len);
 			handler->xfer.rx_buff[handler->xfer.rx_len++] =
 				(unsigned char)(GET_IC_DATA_CMD(handler) &
@@ -884,7 +884,7 @@ int rtk_i2c_read_edid_seg(struct rtk_i2c_handler *handler,
 	int tx_len = 0;
 	int cnt = 0;
 
-	RTK_DEBUG("%s seg=0x%x offset=0x%02x len(%u)\n",
+	pr_debug("rtk-i2c: " "%s seg=0x%x offset=0x%02x len(%u)\n",
 		__func__, seg, offset, rx_buf_len);
 
 	rtk_i2c_set_tar(handler, 0x30, ADDR_MODE_7BITS);
@@ -897,7 +897,7 @@ int rtk_i2c_read_edid_seg(struct rtk_i2c_handler *handler,
 		else
 			return -ETIMEOUT;
 
-		RTK_DEBUG("%s IC_STATUS = 0x%x\n",
+		pr_debug("rtk-i2c: " "%s IC_STATUS = 0x%x\n",
 			__func__, GET_IC_STATUS(handler));
 	}
 
@@ -921,7 +921,7 @@ int rtk_i2c_read_edid_seg(struct rtk_i2c_handler *handler,
 	SET_IC_DATA_CMD(handler, offset|(0x1<<10)); /* Restart, Word Offset */
 	udelay(100);
 
-	RTK_DEBUG("%s IC_STATUS= 0x%x\n", __func__, GET_IC_STATUS(handler));
+	pr_debug("rtk-i2c: " "%s IC_STATUS= 0x%x\n", __func__, GET_IC_STATUS(handler));
 
 	while (!TxComplete() && NOT_TXFULL(handler)) {
 
@@ -971,7 +971,7 @@ irqreturn_t rtk_i2c_isr(int this_irq, void *dev_id)
 	unsigned int tx_abrt_source = 0;
 	unsigned int tmp;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 #if defined(CONFIG_OPTEE) && defined(CONFIG_ARCH_RTD16xx)
 #else
@@ -1065,7 +1065,7 @@ irqreturn_t rtk_i2c_isr(int this_irq, void *dev_id)
 int rtk_i2c_set_sar(struct rtk_i2c_handler *handler,
 	unsigned short addr, enum ADDR_MODE mode)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	if (mode == ADDR_MODE_10BITS) {
 		SET_IC_ENABLE(handler, 0);
@@ -1096,7 +1096,7 @@ int rtk_i2c_slave_mode_enable(struct rtk_i2c_handler *handler,
 {
 	unsigned long flags;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	LOCK_RTK_I2C(&handler->lock, flags);
 
@@ -1139,7 +1139,7 @@ int rtk_i2c_register_slave_ops(struct rtk_i2c_handler *handler,
 {
 	unsigned long flags;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	LOCK_RTK_I2C(&handler->lock, flags);
 
@@ -1166,7 +1166,7 @@ int rtk_i2c_register_slave_ops(struct rtk_i2c_handler *handler,
  */
 int rtk_i2c_dump(struct rtk_i2c_handler *handler)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 	pr_info("=========================\n");
 	pr_info("= VER : %s\n", VERSION);
 	pr_info("=========================\n");
@@ -1314,7 +1314,7 @@ struct rtk_i2c_handler *create_rtk_i2c_handle(
 {
 	struct rtk_i2c_handler *hHandle;
 
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	if (!(BIT(id) & I2C_ID_MASK))
 		return NULL;
@@ -1372,7 +1372,7 @@ EXPORT_SYMBOL(create_rtk_i2c_handle);
  */
 void destroy_rtk_i2c_handle(struct rtk_i2c_handler *hHandle)
 {
-	RTK_DEBUG("%s\n", __func__);
+	pr_debug("rtk-i2c: " "%s\n", __func__);
 
 	if (hHandle == NULL)
 		return;

@@ -48,23 +48,22 @@ extern struct ion_client *alsa_client;
 
 int RPC_TOAGENT_CHECK_AUDIO_READY()
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     RPC_DEFAULT_INPUT_T *rpc = NULL;
     int ret = -1;
     struct ion_handle *handle = NULL;
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -75,21 +74,21 @@ int RPC_TOAGENT_CHECK_AUDIO_READY()
         CONVERT_FOR_AVCPU(dat), //rpc->info address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->info))), //rpc->retval address
         &rpc->ret)) {
-        ALSA_WARNING("[ALSA %s RPC fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s RPC fail]\n", __FUNCTION__);
         goto exit;
     }
 
     if (rpc->ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s RPC fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s RPC fail]\n", __FUNCTION__);
         goto exit;
     }
 
     if (rpc->info == 0) {
-        ALSA_WARNING("[ALSA Audio is not ready]\n");
+        pr_warn("rtk-alsa: " "[ALSA Audio is not ready]\n");
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d ] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d ] success\n", __FILE__, __FUNCTION__, __LINE__);
     // successful
     ret = 0;
 exit:
@@ -114,12 +113,12 @@ int RPC_TOAGENT_SEND_AUDIO_VERSION(OMX_AUDIO_VERSION version)
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
        goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -136,12 +135,12 @@ int RPC_TOAGENT_SEND_AUDIO_VERSION(OMX_AUDIO_VERSION version)
         CONVERT_FOR_AVCPU(dat), //cmd address
         CONVERT_FOR_AVCPU(dat + offset), //res address
         &RPC_ret)) {
-            ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
             goto exit;
         }
 
     if (RPC_ret != S_OK) {
-            ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+            pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
             goto exit;
         }
 
@@ -157,7 +156,7 @@ exit:
 
 int RPC_TOAGENT_CREATE_PP_AGENT(int* ppId, int* pinId)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     RPC_CREATE_AO_AGENT_T *rpc;
     int ret = -1;
     struct ion_handle *handle = NULL;
@@ -167,12 +166,12 @@ int RPC_TOAGENT_CREATE_PP_AGENT(int* ppId, int* pinId)
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -185,17 +184,17 @@ int RPC_TOAGENT_CREATE_PP_AGENT(int* ppId, int* pinId)
         CONVERT_FOR_AVCPU(dat), //rpc->info address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->info))),//rpc->retval address
         &rpc->ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ntohl(rpc->retval.result) != S_OK || rpc->ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     *ppId = ntohl(rpc->retval.data);
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = RPC_TOAGENT_GET_GLOBAL_PP_PIN(pinId);
 
 exit:
@@ -208,23 +207,22 @@ exit:
 
 int RPC_TOAGENT_CREATE_AO_AGENT(int* aoId, int pinId)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     RPC_CREATE_AO_AGENT_T *rpc;
     int ret = -1;
     struct ion_handle *handle = NULL;
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -237,17 +235,17 @@ int RPC_TOAGENT_CREATE_AO_AGENT(int* aoId, int pinId)
         CONVERT_FOR_AVCPU(dat), //rpc->info address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->info))),//rpc->retval address
         &rpc->ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ntohl(rpc->retval.result) != S_OK || rpc->ret != S_OK) {
-        ALSA_WARNING("[ALSA %x %x %s %d RPC fail]\n", rpc->retval.result, rpc->ret, __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %x %x %s %d RPC fail]\n", rpc->retval.result, rpc->ret, __FUNCTION__, __LINE__);
         goto exit;
     }
 
     *aoId = ntohl(rpc->retval.data);
-    //TRACE_CODE("[%s %s %d] aoid %d success\n", __FILE__, __FUNCTION__, __LINE__, *aoId);
+    //pr_debug("rtk-alsa: " "[%s %s %d] aoid %d success\n", __FILE__, __FUNCTION__, __LINE__, *aoId);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -259,7 +257,7 @@ exit:
 
 int RPC_TOAGENT_PUT_SHARE_MEMORY_LATENCY(void *p, void *p2, int decID, int type)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     AUDIO_RPC_PRIVATEINFO_PARAMETERS *cmd;
     AUDIO_RPC_PRIVATEINFO_RETURNVAL *res;
     int ret = 0;
@@ -270,16 +268,15 @@ int RPC_TOAGENT_PUT_SHARE_MEMORY_LATENCY(void *p, void *p2, int decID, int type)
     size_t len;
     unsigned long offset;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -301,16 +298,16 @@ int RPC_TOAGENT_PUT_SHARE_MEMORY_LATENCY(void *p, void *p2, int decID, int type)
         CONVERT_FOR_AVCPU(dat),
         CONVERT_FOR_AVCPU(dat + offset),
         &RPC_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (RPC_ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 exit:
     if (handle != NULL) {
         ion_unmap_kernel(alsa_client, handle);
@@ -321,7 +318,7 @@ exit:
 
 int RPC_TOAGENT_PUT_SHARE_MEMORY(void *p, int type)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     AUDIO_RPC_PRIVATEINFO_PARAMETERS *cmd;
     AUDIO_RPC_PRIVATEINFO_RETURNVAL *res;
     int ret = 0;
@@ -331,16 +328,15 @@ int RPC_TOAGENT_PUT_SHARE_MEMORY(void *p, int type)
     size_t len;
     unsigned long offset;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -359,16 +355,16 @@ int RPC_TOAGENT_PUT_SHARE_MEMORY(void *p, int type)
         CONVERT_FOR_AVCPU(dat),
         CONVERT_FOR_AVCPU(dat + offset),
         &RPC_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (RPC_ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 exit:
     if (handle != NULL) {
         ion_unmap_kernel(alsa_client, handle);
@@ -379,7 +375,7 @@ exit:
 
 int RPC_TOAGENT_GET_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     AUDIO_RPC_PRIVATEINFO_PARAMETERS *cmd;
     AUDIO_RPC_PRIVATEINFO_RETURNVAL *res;
@@ -390,16 +386,15 @@ int RPC_TOAGENT_GET_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
     size_t len;
     unsigned long offset;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -424,23 +419,23 @@ int RPC_TOAGENT_GET_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat), //cmd address
         CONVERT_FOR_AVCPU(dat + offset),//res address
         &RPC_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (RPC_ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     ret = ntohl(res->privateInfo[0]);
 
     if (ret < FLASH_AUDIO_PIN_1 || ret > FLASH_AUDIO_PIN_3) {
-        ALSA_WARNING("[ALSA %s %d RPC %d fail]\n", __FUNCTION__, __LINE__, ret);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC %d fail]\n", __FUNCTION__, __LINE__, ret);
         ret = -1;
     }
-    //ALSA_WARNING("GET_AO_FLASH_PIN ret %d\n", ret);
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_warn("rtk-alsa: " "GET_AO_FLASH_PIN ret %d\n", ret);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 exit:
     if (handle != NULL) {
         ion_unmap_kernel(alsa_client, handle);
@@ -451,7 +446,7 @@ exit:
 
 int RPC_TOAGENT_GET_GLOBAL_PP_PIN(int* pinId)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     AUDIO_RPC_PRIVATEINFO_PARAMETERS *cmd;
     AUDIO_RPC_PRIVATEINFO_RETURNVAL *res;
@@ -465,12 +460,12 @@ int RPC_TOAGENT_GET_GLOBAL_PP_PIN(int* pinId)
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -488,26 +483,26 @@ int RPC_TOAGENT_GET_GLOBAL_PP_PIN(int* pinId)
         CONVERT_FOR_AVCPU(dat), //cmd address
         CONVERT_FOR_AVCPU(dat + offset), //res address
         &RPC_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (RPC_ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (res != NULL && res->privateInfo[0] == 0x44495050) {
         //int first = res->privateInfo[1];
-        //TRACE_CODE("##### get PP Pin = %ld first %d\n", ntohl(res->privateInfo[2]), ntohl(first));
+        //pr_debug("rtk-alsa: " "##### get PP Pin = %ld first %d\n", ntohl(res->privateInfo[2]), ntohl(first));
         *pinId = ntohl(res->privateInfo[2]);
         ret = 0;
     } else {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         ret = -1;
     }
-    //ALSA_WARNING("GET_GLOBAL_PIN ret %d\n", ret);
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_warn("rtk-alsa: " "GET_GLOBAL_PIN ret %d\n", ret);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 exit:
     if (handle != NULL) {
         ion_unmap_kernel(alsa_client, handle);
@@ -518,7 +513,7 @@ exit:
 
 int RPC_TOAGENT_SET_AO_FLASH_VOLUME(snd_pcm_substream_t * substream)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     snd_pcm_runtime_t *runtime = substream->runtime;
     snd_card_RTK_pcm_t *dpcm = runtime->private_data;
@@ -531,16 +526,15 @@ int RPC_TOAGENT_SET_AO_FLASH_VOLUME(snd_pcm_substream_t * substream)
     size_t len;
     unsigned long offset;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -563,16 +557,16 @@ int RPC_TOAGENT_SET_AO_FLASH_VOLUME(snd_pcm_substream_t * substream)
         CONVERT_FOR_AVCPU(dat),
         CONVERT_FOR_AVCPU(dat + offset),
         &rpc_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc_ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    ALSA_VitalPrint("[ALSA set AO_pin %d volume %d]\n", dpcm->AOpinID, dpcm->volume);
+    pr_debug("rtk-alsa: " "[ALSA set AO_pin %d volume %d]\n", dpcm->AOpinID, dpcm->volume);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -584,7 +578,7 @@ exit:
 
 int RPC_TOAGENT_CREATE_DECODER_AGENT(int* decID, int* pinID)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_CREATE_PCM_DECODER_CTRL_T* rpc = NULL;
     int ret = -1;
@@ -592,16 +586,15 @@ int RPC_TOAGENT_CREATE_DECODER_AGENT(int* decID, int* pinID)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -614,12 +607,12 @@ int RPC_TOAGENT_CREATE_DECODER_AGENT(int* decID, int* pinID)
         CONVERT_FOR_AVCPU(dat), //rpc->instance address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->instance))), //rpc->res address
         &rpc->ret)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->ret != S_OK) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -627,7 +620,7 @@ int RPC_TOAGENT_CREATE_DECODER_AGENT(int* decID, int* pinID)
     *pinID = BASE_BS_IN;
 
     //printk("[ALSA Create Decoder instance %d]\n", *decID/*dpcm->DECAgentID*/);
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -640,7 +633,7 @@ exit:
 // data of AUDIO_RPC_RINGBUFFER_HEADER is "hose side"
 int RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(AUDIO_RPC_RINGBUFFER_HEADER *header, int buffer_count)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_INITRINGBUFFER_HEADER_T *rpc;
     int ch;
@@ -649,16 +642,15 @@ int RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(AUDIO_RPC_RINGBUFFER_HEADER *header, i
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -685,15 +677,15 @@ int RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(AUDIO_RPC_RINGBUFFER_HEADER *header, i
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->ret) + sizeof(rpc->res))), //rpc->header address
         CONVERT_FOR_AVCPU(dat), //rpc->ret address
         &rpc->res)) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK || ntohl(rpc->ret.result) != S_OK) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -705,7 +697,7 @@ exit:
 
 int RPC_TOAGENT_CONNECT_SVC(AUDIO_RPC_CONNECTION *pconnection)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_CONNECTION_T *rpc;
     int ret = -1;
@@ -713,16 +705,15 @@ int RPC_TOAGENT_CONNECT_SVC(AUDIO_RPC_CONNECTION *pconnection)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[%s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -737,16 +728,16 @@ int RPC_TOAGENT_CONNECT_SVC(AUDIO_RPC_CONNECTION *pconnection)
         CONVERT_FOR_AVCPU(dat), //rpc->out address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->out))), //rpc->ret
         &rpc->res)) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK || ntohl(rpc->ret.result) != S_OK) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -758,7 +749,7 @@ exit:
 
 int RPC_TOAGENT_SWITCH_FOCUS(AUDIO_RPC_FOCUS *focus)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     AUDIO_RPC_FOCUS_T *rpc;
     int ret = -1;
     struct ion_handle *handle = NULL;
@@ -768,12 +759,12 @@ int RPC_TOAGENT_SWITCH_FOCUS(AUDIO_RPC_FOCUS *focus)
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[%s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -786,15 +777,15 @@ int RPC_TOAGENT_SWITCH_FOCUS(AUDIO_RPC_FOCUS *focus)
         CONVERT_FOR_AVCPU(dat), //rpc->out address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->instanceID) + sizeof(rpc->focusID))), //rpc->ret
         &rpc->res)) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK || ntohl(rpc->ret.result) != S_OK) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -814,15 +805,15 @@ int RPC_TOAGENT_DAC_I2S_CONFIG(AUDIO_CONFIG_DAC_I2S *config)
     HRESULT *result;
     unsigned long offset;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[%s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -842,15 +833,15 @@ int RPC_TOAGENT_DAC_I2S_CONFIG(AUDIO_CONFIG_DAC_I2S *config)
         CONVERT_FOR_AVCPU(dat), //rpc->out address
         CONVERT_FOR_AVCPU(dat + offset), //rpc->ret
         &rpc->res)) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ntohl(*result) != S_OK) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -862,7 +853,7 @@ exit:
 
 int RPC_TOAGENT_DAC_SPDIF_CONFIG(AUDIO_CONFIG_DAC_SPDIF *config)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     AUDIO_CONFIG_DAC_SPDIF_T *rpc;
     int ret = -1;
     struct ion_handle *handle = NULL;
@@ -874,12 +865,12 @@ int RPC_TOAGENT_DAC_SPDIF_CONFIG(AUDIO_CONFIG_DAC_SPDIF *config)
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[%s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -906,15 +897,15 @@ int RPC_TOAGENT_DAC_SPDIF_CONFIG(AUDIO_CONFIG_DAC_SPDIF *config)
         CONVERT_FOR_AVCPU(dat), //rpc->out address
         CONVERT_FOR_AVCPU(dat + offset), //rpc->ret
         &rpc->res)) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ntohl(*result) != S_OK) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -926,7 +917,7 @@ exit:
 
 int RPC_TOAGENT_SETREFCLOCK(AUDIO_RPC_REFCLOCK *pClock)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     AUDIO_RPC_REFCLOCK_T *rpc;
     int ret = -1;
     struct ion_handle *handle = NULL;
@@ -936,12 +927,12 @@ int RPC_TOAGENT_SETREFCLOCK(AUDIO_RPC_REFCLOCK *pClock)
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[%s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -955,15 +946,15 @@ int RPC_TOAGENT_SETREFCLOCK(AUDIO_RPC_REFCLOCK *pClock)
         CONVERT_FOR_AVCPU(dat), //rpc->out address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->instanceID) + sizeof(rpc->pRefClockID) + sizeof(rpc->pRefClock))), //rpc->ret
         &rpc->res)) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK || ntohl(rpc->ret.result) != S_OK) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -975,23 +966,22 @@ exit:
 
 int RPC_TOAGENT_PAUSE_SVC(int instance_id)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     RPC_TOAGENT_PAUSE_T *rpc;
     int ret = -1;
     struct ion_handle *handle = NULL;
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -1003,16 +993,16 @@ int RPC_TOAGENT_PAUSE_SVC(int instance_id)
         CONVERT_FOR_AVCPU(dat), //rpc->inst_id address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->inst_id))),//rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK) {
-        ALSA_WARNING("[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -1024,7 +1014,7 @@ exit:
 
 int RPC_TOAGENT_DESTROY_AI_FLOW_SVC(int instance_id)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     AUDIO_RPC_AIO_PRIVATEINFO_PARAMETERS *rpc = NULL;
     int ret = -1;
     struct ion_handle *handle = NULL;
@@ -1032,16 +1022,15 @@ int RPC_TOAGENT_DESTROY_AI_FLOW_SVC(int instance_id)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -1054,10 +1043,10 @@ int RPC_TOAGENT_DESTROY_AI_FLOW_SVC(int instance_id)
         CONVERT_FOR_AVCPU(dat), //rpc->inst_id address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(*rpc))),//rpc->retval address
         &res)) {
-        ALSA_WARNING("[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
         goto exit;
     }
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -1069,23 +1058,22 @@ exit:
 
 int RPC_TOAGENT_RUN_SVC(int instance_id)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     RPC_TOAGENT_T *rpc;
     int ret = -1;
     struct ion_handle *handle = NULL;
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[%s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1097,16 +1085,16 @@ int RPC_TOAGENT_RUN_SVC(int instance_id)
         CONVERT_FOR_AVCPU(dat), //rpc->inst_id address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->inst_id))), //rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK || ntohl(rpc->retval.result) != S_OK) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -1118,7 +1106,7 @@ exit:
 
 int RPC_TOAGENT_FLUSH_SVC(AUDIO_RPC_SENDIO  *sendio)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_TOAGENT_FLASH_T *rpc;
     int ret = -1;
@@ -1126,16 +1114,15 @@ int RPC_TOAGENT_FLUSH_SVC(AUDIO_RPC_SENDIO  *sendio)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA %s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1148,16 +1135,16 @@ int RPC_TOAGENT_FLUSH_SVC(AUDIO_RPC_SENDIO  *sendio)
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->retval) + sizeof(rpc->res))), //rpc->sendio address
         CONVERT_FOR_AVCPU(dat), //rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK || ntohl(rpc->retval.result) != S_OK) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -1169,7 +1156,7 @@ exit:
 
 int RPC_TOAGENT_RELEASE_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     HRESULT rpc_ret = 0;
     int ret = -1;
@@ -1180,21 +1167,20 @@ int RPC_TOAGENT_RELEASE_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
     size_t len;
     unsigned long offset;
 
-    TRACE_RPC();
     if (dpcm->AOpinID < FLASH_AUDIO_PIN_1 || dpcm->AOpinID > FLASH_AUDIO_PIN_3) {
-       ALSA_WARNING("[%d @ %s %d]\n", dpcm->AOpinID, __FUNCTION__, __LINE__);
+       pr_warn("rtk-alsa: " "[%d @ %s %d]\n", dpcm->AOpinID, __FUNCTION__, __LINE__);
        goto exit;
     }
 
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1219,16 +1205,16 @@ int RPC_TOAGENT_RELEASE_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat), //cmd address
         CONVERT_FOR_AVCPU(dat + offset), //res address
         &rpc_ret)) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc_ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -1240,7 +1226,7 @@ exit:
 
 int RPC_TOAGENT_STOP_SVC(int instanceID)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_TOAGENT_STOP_T *rpc;
     int ret = -1;
@@ -1248,16 +1234,15 @@ int RPC_TOAGENT_STOP_SVC(int instanceID)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA %s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1269,16 +1254,16 @@ int RPC_TOAGENT_STOP_SVC(int instanceID)
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->retval) + sizeof(rpc->res))), //rpc->instanceID address
         CONVERT_FOR_AVCPU(dat),//rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK || ntohl(rpc->retval.result) != S_OK) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -1296,16 +1281,16 @@ int RPC_TOAGENT_PP_INIT_PIN_SVC(int instanceID)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[%s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1317,15 +1302,15 @@ int RPC_TOAGENT_PP_INIT_PIN_SVC(int instanceID)
         CONVERT_FOR_AVCPU(dat), //rpc->inst_id address
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->inst_id))), //rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK || ntohl(rpc->retval.result) != S_OK) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -1343,17 +1328,16 @@ int RPC_TOAGENT_DESTROY_SVC(int instanceID)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
    handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA %s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1365,17 +1349,17 @@ int RPC_TOAGENT_DESTROY_SVC(int instanceID)
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->retval) + sizeof(rpc->res))), //rpc->instanceID address
         CONVERT_FOR_AVCPU(dat), //rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("%s %d RPC fail\n", __FILE__, __LINE__);
+        pr_warn("rtk-alsa: " "%s %d RPC fail\n", __FILE__, __LINE__);
         goto exit;
     }
 
     if (rpc->res != S_OK || ntohl(rpc->retval.result) != S_OK) {
-        ALSA_WARNING("%s %d RPC fail\n", __FILE__, __LINE__);
+        pr_warn("rtk-alsa: " "%s %d RPC fail\n", __FILE__, __LINE__);
         goto exit;
     }
 
 //    printk(KERN_ALERT "[ALSA] @ %s\n", __FUNCTION__);
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle) {
@@ -1389,7 +1373,7 @@ int RPC_TOAGENT_INBAND_EOS_SVC(snd_card_RTK_pcm_t * dpcm)
 {
     AUDIO_DEC_EOS cmd ;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     cmd.header.type = htonl(AUDIO_DEC_INBAND_CMD_TYPE_EOS);
     cmd.header.size = htonl(sizeof(AUDIO_DEC_EOS));
     cmd.EOSID = 0;
@@ -1413,17 +1397,16 @@ int RPC_TOAGENT_SET_TRUEHD_ERR_SELF_RESET(bool isON)
     phys_addr_t dat;
     size_t len;
     unsigned long offset;
-    TRACE_RPC();
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1442,17 +1425,17 @@ int RPC_TOAGENT_SET_TRUEHD_ERR_SELF_RESET(bool isON)
         CONVERT_FOR_AVCPU(dat),
         CONVERT_FOR_AVCPU(dat + offset),
         &ret)) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         ret = -1;
         goto exit;
     }
 
     if (ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         ret = -1;
         goto exit;
     }
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -1473,17 +1456,16 @@ int RPC_TOAGENT_SET_VOLUME(int volume)
     size_t len;
     unsigned long offset;
 
-    TRACE_RPC();
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1504,18 +1486,18 @@ int RPC_TOAGENT_SET_VOLUME(int volume)
         CONVERT_FOR_AVCPU(dat),
         CONVERT_FOR_AVCPU(dat + offset),
         &ret)) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         ret = -1;
         goto exit;
     }
 
     if (ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         ret = -1;
         goto exit;
     }
 
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if (handle != NULL) {
@@ -1536,16 +1518,15 @@ int RPC_TOAGENT_GET_AI_AGENT(snd_card_RTK_capture_pcm_t *dpcm)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1559,7 +1540,7 @@ int RPC_TOAGENT_GET_AI_AGENT(snd_card_RTK_capture_pcm_t *dpcm)
 		CONVERT_FOR_AVCPU(dat),
 		CONVERT_FOR_AVCPU(dat + offset),
 		&ret)) {
-		ALSA_WARNING("[fail %s %d]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[fail %s %d]\n", __FUNCTION__, __LINE__);
 		goto exit;
 	}
 
@@ -1576,7 +1557,7 @@ exit:
 // get AO volume
 int RPC_TOAGENT_GET_VOLUME(snd_card_RTK_pcm_t *mars)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     int volume = 0;
     AUDIO_RPC_PRIVATEINFO_PARAMETERS *pArg;
@@ -1587,16 +1568,15 @@ int RPC_TOAGENT_GET_VOLUME(snd_card_RTK_pcm_t *mars)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -1612,12 +1592,12 @@ int RPC_TOAGENT_GET_VOLUME(snd_card_RTK_pcm_t *mars)
         CONVERT_FOR_AVCPU(dat),
         CONVERT_FOR_AVCPU(dat + offset),
         &rc)) {
-        ALSA_WARNING("[fail %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[fail %s %d]\n", __FUNCTION__, __LINE__);
         volume = -1;
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     // get gpAudio->ao_volume_level (from audio FW)
     volume = ntohl(pRet->privateInfo[1]);
 
@@ -1639,17 +1619,17 @@ int RPC_TOAGENT_AI_CONFIG_HDMI_RX_IN(snd_card_RTK_capture_pcm_t *dpcm)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0)
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -1665,17 +1645,17 @@ int RPC_TOAGENT_AI_CONFIG_HDMI_RX_IN(snd_card_RTK_capture_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat + offset),
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(RPC_ret != S_OK )
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if(handle != NULL) {
@@ -1695,17 +1675,17 @@ int RPC_TOAGENT_AI_CONFIG_I2S_IN(snd_card_RTK_capture_pcm_t *dpcm)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0)
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -1721,17 +1701,17 @@ int RPC_TOAGENT_AI_CONFIG_I2S_IN(snd_card_RTK_capture_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat + offset),
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(RPC_ret != S_OK )
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if(handle != NULL) {
@@ -1751,17 +1731,17 @@ int RPC_TOAGENT_AI_CONFIG_AUDIO_IN(snd_card_RTK_capture_pcm_t *dpcm)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0)
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -1780,17 +1760,17 @@ int RPC_TOAGENT_AI_CONFIG_AUDIO_IN(snd_card_RTK_capture_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat + offset),
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(RPC_ret != S_OK )
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if(handle != NULL) {
@@ -1802,7 +1782,7 @@ exit:
 
 int RPC_TOAGENT_SET_AI_FLASH_VOLUME(snd_card_RTK_capture_pcm_t *dpcm, unsigned int volume)
 {
-	//TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+	//pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
 	AUDIO_RPC_AIO_PRIVATEINFO_PARAMETERS *rpc = NULL;
 	AUDIO_RPC_PRIVATEINFO_RETURNVAL *res;
@@ -1813,16 +1793,15 @@ int RPC_TOAGENT_SET_AI_FLASH_VOLUME(snd_card_RTK_capture_pcm_t *dpcm, unsigned i
 	phys_addr_t dat;
 	size_t len;
 
-	TRACE_RPC();
 	handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 	if (IS_ERR(handle)) {
-		ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 		goto exit;
 	}
 
 	if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		goto exit;
 	}
 
@@ -1840,16 +1819,16 @@ int RPC_TOAGENT_SET_AI_FLASH_VOLUME(snd_card_RTK_capture_pcm_t *dpcm, unsigned i
 		CONVERT_FOR_AVCPU(dat),
 		CONVERT_FOR_AVCPU(dat + offset),
 		&rpc_ret)) {
-		ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
 		goto exit;
 	}
 
 	if(rpc_ret != S_OK) {
-		ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
 		goto exit;
 	}
 
-	TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 	ret = 0;
 
 exit:
@@ -1862,7 +1841,7 @@ exit:
 
 int RPC_TOAGENT_SET_SOFTWARE_AI_FLASH_VOLUME(snd_card_RTK_capture_pcm_t *dpcm, unsigned int volume)
 {
-	//TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+	//pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
 	AUDIO_RPC_AIO_PRIVATEINFO_PARAMETERS *rpc = NULL;
 	AUDIO_RPC_PRIVATEINFO_RETURNVAL *res;
@@ -1881,16 +1860,15 @@ int RPC_TOAGENT_SET_SOFTWARE_AI_FLASH_VOLUME(snd_card_RTK_capture_pcm_t *dpcm, u
 	else
 		goto exit;
 
-	TRACE_RPC();
 	handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 	if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
 	if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -1907,16 +1885,16 @@ int RPC_TOAGENT_SET_SOFTWARE_AI_FLASH_VOLUME(snd_card_RTK_capture_pcm_t *dpcm, u
 		CONVERT_FOR_AVCPU(dat),
 		CONVERT_FOR_AVCPU(dat + offset),
 		&rpc_ret)) {
-		ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
 	}
 
 	if(rpc_ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-	TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 
 exit:
@@ -1938,16 +1916,15 @@ int RPC_TOAGENT_SET_EQ(snd_card_RTK_pcm_t *dpcm, AUDIO_RPC_EQUALIZER_MODE equali
 	phys_addr_t dat;
 	size_t len;
 
-	TRACE_RPC();
 	handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
 	if (IS_ERR(handle)) {
-		ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
 		goto exit;
 	}
 
 	if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-		ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
 		goto exit;
 	}
 
@@ -1964,16 +1941,16 @@ int RPC_TOAGENT_SET_EQ(snd_card_RTK_pcm_t *dpcm, AUDIO_RPC_EQUALIZER_MODE equali
 		CONVERT_FOR_AVCPU(dat),
 		CONVERT_FOR_AVCPU(dat + offset),
 		&rpc_ret)) {
-		ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
 		goto exit;
 	}
 
 	if(rpc_ret != S_OK) {
-		ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+		pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
 		goto exit;
 	}
 
-	TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+	pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 	ret = 0;
 
 exit:
@@ -1994,17 +1971,17 @@ int RPC_TOAGENT_AI_CONFIG_NONPCM_IN(snd_card_RTK_capture_pcm_t *dpcm)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0)
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2019,17 +1996,17 @@ int RPC_TOAGENT_AI_CONFIG_NONPCM_IN(snd_card_RTK_capture_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat + offset),
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(RPC_ret != S_OK )
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if(handle != NULL) {
@@ -2048,17 +2025,17 @@ int RPC_TOAGENT_CREATE_AI_AGENT(snd_card_RTK_capture_pcm_t *dpcm)
     phys_addr_t dat;
     size_t len;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0)
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2072,19 +2049,19 @@ int RPC_TOAGENT_CREATE_AI_AGENT(snd_card_RTK_capture_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat + get_rpc_alignment_offset(sizeof(rpc->info))),
         &rpc->ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ntohl(rpc->retval.result) != S_OK || rpc->ret != S_OK)
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     dpcm->AIAgentID = ntohl(rpc->retval.data);
 //    printk(KERN_ALERT "[ALSA Create AI instance %d]\n", dpcm->AIAgentID);
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     // success
     ret = 0;
 exit:
@@ -2108,17 +2085,17 @@ int RPC_TOAGENT_CONFIGURE_AI_HW(snd_pcm_runtime_t *runtime)
     size_t len;
     unsigned int offset;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0)
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
     rpc = ion_map_kernel(alsa_client, handle);
@@ -2141,10 +2118,10 @@ int RPC_TOAGENT_CONFIGURE_AI_HW(snd_pcm_runtime_t *runtime)
         CONVERT_FOR_AVCPU(dat + offset), //rpc_arg address
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if(handle != NULL) {
@@ -2166,17 +2143,17 @@ int RPC_TOAGENT_AI_DISCONNECT_ALSA_AUDIO(snd_pcm_runtime_t *runtime)
     size_t len;
     unsigned int offset;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0)
     {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2201,17 +2178,17 @@ int RPC_TOAGENT_AI_DISCONNECT_ALSA_AUDIO(snd_pcm_runtime_t *runtime)
         CONVERT_FOR_AVCPU(dat + offset),
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(RPC_ret != S_OK )
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if(handle != NULL) {
@@ -2233,17 +2210,17 @@ int RPC_TOAGENT_AI_CONNECT_ALSA(snd_pcm_runtime_t *runtime)
     size_t len;
     unsigned int offset;
 
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ion_phys(alsa_client, handle, &dat, &len) != 0)
     {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2284,17 +2261,17 @@ int RPC_TOAGENT_AI_CONNECT_ALSA(snd_pcm_runtime_t *runtime)
         CONVERT_FOR_AVCPU(dat + offset),
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(RPC_ret != S_OK )
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     ret = 0;
 exit:
     if(handle != NULL) {
@@ -2314,18 +2291,17 @@ int RPC_DESTROY_AUDIO_FLOW(int pid)
     phys_addr_t dat;
     size_t len;
     unsigned int offset;
-    //ALSA_WARNING("[%s] PID = %d\n",__func__,pid);
+    //pr_warn("rtk-alsa: " "[%s] PID = %d\n",__func__,pid);
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2345,11 +2321,11 @@ int RPC_DESTROY_AUDIO_FLOW(int pid)
                 CONVERT_FOR_AVCPU(dat),
                 CONVERT_FOR_AVCPU(dat + offset),
                 &RPC_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
     }
 
     if (RPC_ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2372,16 +2348,15 @@ int RPC_TOAGENT_SET_LOW_WATER_LEVEL(bool isLowWater)
     size_t len;
     unsigned long offset;
 
-    TRACE_RPC();
     handle = ion_alloc(alsa_client, 4096, 1024, RTK_PHOENIX_ION_HEAP_AUDIO_MASK, AUDIO_ION_FLAG);
 
     if (IS_ERR(handle)) {
-        ALSA_WARNING("[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d ion_alloc fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ion_phys(alsa_client, handle, &dat, &len) != 0) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2407,12 +2382,12 @@ int RPC_TOAGENT_SET_LOW_WATER_LEVEL(bool isLowWater)
         CONVERT_FOR_AVCPU(dat), //cmd address
         CONVERT_FOR_AVCPU(dat + offset),//res address
         &RPC_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (RPC_ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2430,7 +2405,7 @@ exit:
 
 int RPC_TOAGENT_CHECK_AUDIO_READY()
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_DEFAULT_INPUT_T *rpc = NULL;
     int ret = -1;
@@ -2439,7 +2414,7 @@ int RPC_TOAGENT_CHECK_AUDIO_READY()
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2450,21 +2425,21 @@ int RPC_TOAGENT_CHECK_AUDIO_READY()
         CONVERT_FOR_AVCPU(dat), //rpc->info address
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->info)), //rpc->retval address
         &rpc->ret)) {
-        ALSA_WARNING("[ALSA %s RPC fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s RPC fail]\n", __FUNCTION__);
         goto exit;
     }
 
     if(rpc->ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s RPC fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s RPC fail]\n", __FUNCTION__);
         goto exit;
     }
 
     if(rpc->info == 0) {
-        ALSA_WARNING("[ALSA Audio is not ready]\n");
+        pr_warn("rtk-alsa: " "[ALSA Audio is not ready]\n");
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d ] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d ] success\n", __FILE__, __FUNCTION__, __LINE__);
 
     // successful
     ret = 0;
@@ -2476,7 +2451,7 @@ exit:
 
 int RPC_TOAGENT_CREATE_AO_AGENT(snd_card_RTK_pcm_t *dpcm)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_CREATE_AO_AGENT_T *rpc;
     int ret = -1;
@@ -2485,7 +2460,7 @@ int RPC_TOAGENT_CREATE_AO_AGENT(snd_card_RTK_pcm_t *dpcm)
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2498,17 +2473,17 @@ int RPC_TOAGENT_CREATE_AO_AGENT(snd_card_RTK_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat), //rpc->info address
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->info)),//rpc->retval address
         &rpc->ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(ntohl(rpc->retval.result) != S_OK || rpc->ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     dpcm->AOAgentID = ntohl(rpc->retval.data);
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
     // success
     ret = 0;
 exit:
@@ -2521,7 +2496,7 @@ exit:
 
 int RPC_TOAGENT_PUT_SHARE_MEMORY(void *p)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     AUDIO_RPC_PRIVATEINFO_PARAMETERS *cmd;
     AUDIO_RPC_PRIVATEINFO_RETURNVAL*res;
@@ -2535,7 +2510,7 @@ int RPC_TOAGENT_PUT_SHARE_MEMORY(void *p)
 
     if(!addr)
     {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2554,13 +2529,13 @@ int RPC_TOAGENT_PUT_SHARE_MEMORY(void *p)
         CONVERT_FOR_AVCPU(dat+offset),
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (RPC_ret != S_OK )
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2573,7 +2548,7 @@ exit:
 
 int RPC_TOAGENT_GET_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     AUDIO_RPC_PRIVATEINFO_PARAMETERS *cmd;
     AUDIO_RPC_PRIVATEINFO_RETURNVAL *res;
@@ -2586,7 +2561,7 @@ int RPC_TOAGENT_GET_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
 
     if(!addr) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2609,24 +2584,24 @@ int RPC_TOAGENT_GET_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat), //cmd address
         CONVERT_FOR_AVCPU(dat + offset),//res address
         &RPC_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(RPC_ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     ret = ntohl(res->privateInfo[0]);
 
     if(ret < FLASH_AUDIO_PIN_1 || ret > FLASH_AUDIO_PIN_3) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         ret = -1;
     }
 
-    //ALSA_WARNING("GET_AO_FLASH_PIN ret %d\n", ret);
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_warn("rtk-alsa: " "GET_AO_FLASH_PIN ret %d\n", ret);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 exit:
     if(addr)
         dma_free_coherent(NULL, 4096, addr, dat);
@@ -2638,7 +2613,7 @@ exit:
 
 int RPC_TOAGENT_SET_AO_FLASH_VOLUME(snd_pcm_substream_t * substream)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     snd_pcm_runtime_t *runtime = substream->runtime;
     snd_card_RTK_pcm_t *dpcm = runtime->private_data;
@@ -2653,7 +2628,7 @@ int RPC_TOAGENT_SET_AO_FLASH_VOLUME(snd_pcm_substream_t * substream)
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
 
     if(!addr) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2674,18 +2649,18 @@ int RPC_TOAGENT_SET_AO_FLASH_VOLUME(snd_pcm_substream_t * substream)
         CONVERT_FOR_AVCPU(dat),
         CONVERT_FOR_AVCPU(dat + offset),
         &rpc_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(rpc_ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     // success
     ret = 0;
-    //ALSA_VitalPrint("[ALSA set AO_pin %d volume %d]\n", dpcm->AOpinID, dpcm->volume);
+    //pr_debug("rtk-alsa: " "[ALSA set AO_pin %d volume %d]\n", dpcm->AOpinID, dpcm->volume);
 exit:
     if(addr)
         dma_free_coherent(NULL, 4096, addr, dat);
@@ -2694,7 +2669,7 @@ exit:
 
 int RPC_TOAGENT_CREATE_DECODER_AGENT(snd_card_RTK_pcm_t * dpcm)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_CREATE_PCM_DECODER_CTRL_T* rpc = NULL;
     int ret = -1;
@@ -2703,7 +2678,7 @@ int RPC_TOAGENT_CREATE_DECODER_AGENT(snd_card_RTK_pcm_t * dpcm)
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2716,12 +2691,12 @@ int RPC_TOAGENT_CREATE_DECODER_AGENT(snd_card_RTK_pcm_t * dpcm)
         CONVERT_FOR_AVCPU(dat), //rpc->instance address
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->instance)), //rpc->res address
         &rpc->ret)) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(rpc->ret != S_OK) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2730,7 +2705,7 @@ int RPC_TOAGENT_CREATE_DECODER_AGENT(snd_card_RTK_pcm_t * dpcm)
 
     ret = 0;
     printk("[ALSA Create Decoder instance %d]\n", dpcm->DECAgentID);
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 
 exit:
     if(addr)
@@ -2742,7 +2717,7 @@ exit:
 // data of AUDIO_RPC_RINGBUFFER_HEADER is "hose side"
 int RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(AUDIO_RPC_RINGBUFFER_HEADER *header, int buffer_count)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_INITRINGBUFFER_HEADER_T *rpc;
     int ch;
@@ -2752,7 +2727,7 @@ int RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(AUDIO_RPC_RINGBUFFER_HEADER *header, i
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2780,16 +2755,16 @@ int RPC_TOAGENT_INITRINGBUFFER_HEADER_SVC(AUDIO_RPC_RINGBUFFER_HEADER *header, i
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->ret) + sizeof(rpc->res)), //rpc->header address
         CONVERT_FOR_AVCPU(dat), //rpc->ret address
         &rpc->res)) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(rpc->res != S_OK || ntohl(rpc->ret.result) != S_OK) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 
     // success
     ret = 0;
@@ -2802,7 +2777,7 @@ exit:
 
 int RPC_TOAGENT_CONNECT_SVC(AUDIO_RPC_CONNECTION *pconnection)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_CONNECTION_T *rpc;
     int ret = -1;
@@ -2811,7 +2786,7 @@ int RPC_TOAGENT_CONNECT_SVC(AUDIO_RPC_CONNECTION *pconnection)
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr) {
-        ALSA_WARNING("[%s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[%s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2826,16 +2801,16 @@ int RPC_TOAGENT_CONNECT_SVC(AUDIO_RPC_CONNECTION *pconnection)
         CONVERT_FOR_AVCPU(dat), //rpc->out address
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->out)), //rpc->ret
         &rpc->res)) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(rpc->res != S_OK || ntohl(rpc->ret.result) != S_OK) {
-        ALSA_WARNING("[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s RPC fail %d]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 
     // success
     ret = 0;
@@ -2847,7 +2822,7 @@ exit:
 
 int RPC_TOAGENT_PAUSE_SVC(int instance_id)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_TOAGENT_PAUSE_T *rpc;
     int ret = -1;
@@ -2856,7 +2831,7 @@ int RPC_TOAGENT_PAUSE_SVC(int instance_id)
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr) {
-        ALSA_WARNING("[%s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -2868,16 +2843,16 @@ int RPC_TOAGENT_PAUSE_SVC(int instance_id)
         CONVERT_FOR_AVCPU(dat), //rpc->inst_id address
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->inst_id)),//rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(rpc->res != S_OK) {
-        ALSA_WARNING("[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail\n]", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 
     // success
     ret = 0;
@@ -2889,7 +2864,7 @@ exit:
 
 int RPC_TOAGENT_RUN_SVC(int instance_id)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_TOAGENT_T *rpc;
     int ret = -1;
@@ -2898,7 +2873,7 @@ int RPC_TOAGENT_RUN_SVC(int instance_id)
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr) {
-        ALSA_WARNING("[%s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[%s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2910,16 +2885,16 @@ int RPC_TOAGENT_RUN_SVC(int instance_id)
         CONVERT_FOR_AVCPU(dat), //rpc->inst_id address
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->inst_id)), //rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(rpc->res != S_OK || ntohl(rpc->retval.result) != S_OK) {
-        ALSA_WARNING("[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[%s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 
     // success
     ret = 0;
@@ -2931,7 +2906,7 @@ exit:
 
 int RPC_TOAGENT_FLUSH_SVC(AUDIO_RPC_SENDIO  *sendio)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_TOAGENT_FLASH_T *rpc;
     int ret = -1;
@@ -2940,7 +2915,7 @@ int RPC_TOAGENT_FLUSH_SVC(AUDIO_RPC_SENDIO  *sendio)
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr) {
-        ALSA_WARNING("[ALSA %s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -2953,16 +2928,16 @@ int RPC_TOAGENT_FLUSH_SVC(AUDIO_RPC_SENDIO  *sendio)
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->retval) + sizeof(rpc->res)), //rpc->sendio address
         CONVERT_FOR_AVCPU(dat), //rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(rpc->res != S_OK || ntohl(rpc->retval.result) != S_OK) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 
     // success
     ret = 0;
@@ -2974,7 +2949,7 @@ exit:
 
 int RPC_TOAGENT_RELEASE_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     HRESULT rpc_ret = 0;
     int ret = -1;
@@ -2985,14 +2960,14 @@ int RPC_TOAGENT_RELEASE_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
     unsigned int offset;
 
     if(dpcm->AOpinID < FLASH_AUDIO_PIN_1 || dpcm->AOpinID > FLASH_AUDIO_PIN_3) {
-       ALSA_WARNING("[%d @ %s %d]\n", dpcm->AOpinID, __FUNCTION__, __LINE__);
+       pr_warn("rtk-alsa: " "[%d @ %s %d]\n", dpcm->AOpinID, __FUNCTION__, __LINE__);
        goto exit;
     }
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
 
     if(!addr) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -3015,16 +2990,16 @@ int RPC_TOAGENT_RELEASE_AO_FLASH_PIN(snd_card_RTK_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat), //cmd address
         CONVERT_FOR_AVCPU(dat + offset), //res address
         &rpc_ret)) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(rpc_ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 
     ret = 0;
 
@@ -3037,7 +3012,7 @@ exit:
 
 int RPC_TOAGENT_STOP_SVC(int instanceID)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_TOAGENT_STOP_T *rpc;
     int ret = -1;
@@ -3047,7 +3022,7 @@ int RPC_TOAGENT_STOP_SVC(int instanceID)
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
 
     if(!addr) {
-        ALSA_WARNING("[ALSA %s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -3060,13 +3035,13 @@ int RPC_TOAGENT_STOP_SVC(int instanceID)
         CONVERT_FOR_AVCPU(dat),//rpc->retval address
         &rpc->res))
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if(rpc->res != S_OK || ntohl(rpc->retval.result) != S_OK)
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -3079,7 +3054,7 @@ exit:
 
 int RPC_TOAGENT_DESTROY_SVC(int instanceID)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_TOAGENT_DESTROY_T *rpc;
     int ret = -1;
@@ -3089,7 +3064,7 @@ int RPC_TOAGENT_DESTROY_SVC(int instanceID)
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr)
     {
-        ALSA_WARNING("[ALSA %s malloc fail]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA %s malloc fail]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -3101,12 +3076,12 @@ int RPC_TOAGENT_DESTROY_SVC(int instanceID)
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->retval) + sizeof(rpc->res)), //rpc->instanceID address
         CONVERT_FOR_AVCPU(dat), //rpc->retval address
         &rpc->res)) {
-        ALSA_WARNING("%s %d RPC fail\n", __FILE__, __LINE__);
+        pr_warn("rtk-alsa: " "%s %d RPC fail\n", __FILE__, __LINE__);
         goto exit;
     }
 
     if(rpc->res != S_OK || ntohl(rpc->retval.result) != S_OK) {
-        ALSA_WARNING("%s %d RPC fail\n", __FILE__, __LINE__);
+        pr_warn("rtk-alsa: " "%s %d RPC fail\n", __FILE__, __LINE__);
         goto exit;
     }
 
@@ -3119,7 +3094,7 @@ exit:
 
 int RPC_TOAGENT_INBAND_EOS_SVC(snd_card_RTK_pcm_t * dpcm)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     AUDIO_DEC_EOS cmd ;
 
@@ -3128,7 +3103,7 @@ int RPC_TOAGENT_INBAND_EOS_SVC(snd_card_RTK_pcm_t * dpcm)
     cmd.EOSID = 0;
 
     cmd.wPtr = htonl(dpcm->decInRing_LE[0].writePtr);
-    //TRACE_CODE("[test]write cmd type %d\n", AUDIO_DEC_INBAND_CMD_TYPE_EOS);
+    //pr_debug("rtk-alsa: " "[test]write cmd type %d\n", AUDIO_DEC_INBAND_CMD_TYPE_EOS);
     //snd_realtek_hw_ring_write(((unsigned int)dpcm->decInbandRing - (unsigned int)dpcm + dpcm->phy_addr), &cmd, sizeof(AUDIO_DEC_EOS));
     snd_realtek_hw_ring_write((unsigned int)&dpcm->decInbandRing, &cmd, sizeof(AUDIO_DEC_EOS), (unsigned int)dpcm - (unsigned int)dpcm->phy_addr);
     return 0;
@@ -3137,7 +3112,7 @@ int RPC_TOAGENT_INBAND_EOS_SVC(snd_card_RTK_pcm_t * dpcm)
 // set AO volume
 int RPC_TOAGENT_SET_VOLUME(int volume)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     AUDIO_CONFIG_COMMAND *config;
     unsigned int *res;
@@ -3149,7 +3124,7 @@ int RPC_TOAGENT_SET_VOLUME(int volume)
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
 
     if(!addr) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -3168,20 +3143,20 @@ int RPC_TOAGENT_SET_VOLUME(int volume)
         CONVERT_FOR_AVCPU(dat),
         CONVERT_FOR_AVCPU(dat + offset),
         &ret)) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         ret = -1;
         goto exit;
     }
 
     if (ret != S_OK) {
-        ALSA_WARNING("[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n", __FUNCTION__, __LINE__);
         ret = -1;
         goto exit;
     }
 
     ret = 0;
 
-    //TRACE_CODE("[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d] success\n", __FILE__, __FUNCTION__, __LINE__);
 exit:
     if(addr)
         dma_free_coherent(NULL, 4096, addr, dat);
@@ -3192,7 +3167,7 @@ exit:
 // get AO volume
 int RPC_TOAGENT_GET_VOLUME(snd_card_RTK_pcm_t *mars)
 {
-    //TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     int volume;
     RPC_GET_VOLUME_T *config;
@@ -3201,7 +3176,7 @@ int RPC_TOAGENT_GET_VOLUME(snd_card_RTK_pcm_t *mars)
 
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if(!addr) {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -3218,13 +3193,13 @@ int RPC_TOAGENT_GET_VOLUME(snd_card_RTK_pcm_t *mars)
         CONVERT_FOR_AVCPU(dat + sizeof(config->res) + sizeof(config->ret)),
         CONVERT_FOR_AVCPU(dat),
         &(config->ret))) {
-        ALSA_WARNING("[fail %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[fail %s %d]\n", __FUNCTION__, __LINE__);
         volume = -1;
         goto exit;
     }
 
     if(config->ret != S_OK) {
-        ALSA_WARNING("[fail %s %d]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[fail %s %d]\n", __FUNCTION__, __LINE__);
         volume = -1;
         goto exit;
     }
@@ -3240,7 +3215,7 @@ exit:
 
 int RPC_TOAGENT_CREATE_AI_AGENT(snd_card_RTK_capture_pcm_t *dpcm)
 {
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     RPC_CREATE_AO_AGENT_T *rpc = NULL;
     int ret = -1;
@@ -3250,7 +3225,7 @@ int RPC_TOAGENT_CREATE_AI_AGENT(snd_card_RTK_capture_pcm_t *dpcm)
     addr = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     if (!addr)
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -3264,13 +3239,13 @@ int RPC_TOAGENT_CREATE_AI_AGENT(snd_card_RTK_capture_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat + sizeof(rpc->info)),
         &rpc->ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (ntohl(rpc->retval.result) != S_OK || rpc->ret != S_OK)
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -3285,7 +3260,7 @@ exit:
 
 int RPC_TOAGENT_CONFIGURE_AI_HW(snd_pcm_runtime_t *runtime)
 {
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     snd_card_RTK_capture_pcm_t *dpcm = runtime->private_data;
     AUDIO_CONFIG_ADC *rpc = NULL;
@@ -3301,7 +3276,7 @@ int RPC_TOAGENT_CONFIGURE_AI_HW(snd_pcm_runtime_t *runtime)
 
     if(!addr)
     {
-        ALSA_WARNING("[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
     rpc = addr;
@@ -3322,7 +3297,7 @@ int RPC_TOAGENT_CONFIGURE_AI_HW(snd_pcm_runtime_t *runtime)
         CONVERT_FOR_AVCPU(dat + offset), //rpc_arg address
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n",__FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -3335,7 +3310,7 @@ exit:
 
 int RPC_TOAGENT_AI_CONNECT_ALSA(snd_card_RTK_capture_pcm_t *dpcm)
 {
-    TRACE_CODE("[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    pr_debug("rtk-alsa: " "[%s %s %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
     AUDIO_RPC_PRIVATEINFO_PARAMETERS *cmd;
     AUDIO_RPC_PRIVATEINFO_RETURNVAL*res;
@@ -3349,7 +3324,7 @@ int RPC_TOAGENT_AI_CONNECT_ALSA(snd_card_RTK_capture_pcm_t *dpcm)
 
     if(!addr)
     {
-        ALSA_WARNING("[ALSA malloc fail %s]\n", __FUNCTION__);
+        pr_warn("rtk-alsa: " "[ALSA malloc fail %s]\n", __FUNCTION__);
         goto exit;
     }
 
@@ -3368,13 +3343,13 @@ int RPC_TOAGENT_AI_CONNECT_ALSA(snd_card_RTK_capture_pcm_t *dpcm)
         CONVERT_FOR_AVCPU(dat + offset),
         &RPC_ret))
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
     if (RPC_ret != S_OK)
     {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 
@@ -3393,7 +3368,7 @@ int RPC_DESTROY_AUDIO_FLOW(int pid)
     int ret = -1;
     dma_addr_t dat;
     unsigned int offset;
-    //ALSA_WARNING("[%s] PID = %d\n",__func__,pid);
+    //pr_warn("rtk-alsa: " "[%s] PID = %d\n",__func__,pid);
     cmd = dma_alloc_coherent(NULL, 4096, &dat, GFP_KERNEL);
     res = (AUDIO_RPC_PRIVATEINFO_RETURNVAL *)((unsigned int)(cmd + sizeof(AUDIO_RPC_PRIVATEINFO_PARAMETERS)+8) & 0xFFFFFFFC);
     offset = (unsigned int)res - (unsigned int)cmd;
@@ -3406,11 +3381,11 @@ int RPC_DESTROY_AUDIO_FLOW(int pid)
                 CONVERT_FOR_AVCPU(dat),
                 CONVERT_FOR_AVCPU(dat + offset),
                 &RPC_ret)) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
     }
 
     if(RPC_ret != S_OK ) {
-        ALSA_WARNING("[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
+        pr_warn("rtk-alsa: " "[ALSA %s %d RPC fail]\n", __FUNCTION__, __LINE__);
         goto exit;
     }
 exit:

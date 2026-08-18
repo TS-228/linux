@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0
 
+include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
+CFLAGS_ahci_rtk.o += $(rtk_vendor-ccflags)
+
 obj-$(CONFIG_ATA)		+= libata.o
 
 # non-SFF interface

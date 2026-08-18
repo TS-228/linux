@@ -44,10 +44,6 @@
 #include <asm/tlbflush.h>
 #include <asm/traps.h>
 
-#ifdef CONFIG_RTK_TRACER
-#include <linux/rtk_trace.h>
-#endif
-
 struct fault_info {
 	int	(*fn)(unsigned long far, unsigned long esr,
 		      struct pt_regs *regs);
