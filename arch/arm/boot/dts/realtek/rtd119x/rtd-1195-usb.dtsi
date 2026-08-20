@@ -14,8 +14,17 @@
 
 		dwc3@18020000 {
 			dr_mode = "host";
-			/* Avoids intermittent transaction errors / port resets on this SoC. */
-			snps,rtk-tx-rx-thr-quirk;
+			/*
+			 * The vendor's original TX/RX threshold + auto-retry
+			 * workaround (see dwc3_rtk_tx_rx_thr_quirk() in
+			 * drivers/usb/dwc3/core.c) is available via
+			 * "snps,rtk-tx-rx-thr-quirk" but left disabled here:
+			 * 12 iterations of parallel checksum-verified writes
+			 * to both SATA-bridge drives (sda+sdb, ~1.15GB total)
+			 * against mainline's dwc3 driver produced zero
+			 * transaction errors or port resets. Re-add the
+			 * property if that ever changes.
+			 */
 		};
 	};
 
