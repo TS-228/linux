@@ -186,16 +186,31 @@ out:
 	crypto_free_ahash(tfm);
 }
 
-static const int sizes[] = { 256, 1024, 4096, 16384, 32768 };
+/*
+ * Sizes span small (setup-overhead-dominated) through the driver's 64KiB
+ * internal bounce-buffer cap, so the comparison reflects the same chunking
+ * the driver actually does for large skcipher requests.
+ */
+static const int sizes[] = { 256, 1024, 4096, 16384, 32768, 65536 };
+
+/* Same range, minus 65536: the hash path caps at MCP_BUF_SIZE (64KiB) and
+ * takes the whole message as one bounce-buffer copy, so nothing above that
+ * is a meaningful comparison point for this driver.
+ */
+static const int hash_sizes[] = { 256, 1024, 4096, 16384, 32768 };
 
 static int __init rtk_mcp_bench_init(void)
 {
 	int i;
 
 	pr_info("bench: === Realtek MCP vs CPU benchmark ===\n");
+	pr_info("bench: CPU reference drivers: aes-generic (unoptimized C),\n");
+	pr_info("bench:   *-neonbs/-neon/-asm (best available ARM NEON/asm code)\n");
 
 	for (i = 0; i < ARRAY_SIZE(sizes); i++) {
 		bench_skcipher("rtk-mcp-ecb-aes", "ecb(aes) [MCP]",
+			       sizes[i], BENCH_ITERATIONS);
+		bench_skcipher("ecb-aes-neonbs", "ecb(aes) [CPU/neon-bitslice]",
 			       sizes[i], BENCH_ITERATIONS);
 		bench_skcipher("ecb(aes-generic)", "ecb(aes) [CPU/generic]",
 			       sizes[i], BENCH_ITERATIONS);
@@ -206,26 +221,36 @@ static int __init rtk_mcp_bench_init(void)
 	for (i = 0; i < ARRAY_SIZE(sizes); i++) {
 		bench_skcipher("rtk-mcp-cbc-aes", "cbc(aes) [MCP]",
 			       sizes[i], BENCH_ITERATIONS);
+		bench_skcipher("cbc-aes-neonbs", "cbc(aes) [CPU/neon-bitslice]",
+			       sizes[i], BENCH_ITERATIONS);
 		bench_skcipher("cbc(aes-generic)", "cbc(aes) [CPU/generic]",
 			       sizes[i], BENCH_ITERATIONS);
 	}
 
 	pr_info("bench: ---\n");
 
-	for (i = 0; i < ARRAY_SIZE(sizes); i++) {
+	for (i = 0; i < ARRAY_SIZE(hash_sizes); i++) {
 		bench_ahash("rtk-mcp-sha1", "sha1 [MCP]",
-			    sizes[i], BENCH_ITERATIONS);
+			    hash_sizes[i], BENCH_ITERATIONS);
+		bench_ahash("sha1-neon", "sha1 [CPU/neon]",
+			    hash_sizes[i], BENCH_ITERATIONS);
+		bench_ahash("sha1-asm", "sha1 [CPU/asm]",
+			    hash_sizes[i], BENCH_ITERATIONS);
 		bench_ahash("sha1-generic", "sha1 [CPU/generic]",
-			    sizes[i], BENCH_ITERATIONS);
+			    hash_sizes[i], BENCH_ITERATIONS);
 	}
 
 	pr_info("bench: ---\n");
 
-	for (i = 0; i < ARRAY_SIZE(sizes); i++) {
+	for (i = 0; i < ARRAY_SIZE(hash_sizes); i++) {
 		bench_ahash("rtk-mcp-sha256", "sha256 [MCP]",
-			    sizes[i], BENCH_ITERATIONS);
+			    hash_sizes[i], BENCH_ITERATIONS);
+		bench_ahash("sha256-neon", "sha256 [CPU/neon]",
+			    hash_sizes[i], BENCH_ITERATIONS);
+		bench_ahash("sha256-asm", "sha256 [CPU/asm]",
+			    hash_sizes[i], BENCH_ITERATIONS);
 		bench_ahash("sha256-generic", "sha256 [CPU/generic]",
-			    sizes[i], BENCH_ITERATIONS);
+			    hash_sizes[i], BENCH_ITERATIONS);
 	}
 
 	pr_info("bench: === done ===\n");

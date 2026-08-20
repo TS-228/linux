@@ -10,7 +10,9 @@
 #include <crypto/sha1.h>
 #include <crypto/sha2.h>
 #include <linux/module.h>
+#include <linux/random.h>
 #include <linux/scatterlist.h>
+#include <linux/vmalloc.h>
 
 struct test_vec {
 	const char *name;
@@ -267,6 +269,279 @@ out_tfm:
 	return ret;
 }
 
+/*
+ * MCP_BUF_SIZE in rtk-mcp.c is 64KiB: skcipher requests larger than that
+ * are split into multiple hardware transfers, chained via IV. This is the
+ * one code path the small NIST vectors above never exercise. Cross-check
+ * against the CPU reference implementation at sizes that land exactly on,
+ * one block over, and several multiples past that boundary.
+ */
+#define MCP_TEST_BUF_SIZE	(64 * 1024)
+
+static int do_skcipher(struct crypto_skcipher *tfm, const u8 *src, u8 *dst,
+			size_t len, u8 *iv, bool encrypt)
+{
+	struct skcipher_request *req;
+	struct scatterlist sg_src, sg_dst;
+	DECLARE_CRYPTO_WAIT(wait);
+	int ret;
+
+	req = skcipher_request_alloc(tfm, GFP_KERNEL);
+	if (!req)
+		return -ENOMEM;
+
+	sg_init_one(&sg_src, src, len);
+	sg_init_one(&sg_dst, dst, len);
+	skcipher_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
+				      crypto_req_done, &wait);
+	skcipher_request_set_crypt(req, &sg_src, &sg_dst, len,
+				   crypto_skcipher_ivsize(tfm) ? iv : NULL);
+
+	ret = crypto_wait_req(encrypt ? crypto_skcipher_encrypt(req)
+				      : crypto_skcipher_decrypt(req), &wait);
+	skcipher_request_free(req);
+	return ret;
+}
+
+static int run_large_cbc_test(const char *hw_driver, const char *cpu_driver,
+			       size_t size)
+{
+	struct crypto_skcipher *hw_tfm, *cpu_tfm;
+	u8 key[16], iv_orig[16], iv_hw[16], iv_cpu[16];
+	u8 *src, *hw_ct, *cpu_ct, *hw_pt;
+	int ret;
+
+	hw_tfm = crypto_alloc_skcipher(hw_driver, 0, 0);
+	if (IS_ERR(hw_tfm)) {
+		pr_err("rtk-mcp-test: alloc %s failed: %ld\n",
+		       hw_driver, PTR_ERR(hw_tfm));
+		return PTR_ERR(hw_tfm);
+	}
+	cpu_tfm = crypto_alloc_skcipher(cpu_driver, 0, 0);
+	if (IS_ERR(cpu_tfm)) {
+		pr_err("rtk-mcp-test: alloc %s failed: %ld\n",
+		       cpu_driver, PTR_ERR(cpu_tfm));
+		crypto_free_skcipher(hw_tfm);
+		return PTR_ERR(cpu_tfm);
+	}
+
+	src = vmalloc(size);
+	hw_ct = vmalloc(size);
+	cpu_ct = vmalloc(size);
+	hw_pt = vmalloc(size);
+	if (!src || !hw_ct || !cpu_ct || !hw_pt) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	get_random_bytes(key, sizeof(key));
+	get_random_bytes(iv_orig, sizeof(iv_orig));
+	get_random_bytes(src, size);
+
+	ret = crypto_skcipher_setkey(hw_tfm, key, sizeof(key));
+	if (!ret)
+		ret = crypto_skcipher_setkey(cpu_tfm, key, sizeof(key));
+	if (ret) {
+		pr_err("rtk-mcp-test: large cbc %zu: setkey failed: %d\n",
+		       size, ret);
+		goto out;
+	}
+
+	/* Encrypt with both HW and CPU from the same IV; ciphertext and the
+	 * post-op IV (per crypto API: last ciphertext block) must match.
+	 */
+	memcpy(iv_hw, iv_orig, sizeof(iv_orig));
+	memcpy(iv_cpu, iv_orig, sizeof(iv_orig));
+	ret = do_skcipher(hw_tfm, src, hw_ct, size, iv_hw, true);
+	if (ret) {
+		pr_err("rtk-mcp-test: large cbc %zu: HW encrypt failed: %d\n",
+		       size, ret);
+		goto out;
+	}
+	ret = do_skcipher(cpu_tfm, src, cpu_ct, size, iv_cpu, true);
+	if (ret) {
+		pr_err("rtk-mcp-test: large cbc %zu: CPU encrypt failed: %d\n",
+		       size, ret);
+		goto out;
+	}
+
+	if (memcmp(hw_ct, cpu_ct, size) || memcmp(iv_hw, iv_cpu, 16)) {
+		pr_err("rtk-mcp-test: large cbc %zu bytes encrypt MISMATCH vs %s\n",
+		       size, cpu_driver);
+		ret = -EINVAL;
+		goto out;
+	}
+
+	/* Round-trip: HW-decrypt its own (in-place) ciphertext from the
+	 * original IV; must recover the plaintext, with the output IV again
+	 * matching the last ciphertext block. This is exactly the in-place
+	 * decrypt path that had the "wrong output IV" bug.
+	 */
+	memcpy(hw_pt, hw_ct, size);
+	memcpy(iv_hw, iv_orig, sizeof(iv_orig));
+	ret = do_skcipher(hw_tfm, hw_pt, hw_pt, size, iv_hw, false);
+	if (ret) {
+		pr_err("rtk-mcp-test: large cbc %zu: HW in-place decrypt failed: %d\n",
+		       size, ret);
+		goto out;
+	}
+
+	if (memcmp(hw_pt, src, size)) {
+		pr_err("rtk-mcp-test: large cbc %zu bytes in-place decrypt MISMATCH\n",
+		       size);
+		ret = -EINVAL;
+		goto out;
+	}
+	if (memcmp(iv_hw, cpu_ct + size - 16, 16)) {
+		pr_err("rtk-mcp-test: large cbc %zu bytes decrypt output IV MISMATCH\n",
+		       size);
+		ret = -EINVAL;
+		goto out;
+	}
+
+	ret = 0;
+out:
+	vfree(src);
+	vfree(hw_ct);
+	vfree(cpu_ct);
+	vfree(hw_pt);
+	crypto_free_skcipher(hw_tfm);
+	crypto_free_skcipher(cpu_tfm);
+	if (ret == 0)
+		pr_info("rtk-mcp-test: large cbc %zu bytes (%s vs %s) PASSED\n",
+			size, hw_driver, cpu_driver);
+	return ret;
+}
+
+static int do_ahash_digest(struct crypto_ahash *tfm, const u8 *data,
+			    size_t len, u8 *out)
+{
+	struct ahash_request *req;
+	struct scatterlist sg;
+	DECLARE_CRYPTO_WAIT(wait);
+	int ret;
+
+	req = ahash_request_alloc(tfm, GFP_KERNEL);
+	if (!req)
+		return -ENOMEM;
+
+	sg_init_one(&sg, data, len ? len : 1);
+	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
+				   crypto_req_done, &wait);
+	ahash_request_set_crypt(req, &sg, out, len);
+	ret = crypto_wait_req(crypto_ahash_digest(req), &wait);
+	ahash_request_free(req);
+	return ret;
+}
+
+/*
+ * The driver buffers the whole message before hashing, capped at
+ * MCP_BUF_SIZE (64KiB) in rtk-mcp.c. Verify correctness right up to that
+ * cap against the CPU reference, and confirm the kernel-API-legal case of
+ * a too-large request is rejected cleanly (-E2BIG) rather than corrupting
+ * memory or hanging.
+ */
+static int run_sha_boundary_test(const char *hw_alg, const char *cpu_alg,
+				  size_t size)
+{
+	struct crypto_ahash *hw_tfm, *cpu_tfm;
+	u8 *data, *hw_digest, *cpu_digest;
+	unsigned int digest_size;
+	int ret;
+
+	hw_tfm = crypto_alloc_ahash(hw_alg, 0, 0);
+	if (IS_ERR(hw_tfm))
+		return PTR_ERR(hw_tfm);
+	cpu_tfm = crypto_alloc_ahash(cpu_alg, 0, 0);
+	if (IS_ERR(cpu_tfm)) {
+		ret = PTR_ERR(cpu_tfm);
+		crypto_free_ahash(hw_tfm);
+		return ret;
+	}
+
+	digest_size = crypto_ahash_digestsize(hw_tfm);
+	data = vmalloc(size ? size : 1);
+	hw_digest = kmalloc(digest_size, GFP_KERNEL);
+	cpu_digest = kmalloc(digest_size, GFP_KERNEL);
+	if (!data || !hw_digest || !cpu_digest) {
+		ret = -ENOMEM;
+		goto out;
+	}
+	if (size)
+		get_random_bytes(data, size);
+
+	ret = do_ahash_digest(hw_tfm, data, size, hw_digest);
+	if (ret) {
+		pr_err("rtk-mcp-test: sha boundary %s %zu bytes: HW failed: %d\n",
+		       hw_alg, size, ret);
+		goto out;
+	}
+	ret = do_ahash_digest(cpu_tfm, data, size, cpu_digest);
+	if (ret) {
+		pr_err("rtk-mcp-test: sha boundary %s %zu bytes: CPU failed: %d\n",
+		       hw_alg, size, ret);
+		goto out;
+	}
+
+	if (memcmp(hw_digest, cpu_digest, digest_size)) {
+		pr_err("rtk-mcp-test: sha boundary %s %zu bytes MISMATCH vs %s\n",
+		       hw_alg, size, cpu_alg);
+		ret = -EINVAL;
+		goto out;
+	}
+
+	ret = 0;
+out:
+	vfree(data);
+	kfree(hw_digest);
+	kfree(cpu_digest);
+	crypto_free_ahash(hw_tfm);
+	crypto_free_ahash(cpu_tfm);
+	if (ret == 0)
+		pr_info("rtk-mcp-test: sha boundary %s %zu bytes PASSED\n",
+			hw_alg, size);
+	return ret;
+}
+
+/* One byte over the driver's buffering cap must be rejected, not hang or
+ * corrupt memory -- this is a legal request under the ahash API (no size
+ * limit there), just one this driver's design can't service.
+ */
+static int run_sha_too_large_test(const char *hw_alg, size_t size)
+{
+	struct crypto_ahash *tfm;
+	u8 *data, *digest;
+	int ret;
+
+	tfm = crypto_alloc_ahash(hw_alg, 0, 0);
+	if (IS_ERR(tfm))
+		return PTR_ERR(tfm);
+
+	data = vmalloc(size);
+	digest = kmalloc(crypto_ahash_digestsize(tfm), GFP_KERNEL);
+	if (!data || !digest) {
+		ret = -ENOMEM;
+		goto out;
+	}
+	get_random_bytes(data, size);
+
+	ret = do_ahash_digest(tfm, data, size, digest);
+	if (ret == -E2BIG) {
+		pr_info("rtk-mcp-test: sha oversize %s %zu bytes correctly rejected (-E2BIG) PASSED\n",
+			hw_alg, size);
+		ret = 0;
+	} else {
+		pr_err("rtk-mcp-test: sha oversize %s %zu bytes: expected -E2BIG, got %d\n",
+		       hw_alg, size, ret);
+		ret = ret ? ret : -EINVAL; /* ret==0 would itself be wrong here */
+	}
+out:
+	vfree(data);
+	kfree(digest);
+	crypto_free_ahash(tfm);
+	return ret;
+}
+
 static int __init rtk_mcp_test_init(void)
 {
 	int i, ret, fail = 0;
@@ -287,6 +562,50 @@ static int __init rtk_mcp_test_init(void)
 		ARRAY_SIZE(sha_vectors));
 	for (i = 0; i < ARRAY_SIZE(sha_vectors); i++) {
 		ret = run_sha_digest(&sha_vectors[i]);
+		if (ret)
+			fail++;
+	}
+
+	pr_info("rtk-mcp-test: large-buffer cbc(aes) chunk-boundary tests vs cbc(aes-generic)\n");
+	{
+		static const size_t cbc_sizes[] = {
+			MCP_TEST_BUF_SIZE,		/* exactly 1 chunk */
+			MCP_TEST_BUF_SIZE + 16,	/* 1 block into chunk 2 */
+			2 * MCP_TEST_BUF_SIZE,		/* exactly 2 chunks */
+			3 * MCP_TEST_BUF_SIZE + 128,	/* partial last chunk */
+		};
+
+		for (i = 0; i < ARRAY_SIZE(cbc_sizes); i++) {
+			ret = run_large_cbc_test("rtk-mcp-cbc-aes",
+						 "cbc(aes-generic)",
+						 cbc_sizes[i]);
+			if (ret)
+				fail++;
+		}
+	}
+
+	pr_info("rtk-mcp-test: sha1/sha256 size-boundary tests vs generic\n");
+	{
+		static const size_t sha_sizes[] = {
+			0, 1, 55, 56, 63, 64, 65, 127, 128, 999,
+			MCP_TEST_BUF_SIZE - 1, MCP_TEST_BUF_SIZE,
+		};
+
+		for (i = 0; i < ARRAY_SIZE(sha_sizes); i++) {
+			ret = run_sha_boundary_test("rtk-mcp-sha1", "sha1-generic",
+						    sha_sizes[i]);
+			if (ret)
+				fail++;
+			ret = run_sha_boundary_test("rtk-mcp-sha256", "sha256-generic",
+						    sha_sizes[i]);
+			if (ret)
+				fail++;
+		}
+
+		ret = run_sha_too_large_test("rtk-mcp-sha1", MCP_TEST_BUF_SIZE + 1);
+		if (ret)
+			fail++;
+		ret = run_sha_too_large_test("rtk-mcp-sha256", MCP_TEST_BUF_SIZE + 1);
 		if (ret)
 			fail++;
 	}
