@@ -24,10 +24,8 @@ void __iomem *__ioremap_prot(phys_addr_t phys_addr, size_t size,
 		return NULL;
 
 	/* Don't allow RAM to be mapped. */
-#ifndef CONFIG_RTK_MEM_REMAP
 	if (WARN_ON(pfn_is_map_memory(__phys_to_pfn(phys_addr))))
 		return NULL;
-#endif
 
 	/*
 	 * If a hook is registered (e.g. for confidential computing

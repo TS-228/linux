@@ -57,9 +57,6 @@
 #include <asm/switch_to.h>
 #include <asm/system_misc.h>
 
-#ifdef CONFIG_RTK_TRACER
-#endif
-
 #if defined(CONFIG_STACKPROTECTOR) && !defined(CONFIG_STACKPROTECTOR_PER_TASK)
 #include <linux/stackprotector.h>
 unsigned long __stack_chk_guard __ro_after_init;

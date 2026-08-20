@@ -38,24 +38,6 @@
 	msr	daifset, #0xf
 	.endm
 
-	.macro enable_daif
-	msr	daifclr, #0xf
-	.endm
-
-#ifdef CONFIG_RTK_PLATFORM
-/*
- * Save/disable and restore interrupts.
- */
-	.macro  save_and_disable_irqs, olddaif
-	mrs     \olddaif, daif
-	msr     daifset, #3
-	.endm
-
-	.macro  restore_irqs, olddaif
-	msr     daif, \olddaif
-	.endm
-#endif /* CONFIG_RTK_PLATFORM */
-
 /*
  * Save/restore interrupts.
  */
