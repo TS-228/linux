@@ -215,16 +215,59 @@ void __init rsvmem_remap(struct reserved_mem *rmem)
 		VT100_NONE, __FUNCTION__, __LINE__, rmem->name, save_remap_name);
 }
 
-void __init rtk_mem_remap_of_init_by_DT(struct reserved_mem *rmem, int rmem_count)
+/*
+ * The RESERVEDMEM_OF_DECLARE callback below runs during early FDT scanning,
+ * before mm is up, so it can't ioremap() anything (see the comment in
+ * rsvmem_remap_setup()). Do the actual remap here instead, once mm is
+ * ready. core_initcall runs well before rtk_rpc's own late_initcall(
+ * rtk_rpc_init) probes the "Realtek,rtk-rpc" device that reads
+ * rpc_common_base/rpc_ringbuf_base, and before rtk_bus_sync()'s callers
+ * or rtd119x_suspend.c can reach rbus_addr.
+ */
+static int __init rtk_mem_remap_late_init(void)
 {
-	int i;
-	printk(MYDBG_LEVEL VT100_LIGHT_RED "rmem_count: %d"
-		VT100_NONE, rmem_count);
-	for (i = 0; i < rmem_count; i++) {
-		printk(MYDBG_LEVEL "\n");
-		rsvmem_remap(&rmem[i]);
+	struct device_node *np;
+
+	for_each_compatible_node(np, NULL, "rsvmem-remap") {
+		struct reserved_mem *rmem = of_reserved_mem_lookup(np);
+		const char *save_remap_name;
+		void *ret_iomap;
+
+		if (!rmem || !rmem->size)
+			continue;
+
+		if (of_property_read_string(np, "save_remap_name", &save_remap_name))
+			continue;
+
+		ret_iomap = ioremap(rmem->base, rmem->size);
+		if (!ret_iomap) {
+			pr_err("[%s] ioremap(%llx,%llx) failed for %s\n",
+				DRIVER_NAME, rmem->base, rmem->size, save_remap_name);
+			continue;
+		}
+
+		if (!strcmp(save_remap_name, "rbus")) {
+#ifdef CONFIG_RTK_RBUS_BARRIER
+			rbus_addr = ret_iomap;
+			if (of_property_read_bool(np, "rtk_rbus_barrier_flag"))
+				rtk_rbus_barrier_flag = 1;
+#endif
+		} else if (!strcmp(save_remap_name, "common")) {
+#ifdef CONFIG_RTK_RPC
+			rpc_common_base = ret_iomap;
+#endif
+		} else if (!strcmp(save_remap_name, "ringbuf")) {
+#ifdef CONFIG_RTK_RPC
+			rpc_ringbuf_base = ret_iomap;
+#endif
+		}
+		pr_info("[%s] %s/%s remapped to %p\n",
+			DRIVER_NAME, rmem->name, save_remap_name, ret_iomap);
 	}
+
+	return 0;
 }
+core_initcall(rtk_mem_remap_late_init);
 
 static int __init rsvmem_remap_setup(struct reserved_mem *rmem)
 {
