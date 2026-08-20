@@ -1568,9 +1568,34 @@ int rtk_sdmmc_int_wait(char* drv_name, struct rtk_sdmmc_host *rtk_host, u8 cmdco
 	}
 	rtk_sdmmc_sync(rtk_host);
 	irq_error_bit=0;
+	/*
+	 * Clear any stale completion from a previous command's interrupt
+	 * arriving late (after that command had already fallen through to
+	 * the polling path below and moved on). Without this, a late
+	 * complete() satisfies *this* command's wait immediately instead of
+	 * its own.
+	 */
+	reinit_completion(rtk_host->int_waiting);
 	writeb((u8) (cmdcode | START_EN), sdmmc_base + SD_TRANSFER); //cmd fire
 
-	wait_for_completion(rtk_host->int_waiting);
+	/*
+	 * The vendor RTD1195 driver (rtk_crsd_ops.c, rtk_crsd_int_waitfor())
+	 * never waits on this interrupt at all in production -- built with
+	 * ENABLE_SD_INT_MODE undefined, so int_enable() is a no-op and
+	 * completion is entirely via a bounded ~300ms register poll
+	 * (SD_TRANSFER END_STATE|IDLE_STATE), with request_irq() and the
+	 * ISR itself compiled out entirely. On this port the interrupt
+	 * itself is reliable (confirmed on hardware: 6400+ consecutive
+	 * commands via a stress test, zero timeouts) -- an earlier
+	 * multi-minute stall that looked like a missed interrupt turned out
+	 * to be an unrelated userspace process (smartd) queuing many of its
+	 * own commands ahead of ours on the shared per-host request queue.
+	 * Bounding the wait to the vendor's ~300ms and falling through to
+	 * the existing polling loop below is still worth keeping as a
+	 * defensive backstop matching vendor precedent, not because the
+	 * interrupt is known to be unreliable.
+	 */
+	wait_for_completion_timeout(rtk_host->int_waiting, msecs_to_jiffies(300));
 
 	rtk_sdmmc_sync(rtk_host);
 

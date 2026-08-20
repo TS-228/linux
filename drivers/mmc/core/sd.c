@@ -30,7 +30,7 @@
 #include "sd.h"
 #include "sd_ops.h"
 
-#ifdef CONFIG_MMC_RTK_SDMMC
+#if defined(CONFIG_MMC_RTK_SDMMC) || defined(CONFIG_MMC_RTK_SDMMC_MODULE)
 int mmc_runtime_resume_flag=0;
 int get_mmc_runtime_resume_flag(void)
 {
@@ -44,15 +44,13 @@ void set_mmc_runtime_resume_flag(int flag)
 EXPORT_SYMBOL(set_mmc_runtime_resume_flag);
 #endif
 
-#ifdef CONFIG_ARCH_RTD119X
-#ifdef CONFIG_MMC_RTK_SDMMC
+#if defined(CONFIG_ARCH_RTD119X) && (defined(CONFIG_MMC_RTK_SDMMC) || defined(CONFIG_MMC_RTK_SDMMC_MODULE))
 int Menfid=0x0;
 int get_manfid(void)
 {
         return Menfid;
 }
 EXPORT_SYMBOL(get_manfid);
-#endif
 #endif
 
 static const unsigned int tran_exp[] = {
@@ -107,10 +105,8 @@ void mmc_decode_cid(struct mmc_card *card)
 	 * have to assume we can parse this.
 	 */
 	card->cid.manfid		= unstuff_bits(resp, 120, 8);
-#ifdef CONFIG_ARCH_RTD119X
-#ifdef CONFIG_MMC_RTK_SDMMC
+#if defined(CONFIG_ARCH_RTD119X) && (defined(CONFIG_MMC_RTK_SDMMC) || defined(CONFIG_MMC_RTK_SDMMC_MODULE))
 	Menfid = card->cid.manfid;
-#endif
 #endif
 
 	card->cid.oemid			= unstuff_bits(resp, 104, 16);
@@ -1841,7 +1837,7 @@ static int mmc_sd_runtime_resume(struct mmc_host *host)
 
 	err = _mmc_sd_resume(host);
 	if (err && err != -ENOMEDIUM) {
-#ifdef CONFIG_MMC_RTK_SDMMC
+#if defined(CONFIG_MMC_RTK_SDMMC) || defined(CONFIG_MMC_RTK_SDMMC_MODULE)
 		mmc_runtime_resume_flag=1;
 #endif
 
