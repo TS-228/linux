@@ -50,9 +50,6 @@
 #include "debug.h"
 #include "../host/xhci-ext-caps.h"
 
-#define RTK_DWC3_RX_THRESHOLD_EN		BIT(29)
-#define RTK_DWC3_RX_PKT_CNT(n)			((n) << 24)
-#define RTK_DWC3_RX_MAX_BURST_SZ(n)		((n) << 19)
 
 #define DWC3_DEFAULT_AUTOSUSPEND_DELAY	5000 /* ms */
 
@@ -1346,29 +1343,6 @@ static void dwc3_config_threshold(struct dwc3 *dwc)
 	}
 }
 
-/*
- * Realtek RTD SoCs: without this, transactions on this DWC3 instance
- * intermittently fail and cause a port reset. Re-applied on resume since
- * these registers don't retain state across suspend.
- */
-static void dwc3_rtk_tx_rx_thr_quirk(struct dwc3 *dwc)
-{
-	if (!dwc->rtk_tx_rx_thr_quirk)
-		return;
-
-	dwc3_writel(dwc->regs, DWC3_GTXTHRCFG, 0x01010000);
-	dwc3_writel(dwc->regs, DWC3_GRXTHRCFG, RTK_DWC3_RX_THRESHOLD_EN |
-		    RTK_DWC3_RX_PKT_CNT(3) | RTK_DWC3_RX_MAX_BURST_SZ(3));
-	/* enable auto retry */
-	dwc3_writel(dwc->regs, DWC3_GUCTL,
-		    dwc3_readl(dwc->regs, DWC3_GUCTL) | (1 << 14));
-
-	if (dwc->revision >= DWC3_REVISION_300A)
-		dwc3_writel(dwc->regs, DWC3_DEV_IMOD(0),
-			    dwc3_readl(dwc->regs, DWC3_DEV_IMOD(0)) |
-			    DWC3_DEVICE_IMODI(0x1));
-}
-
 /**
  * dwc3_core_init - Low-level initialization of DWC3 Core
  * @dwc: Pointer to our controller context structure
@@ -1539,7 +1513,6 @@ static int dwc3_core_init(struct dwc3 *dwc)
 		reg |= DWC3_LLUCTL_FORCE_GEN1;
 		dwc3_writel(dwc->regs, DWC3_LLUCTL, reg);
 	}
-	dwc3_rtk_tx_rx_thr_quirk(dwc);
 
 	return 0;
 
@@ -1840,8 +1813,6 @@ static void dwc3_get_properties(struct dwc3 *dwc)
 				"snps,parkmode-disable-ss-quirk");
 	dwc->parkmode_disable_hs_quirk = device_property_read_bool(dev,
 				"snps,parkmode-disable-hs-quirk");
-	dwc->rtk_tx_rx_thr_quirk = device_property_read_bool(dev,
-				"snps,rtk-tx-rx-thr-quirk");
 	dwc->gfladj_refclk_lpm_sel = device_property_read_bool(dev,
 				"snps,gfladj-refclk-lpm-sel-quirk");
 
@@ -2747,8 +2718,6 @@ static int dwc3_resume(struct device *dev)
 	//For suspend mode
 	dev_info(dev,  "[USB] %s Suspend mode\n", __func__);
 #endif
-
-	dwc3_rtk_tx_rx_thr_quirk(dwc);
 
 	pinctrl_pm_select_default_state(dev);
 
