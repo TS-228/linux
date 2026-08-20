@@ -83,6 +83,15 @@ static struct notifier_block rtk_restart_nb = {
 };
 
 static struct of_device_id rtk_restart_ids[] = {
+	/*
+	 * "Realtek,rtk-watchdog" is the stale vendor 3.10 compatible; the
+	 * mainlined DT node (arch/arm/boot/dts/realtek/rtd119x/rtd-119x.dtsi)
+	 * uses "realtek,rtd1295-watchdog". Without this match,
+	 * of_find_matching_node() always fails, register_restart_handler()
+	 * is never reached, and machine_restart() has no handler at all --
+	 * reboot hangs after "reboot: Restarting system".
+	 */
+	{.compatible = "realtek,rtd1295-watchdog"},
 	{.compatible = "Realtek,rtk-watchdog"},
 	{}
 };

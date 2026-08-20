@@ -32,8 +32,8 @@
 #include <linux/kernel.h>
 #include <linux/mod_devicetable.h>
 #include <linux/module.h>
-#include <linux/moduleparam.h>
 #include <linux/mutex.h>
+#include <linux/nvmem-provider.h>
 #include <linux/of.h>
 #include <linux/property.h>
 #include <linux/reboot.h>
@@ -41,10 +41,6 @@
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/thermal.h>
-
-static bool debug_rx;
-module_param(debug_rx, bool, 0644);
-MODULE_PARM_DESC(debug_rx, "Log every PIC RX byte at info level");
 
 #define QNAP_TS228_PIC_BAUDRATE		19200
 #define QNAP_TS228_PIC_TIMEOUT_MS	1000
@@ -122,6 +118,9 @@ struct qnap_ts228_pic {
 	bool fan_valid;
 	bool temp_valid;
 
+	u8 mac_addr[ETH_ALEN];
+	bool mac_valid;
+
 	struct task_struct *monitor_task;
 
 	struct fwnode_handle *fan_node;
@@ -152,10 +151,6 @@ static size_t qnap_ts228_pic_receive_buf(struct serdev_device *serdev,
 	struct qnap_ts228_pic *pic = serdev_device_get_drvdata(serdev);
 	size_t i;
 	bool got_data = false;
-
-	if (debug_rx && count)
-		dev_info(&serdev->dev, "pic-rx (%zu): %*ph\n",
-			 count, (int)count, data);
 
 	for (i = 0; i < count; i++) {
 		u8 b = data[i];
@@ -305,7 +300,7 @@ static int qnap_ts228_pic_wait_data(struct qnap_ts228_pic *pic, u8 *val)
 		ret = qnap_ts228_pic_wait_byte(pic, &b);
 		if (ret)
 			continue;
-		if (b == PIC_CMD_ACK || b == PIC_CMD_SYNC || b == 0xe0)
+		if (b == PIC_CMD_ACK || b == PIC_CMD_SYNC || b == 0xe0 || b == 0x00)
 			continue;
 		*val = b;
 		return 0;
@@ -345,16 +340,6 @@ static int qnap_ts228_pic_start_monitor(struct qnap_ts228_pic *pic)
 	pic->monitor_ready = true;
 	dev_info(&pic->serdev->dev, "PIC initialized (0xf2)\n");
 	return 0;
-}
-
-static void qnap_ts228_pic_log_rx(struct qnap_ts228_pic *pic, const char *tag)
-{
-	if (!pic->rx_len)
-		return;
-
-	dev_info(&pic->serdev->dev, "%s rx (%u): %*ph\n",
-		 tag, pic->rx_len, (int)min_t(unsigned int, pic->rx_len, 16U),
-		 pic->rx_buf);
 }
 
 static int qnap_ts228_pic_read_cmd(struct qnap_ts228_pic *pic, u8 cmd, u8 *val)
@@ -457,7 +442,6 @@ static int qnap_ts228_pic_set_fan_level(struct qnap_ts228_pic *pic, unsigned int
 		return ret;
 
 	usleep_range(200000, 250000);
-	qnap_ts228_pic_log_rx(pic, "fan set");
 	qnap_ts228_pic_reset_rx(pic);
 
 	pic->fan_holdoff_until = jiffies + msecs_to_jiffies(PIC_FAN_HOLDOFF_MS);
@@ -516,18 +500,27 @@ static int qnap_ts228_pic_reboot_notify(struct notifier_block *nb,
 	return NOTIFY_OK;
 }
 
-static void qnap_ts228_pic_shutdown(struct device *dev)
+static void qnap_ts228_pic_shutdown(struct serdev_device *serdev)
 {
-	struct serdev_device *serdev = to_serdev_device(dev);
 	struct qnap_ts228_pic *pic = serdev_device_get_drvdata(serdev);
 
 	if (!pic)
 		return;
 
+	/*
+	 * device_shutdown() runs this unconditionally for reboot, halt, and
+	 * poweroff alike -- unlike the reboot notifier above, it gets no
+	 * mode argument. Only cut the PSU on an actual poweroff/halt; on
+	 * SYSTEM_RESTART this must be a no-op or "reboot" cuts power via the
+	 * PIC instead of letting the SoC reset, and the board just stays off.
+	 */
+	if (system_state != SYSTEM_POWER_OFF && system_state != SYSTEM_HALT)
+		return;
+
 	mutex_lock(&pic->lock);
 	qnap_ts228_pic_send_cmd(pic, PIC_CMD_SOFTWARE_SHUTDOWN);
 	mutex_unlock(&pic->lock);
-	dev_emerg(dev, "PIC software shutdown (0x41) via device shutdown\n");
+	dev_emerg(&serdev->dev, "PIC software shutdown (0x41) via device shutdown\n");
 	mdelay(1500);
 }
 
@@ -817,6 +810,72 @@ static size_t qnap_ts228_pic_ascii_len(const u8 *buf, size_t len)
 	return len;
 }
 
+static int qnap_ts228_pic_mac_ascii_to_bin(const u8 *raw, size_t raw_len,
+					     u8 mac[ETH_ALEN])
+{
+	char tmp[PIC_EEPROM_MAC_LEN + 1];
+	size_t len;
+
+	len = qnap_ts228_pic_ascii_len(raw, raw_len);
+	if (!len || len >= sizeof(tmp))
+		return -EINVAL;
+
+	memcpy(tmp, raw, len);
+	tmp[len] = '\0';
+
+	if (!mac_pton(tmp, mac))
+		return -EINVAL;
+
+	return 0;
+}
+
+/*
+ * Must be called with pic->lock held.
+ * Loads MAC from PIC EEPROM and populates pic->mac_addr cache.
+ */
+static int qnap_ts228_pic_load_mac_locked(struct qnap_ts228_pic *pic)
+{
+	u8 raw[PIC_EEPROM_MAC_LEN];
+	int ret;
+
+	if (pic->mac_valid)
+		return 0;
+
+	ret = qnap_ts228_pic_eeprom_read(pic, PIC_EEPROM_MAC_OFF, raw,
+					  PIC_EEPROM_MAC_LEN);
+	if (ret)
+		return ret;
+
+	ret = qnap_ts228_pic_mac_ascii_to_bin(raw, PIC_EEPROM_MAC_LEN,
+					       pic->mac_addr);
+	if (ret)
+		return ret;
+
+	pic->mac_valid = true;
+	return 0;
+}
+
+static int qnap_ts228_pic_nvmem_mac_reg_read(void *priv, unsigned int offset,
+					      void *val, size_t bytes)
+{
+	struct qnap_ts228_pic *pic = priv;
+	u8 *out = val;
+	int ret;
+
+	if (!out)
+		return -EINVAL;
+	if (offset >= ETH_ALEN || offset + bytes > ETH_ALEN)
+		return -EINVAL;
+
+	guard(mutex)(&pic->lock);
+	ret = qnap_ts228_pic_load_mac_locked(pic);
+	if (ret)
+		return ret;
+
+	memcpy(out, pic->mac_addr + offset, bytes);
+	return 0;
+}
+
 static ssize_t serial_number_show(struct device *dev,
 				  struct device_attribute *attr, char *buf)
 {
@@ -926,6 +985,11 @@ static ssize_t mac_address_store(struct device *dev,
 	guard(mutex)(&pic->lock);
 	ret = qnap_ts228_pic_eeprom_write(pic, PIC_EEPROM_MAC_OFF, raw,
 					  PIC_EEPROM_MAC_LEN);
+	if (!ret) {
+		memcpy(pic->mac_addr, mac, ETH_ALEN);
+		pic->mac_valid = true;
+	}
+
 	return ret ? ret : count;
 }
 static DEVICE_ATTR_RW(mac_address);
@@ -1306,6 +1370,37 @@ static int qnap_ts228_pic_probe(struct serdev_device *serdev)
 		return dev_err_probe(dev, PTR_ERR(pic->hwmon_dev),
 				     "Failed to register hwmon device\n");
 
+#if IS_ENABLED(CONFIG_NVMEM)
+	/* Cache MAC before NVMEM registration so deferred GMAC probe avoids EEPROM I/O. */
+	mutex_lock(&pic->lock);
+	ret = qnap_ts228_pic_load_mac_locked(pic);
+	mutex_unlock(&pic->lock);
+	if (ret)
+		dev_warn(dev, "Failed to preload MAC from PIC EEPROM: %d\n", ret);
+
+	{
+		struct nvmem_config cfg = {
+			.dev = dev,
+			.name = "qnap-ts228-pic-mac",
+			.owner = THIS_MODULE,
+			.read_only = true,
+			.reg_read = qnap_ts228_pic_nvmem_mac_reg_read,
+			.size = ETH_ALEN,
+			.word_size = 1,
+			.stride = 1,
+			.priv = pic,
+			/* mac-address@0 under the pic DT node */
+			.add_legacy_fixed_of_cells = true,
+		};
+		struct nvmem_device *nvmem;
+
+		nvmem = devm_nvmem_register(dev, &cfg);
+		if (IS_ERR(nvmem))
+			dev_warn(dev, "Failed to register nvmem MAC cell: %ld\n",
+				 PTR_ERR(nvmem));
+	}
+#endif
+
 	/*
 	 * Register the cooling device only after releasing pic->lock.
 	 * thermal_of_cooling_device_register() updates the thermal zone and
@@ -1356,11 +1451,11 @@ MODULE_DEVICE_TABLE(of, qnap_ts228_pic_of_match);
 
 static struct serdev_device_driver qnap_ts228_pic_driver = {
 	.probe = qnap_ts228_pic_probe,
+	.shutdown = qnap_ts228_pic_shutdown,
 	.driver = {
 		.name = "qnap-ts228-pic",
 		.of_match_table = qnap_ts228_pic_of_match,
 		.dev_groups = qnap_ts228_pic_groups,
-		.shutdown = qnap_ts228_pic_shutdown,
 	},
 };
 module_serdev_device_driver(qnap_ts228_pic_driver);
