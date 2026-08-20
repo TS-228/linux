@@ -96,9 +96,11 @@ ensure_arm_config() {
 }
 
 apply_emmc_config() {
-	# eMMC must stay a module on RTD119x — built-in (=y) breaks early boot (~21 KiB
-	# larger image hits undefined-instruction at 0x0010800c). Do not touch CMDLINE.
-	./scripts/config --module MMC_RTK_EMMC
+	# Previously kept as a module: built-in (=y) used to break early boot with
+	# the old gzip-wrapped raw Image (~21 KiB larger image hit an
+	# undefined-instruction at 0x0010800c). Now built-in for testing since the
+	# boot path has since moved to zImage; revert to --module if that recurs.
+	./scripts/config --enable MMC_RTK_EMMC
 	./scripts/config --disable IKCONFIG_PROC
 	make olddefconfig
 }
@@ -125,7 +127,7 @@ apply_qnap_ts228_pic_config() {
 	./scripts/config --enable SERIAL_8250_DW
 	./scripts/config --enable HWMON
 	./scripts/config --enable THERMAL
-	./scripts/config --module SENSORS_QNAP_TS228_PIC
+	./scripts/config --enable SENSORS_QNAP_TS228_PIC
 	./scripts/config --disable MFD_QNAP_MCU
 	./scripts/config --disable SENSORS_QNAP_MCU_HWMON
 	./scripts/config --disable CONFIG_INPUT_QNAP_MCU 2>/dev/null || \
@@ -165,9 +167,29 @@ apply_thermal_config() {
 	./scripts/config --enable RTK_EFUSE
 	./scripts/config --enable NVMEM
 	./scripts/config --enable NVMEM_SYSFS
-	./scripts/config --module SENSORS_QNAP_TS228_PIC
+	./scripts/config --enable SENSORS_QNAP_TS228_PIC
 	# Vendor Android stub — not a real battery on TS-228.
 	./scripts/config --disable RTD1XXX_POWER 2>/dev/null || true
+	make olddefconfig
+}
+
+apply_armv7_neon_config() {
+	# RTD1195 = dual Cortex-A7 with NEON, no ARMv8 Crypto Extensions.
+	# Enable NEON-accelerated crypto; skip *ARM_CE* (needs PMULL/AES instructions).
+	./scripts/config --enable CRYPTO_SHA1_ARM
+	./scripts/config --enable CRYPTO_SHA1_ARM_NEON
+	./scripts/config --enable CRYPTO_SHA256_ARM
+	./scripts/config --enable CRYPTO_SHA512_ARM
+	./scripts/config --enable CRYPTO_AES_ARM
+	./scripts/config --enable CRYPTO_AES_ARM_BS
+	./scripts/config --enable CRYPTO_BLAKE2S_ARM
+	./scripts/config --enable CRYPTO_BLAKE2B_NEON
+	./scripts/config --enable CRYPTO_NHPOLY1305
+	./scripts/config --enable CRYPTO_NHPOLY1305_NEON
+	./scripts/config --enable CRYPTO_GHASH_ARM_CE
+	# Broken on this board — use CPU NEON crypto instead.
+	./scripts/config --disable CRYPTO_DEV_RTK_MCP
+	./scripts/config --disable CRYPTO_DEV_RTK_MCP_SHA_COMPLIANCE_TEST
 	make olddefconfig
 }
 
@@ -180,6 +202,7 @@ apply_qnap_ts228_pic_config
 apply_ksmbd_config
 apply_cpufreq_config
 apply_thermal_config
+apply_armv7_neon_config
 
 if ! is_arm_rtd119x_config "$CONFIG_FILE"; then
 	echo "ERROR: .config is still not a valid RTD119x ARM config after setup" >&2
@@ -251,13 +274,10 @@ make -j$(nproc) modules
 make dtbs
 
 # Always deploy boot artifacts + loadable modules to TFTP
-sudo cp arch/arm/boot/dts/realtek/rtd119x/rtd-119x-horseradish-QNAP-TS-X28.dtb /var/lib/tftpboot/rescue.emmc.dtb
+sudo cp arch/arm/boot/dts/realtek/rtd1195-qnap-ts-228.dtb /var/lib/tftpboot/rescue.emmc.dtb
 sudo cp arch/arm/boot/uImage /var/lib/tftpboot/emmc.uImage
 if [[ -f drivers/mmc/host/rtkemmc_rtd119x.ko ]]; then
 	sudo cp drivers/mmc/host/rtkemmc_rtd119x.ko /var/lib/tftpboot/
-fi
-if [[ -f drivers/hwmon/qnap-ts228-pic.ko ]]; then
-	sudo cp drivers/hwmon/qnap-ts228-pic.ko /var/lib/tftpboot/
 fi
 
 KREL=$(make -s kernelrelease)
@@ -272,13 +292,15 @@ echo "  install -D -m 644 drivers/mmc/host/rtkemmc_rtd119x.ko \\"
 echo "    /lib/modules/${KREL}/kernel/drivers/mmc/host/rtkemmc_rtd119x.ko"
 echo "  echo rtkemmc_rtd119x > /etc/modules-load.d/rtkemmc.conf"
 echo ""
-echo "PIC driver (module — reload without reboot after one modular kernel boot):"
-echo "  tools/qnap-ts228/reload-pic.sh [host]"
+echo "PIC driver (built-in):"
 echo "  tools/qnap-ts228/mainline-pic-test.sh [host] [pwm]"
 echo "  make -C tools/qnap-ts228 uart_probe && make -C tools/qnap-ts228 deploy HOST=root@<host>"
 echo "  tools/qnap-ts228/pull-stock.sh admin@<stock-host>   # refresh offline HAL reference"
-echo "  # first boot with modular kernel: modprobe qnap_ts228_pic"
-echo "  install -D -m 644 drivers/hwmon/qnap-ts228-pic.ko \\"
-echo "    /lib/modules/${KREL}/kernel/drivers/hwmon/qnap-ts228-pic.ko"
+echo ""
+echo "Rootfs cleanup (remove stale out-of-tree modules after PIC built-in):"
+echo "  rm -f /lib/modules/${KREL}/extra/qnap-ts228-pic.ko"
+echo "  rm -f /lib/modules/${KREL}/kernel/drivers/hwmon/qnap-ts228-pic.ko"
+echo "  rm -f /etc/modules-load.d/qnap-ts228-pic.conf"
+echo "  depmod -a"
 
 echo "tftp \$fdt_loadaddr \$serverip:\$rescue_dtb && tftp \$kernel_loadaddr \$serverip:\$rescue_vmlinux && bootm \$kernel_loadaddr - \$fdt_loadaddr"

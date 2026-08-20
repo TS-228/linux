@@ -1,7 +1,6 @@
 #include <dt-bindings/clock/rtk,clock-rtd119x.h>
 #include <dt-bindings/reset/rtk,reset-rtd119x.h>
 
-/include/ "rtd-119x-irda.dtsi"
 / {
 	interrupt-parent = <&gic>;
 	#address-cells = <1>;
@@ -472,13 +471,6 @@
 		#reset-cells = <1>;
 	};
 
-	osc27M: osc27M {
-		compatible = "fixed-clock";
-		#clock-cells = <0>;
-		clock-frequency = <27000000>;
-		clock-output-names = "osc27M";
-	};
-
 	clk_en_1: clk-en@1800000c {
 		compatible = "realtek,clock-gate-controller";
 		reg = <0x1800000c 0x4>;
@@ -586,19 +578,6 @@
 		resets = <&rst_2 RSTN_UR1>;
 	};
 
-	irda@18007400 {
-		compatible = "Realtek,rtk-irda";
-		interrupt-parent = <&mux_intc>;
-		reg = <0x18007000 0x400>, <0x18007400 0x100>;
-		interrupts = <1 5>;
-//		pinctrl-names = "default";
-//		pinctrl-0 = <&i2c_pins_5>;
-//		status = "default";
-//		gpios = <&rtk_iso_gpio 7>;
-		clocks = <&iso_clk_en CLK_EN_MISC_IR>;
-		resets = <&iso_rst IRSTN_IR>;
-	};
-
 	se@1800c000 {
 		compatible = "realtek,se";
 		reg = <0x1800c000 0x600>;
@@ -636,22 +615,6 @@
 		reg = <0x1801a000 0x900>;
 		interrupts = <0 36 4>;
 	};
-	hdmirx@1800F000 {
-		compatible = "Realtek,rtk119x-mipi-top";
-		reg = <0x1800F000 0x418>,<0x1800FB00 0x100>,<0x18037200 0xDC>,<0x18037300 0x14>,<0x1800F600 0x1c>,<0x18037400 0x40>,<0x1800F000 0x200>,<0x1800F200 0x60>,<0x1800F260 0xA0>,<0x1800F300 0xC0>,<0x1800F3C0 0x20>,<0x1800F3E0 0x10>,<0x1800d1b0 0x10>,<0x18037700 0x98>,<0x18037600 0x98>,<0x18004100 0x100>,<0x18004000 0xf0>,<0x1800FF00 0x28>, <0x1800FD00 0x50>;
-		interrupts = <0 23 4>;
-		gpio-rx-hpd-ctrl = <&rtk_iso_gpio 5 1 0>;
-		mipi_input_type = <1>;/* 0:camera in ;1:HDMI_RX in */
-		mipi_camera_type = <2>; /* 1:fixed pattern; 2:mipi camera*/
-		power-saving = <0>; /* 1:ON,0:OFF; Turn off RX when cable unplugged */
-//		status = "disabled";
-		gpio-rx-5v-detect {
-			compatible = "gpio-rx-5v-detect";
-			gpios =  <&rtk_iso_gpio 4 0 0>;
-			interrupt-parent = <&rtk_iso_gpio>;
-			interrupts = <4>;
-		};
-	};
 	nic: gmac@18016000 {
 		compatible = "Realtek,r8168";
 		reg = <0x18016000 0x1000>;
@@ -667,14 +630,6 @@
 		clock-names = "etn", "etn_250m", "etn_sys";
 		resets = <&rst_1 RSTN_ETN>;
 		reset-names = "rst_etn";
-	};
-	cec0@18007500 {
-		compatible = "Realtek,rtk-cec0";
-		interrupt-parent = <&mux_intc>;
-		reg = <0x18007500 0xe0>,<0x18007040 0xa>;
-		interrupts = <1 22>;
-		module-enable = <0>;
-		status = "okay";
 	};
 	cec1@18037200 {
 	    compatible = "Realtek,rtk119x-cec1";

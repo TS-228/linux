@@ -1,6 +1,6 @@
 
 / {
-	/include/ "rtd-119x-usb.dtsi"
+	/include/ "rtd119x/rtd-119x-usb.dtsi"
 
 	rtk_usb_power_manager@0 {
 		compatible = "Realtek,usb-manager";
