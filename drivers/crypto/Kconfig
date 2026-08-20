@@ -849,6 +849,38 @@ config CRYPTO_DEV_SA2UL
 	  used for crypto offload.  Select this if you want to use hardware
 	  acceleration for cryptographic algorithms on these devices.
 
+config CRYPTO_DEV_RTK_MCP
+	tristate "Realtek MCP crypto accelerator"
+	depends on ARM || ARM64 || COMPILE_TEST
+	select CRYPTO_SKCIPHER
+	select CRYPTO_AES
+	select CRYPTO_SHA1
+	select CRYPTO_SHA256
+	help
+	  Hardware crypto acceleration using the Realtek MCP (Media Content
+	  Protection) engine found in RTD1195/RTD1295/RTD1395 SoCs.
+	  Supports AES-128 ECB/CBC and SHA1/SHA256.
+
+	  To compile this driver as a module, choose M here. The module
+	  will be called rtk-mcp.
+
+config CRYPTO_DEV_RTK_MCP_SHA_COMPLIANCE_TEST
+	tristate "Realtek MCP SHA256 compliance test module"
+	depends on CRYPTO_DEV_RTK_MCP
+	default n
+	help
+	  Builds a test module that compares rtk-mcp-sha256 digests against
+	  sha256-generic across multiple ahash usage patterns.
+
+config CRYPTO_DEV_RTK_MCP_TEST
+	tristate "Realtek MCP known-answer test module"
+	depends on CRYPTO_DEV_RTK_MCP
+	default n
+	help
+	  Builds a test module that runs NIST known-answer AES-128 ECB/CBC
+	  and SHA1/SHA256 test vectors against the rtk-mcp driver and prints
+	  PASS/FAIL to dmesg.
+
 source "drivers/crypto/aspeed/Kconfig"
 source "drivers/crypto/starfive/Kconfig"
 

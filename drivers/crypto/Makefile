@@ -52,3 +52,6 @@ obj-y += hisilicon/
 obj-$(CONFIG_CRYPTO_DEV_AMLOGIC_GXL) += amlogic/
 obj-y += intel/
 obj-y += starfive/
+obj-$(CONFIG_CRYPTO_DEV_RTK_MCP) += rtk-mcp.o
+obj-$(CONFIG_CRYPTO_DEV_RTK_MCP_SHA_COMPLIANCE_TEST) += rtk-mcp-sha-compliance-test.o
+obj-$(CONFIG_CRYPTO_DEV_RTK_MCP_TEST) += rtk-mcp-test.o

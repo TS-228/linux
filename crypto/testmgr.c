@@ -2858,6 +2858,11 @@ static int test_skcipher_vec_cfg(int enc, const struct cipher_testvec *vec,
 	else
 		crypto_skcipher_clear_flags(tfm,
 					    CRYPTO_TFM_REQ_FORBID_WEAK_KEYS);
+
+	if (vec->klen < crypto_skcipher_min_keysize(tfm) ||
+	    vec->klen > crypto_skcipher_max_keysize(tfm))
+		return 0;
+
 	err = do_setkey(crypto_skcipher_setkey, tfm, vec->key, vec->klen,
 			cfg, alignmask);
 	if (err) {
