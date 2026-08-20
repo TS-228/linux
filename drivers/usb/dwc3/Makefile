@@ -59,7 +59,6 @@ obj-$(CONFIG_USB_DWC3_ST)		+= dwc3-st.o
 obj-$(CONFIG_USB_DWC3_RTK)		+= dwc3-rtk.o
 obj-$(CONFIG_USB_DWC3_RTK)		+= dwc3-rtk-type_c.o
 obj-$(CONFIG_USB_RTK_DWC3_DRD_MODE)			+= dwc3-rtk-drd.o
-obj-$(CONFIG_USB_TYPE_C_RTK_RTS5400) += rtk-rts5400.o
 obj-$(CONFIG_USB_DWC3_QCOM)		+= dwc3-qcom.o
 obj-$(CONFIG_USB_DWC3_IMX8MP)		+= dwc3-imx8mp.o
 obj-$(CONFIG_USB_DWC3_XILINX)		+= dwc3-xilinx.o

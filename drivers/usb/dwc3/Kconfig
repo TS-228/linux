@@ -68,12 +68,6 @@ config USB_RTK_DWC3_DRD_MODE
 	help
 		Support Realtek dwc3 drd type c dynamical host/device mode switch
 
-config USB_TYPE_C_RTK_RTS5400
-	bool "RTK Type C Controller RTS5400"
-	depends on USB_RTK_DWC3_DRD_MODE
-	help
-		Support Realtek type c controller via RTS5400
-
 config USB_DWC3_OMAP
 	tristate "Texas Instruments OMAP5 and similar Platforms"
 	depends on ARCH_OMAP2PLUS || COMPILE_TEST

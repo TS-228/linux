@@ -7,7 +7,6 @@ obj-$(CONFIG_MTD_NAND_ECC_MEDIATEK) += ecc-mtk.o
 obj-y	+= onenand/
 obj-y	+= raw/
 
-nand-objs := rtk_nand.o nand_base_rtk.o
 obj-y	+= spi/
 
 nandcore-$(CONFIG_MTD_NAND_ECC) += ecc.o
