@@ -232,10 +232,6 @@ machine-$(CONFIG_ARCH_ZYNQ)		+= zynq
 machine-$(CONFIG_PLAT_VERSATILE)	+= versatile
 machine-$(CONFIG_PLAT_SPEAR)		+= spear
 machine-$(CONFIG_ARCH_RTD119X)	+= rtd119x
-machine-$(CONFIG_ARCH_RTD129x)	+= rtd129x
-machine-$(CONFIG_ARCH_RTD139x)	+= rtd139x
-machine-$(CONFIG_ARCH_RTD16xx)	+= rtd16xx
-machine-$(CONFIG_ARCH_RTD13xx)	+= rtd13xx
 
 # legacy platforms provide their own mach/*.h headers globally,
 # these three are mutually exclusive

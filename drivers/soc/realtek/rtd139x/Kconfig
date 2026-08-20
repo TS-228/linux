@@ -1,5 +1,0 @@
-menu "RTD139x Device Drivers"
-
-source "drivers/soc/realtek/rtd139x/rtk_ve/Kconfig"
-
-endmenu #RTD139x Device Drivers

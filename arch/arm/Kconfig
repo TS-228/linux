@@ -436,14 +436,6 @@ source "arch/arm/mach-realtek/Kconfig"
 
 source "arch/arm/mach-rtd119x/Kconfig"
 
-source "arch/arm/mach-rtd129x/Kconfig"
-
-source "arch/arm/mach-rtd139x/Kconfig"
-
-source "arch/arm/mach-rtd16xx/Kconfig"
-
-source "arch/arm/mach-rtd13xx/Kconfig"
-
 source "arch/arm/mach-rpc/Kconfig"
 
 source "arch/arm/mach-rockchip/Kconfig"

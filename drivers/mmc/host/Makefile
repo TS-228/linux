@@ -8,13 +8,7 @@ CFLAGS_rtkemmc_rtd119x.o += $(rtk_vendor-ccflags)
 CFLAGS_rtk-sdmmc.o += $(rtk_vendor-ccflags)
 CFLAGS_sdmmc_export.o += $(rtk_vendor-ccflags)
 
-ifeq ($(CONFIG_ARCH_RTD119X),y)
 obj-$(CONFIG_MMC_RTK_EMMC)              += rtkemmc_rtd119x.o
-else ifeq ($(CONFIG_ARCH_RTD13xx),y)
-obj-$(CONFIG_MMC_RTK_EMMC)              += rtkemmc_rtd13xx.o
-else
-obj-$(CONFIG_MMC_RTK_EMMC)              += rtkemmc.o
-endif
 
 obj-$(CONFIG_MMC_ARMMMCI) += armmmci.o
 armmmci-y := mmci.o
@@ -116,7 +110,6 @@ obj-$(CONFIG_MMC_CQHCI)			+= cqhci.o
 cqhci-y					+= cqhci-core.o
 cqhci-$(CONFIG_MMC_CRYPTO)		+= cqhci-crypto.o
 obj-$(CONFIG_MMC_HSQ)			+= mmc_hsq.o
-obj-$(CONFIG_MMC_SDHCI_RTK)		+= sdhci-rtk.o
 obj-$(CONFIG_MMC_LITEX)			+= litex_mmc.o
 
 ifeq ($(CONFIG_CB710_DEBUG),y)
