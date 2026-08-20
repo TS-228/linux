@@ -398,7 +398,15 @@ static int qnap_ts228_pic_monitor(void *data)
 			pic->fan_valid = true;
 		}
 		if (!qnap_ts228_pic_read_cmd(pic, PIC_CMD_READ_TEMP, &raw)) {
-			pic->temp_millic = raw * 1000;
+			/*
+			 * Raw byte is offset by +128 (common 8-bit biased-signed
+			 * encoding), not a literal degrees-C integer -- confirmed
+			 * via two independent readings (raw=165,166) that only
+			 * become physically plausible NAS-enclosure ambient temps
+			 * (37C, 38C) after subtracting the bias; raw*1000 direct
+			 * gave an impossible 165-166C every time.
+			 */
+			pic->temp_millic = (raw - 128) * 1000;
 			pic->temp_valid = true;
 		}
 
@@ -1345,7 +1353,8 @@ static int qnap_ts228_pic_probe(struct serdev_device *serdev)
 			pic->fan_valid = true;
 		}
 		if (!qnap_ts228_pic_read_cmd(pic, PIC_CMD_READ_TEMP, &raw)) {
-			pic->temp_millic = raw * 1000;
+			/* See qnap_ts228_pic_monitor() for the +128 bias rationale. */
+			pic->temp_millic = (raw - 128) * 1000;
 			pic->temp_valid = true;
 		}
 
