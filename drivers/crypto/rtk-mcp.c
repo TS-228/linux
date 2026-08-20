@@ -246,8 +246,16 @@ static int rtk_mcp_sha_init(struct ahash_request *req)
 {
 	struct rtk_mcp_hash_reqctx *rctx = ahash_request_ctx(req);
 
+	/*
+	 * ahash_request_alloc() does not zero the trailing reqctx area, so
+	 * on a freshly allocated request buf/alloc hold garbage. Reset them
+	 * explicitly rather than relying on a prior final() on this same
+	 * request object to have cleaned up (krealloc() on a garbage
+	 * pointer corrupts the heap).
+	 */
+	rctx->buf = NULL;
+	rctx->alloc = 0;
 	rctx->used = 0;
-	/* Buffer stays allocated across update/final within one request. */
 	return 0;
 }
 
