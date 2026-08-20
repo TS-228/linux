@@ -1,4 +1,3 @@
-ccflags-y	+= -Idrivers/video/fbdev/rtk
 ccflags-y += -I$(srctree)/drivers/staging/android
 ccflags-$(CONFIG_RTK_RPC)	+= -Idrivers/soc/realtek/common
 ccflags-$(CONFIG_RTK_RPC)	+= -Idrivers/soc/realtek/common/include

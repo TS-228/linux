@@ -34,7 +34,6 @@
 #include <soc/realtek/avcpu.h>
 
 #include "rtk_rpc.h"
-#include "dc2vo/dc2vo.h"
 
 #ifdef CONFIG_ION_RTK
 #include "uapi/ion.h"
@@ -291,16 +290,6 @@ void rpc_send_interrupt(int type)
 
 }
 EXPORT_SYMBOL(rpc_send_interrupt);
-
-void dc2vo_send_interrupt(void)
-{
-	if (rpc_acpu_int_flag != NULL && RPC_HAS_BIT(rpc_acpu_int_flag, VO_DC_SET_NOTIFY)) {
-		RPC_SET_BIT(rpc_acpu_int_flag, VO_DC_FEEDBACK_NOTIFY);
-		/* audio */
-		writel((RPC_INT_SA | RPC_INT_WRITE_1), rpc_int_base+RPC_SB2_INT);
-	}
-}
-EXPORT_SYMBOL(dc2vo_send_interrupt);
 
 static int rpc_event_notify(struct notifier_block *self, unsigned long action,
 		void *data)
