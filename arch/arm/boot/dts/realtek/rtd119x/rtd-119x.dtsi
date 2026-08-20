@@ -7,6 +7,13 @@
 	#address-cells = <1>;
 	#size-cells = <1>;
 
+	osc27M: osc27M {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <27000000>;
+		clock-output-names = "osc27M";
+	};
+
 	cpus {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -541,21 +548,11 @@
 		clock-frequency = <0>;
 	};
 
-	rtk_wdt@1801b5b0 {
-		compatible = "Realtek,rtk-watchdog";
-		reg = <0x18007680 0x10>;
+	wdt: watchdog@18007680 {
+		compatible = "realtek,rtd1295-watchdog";
+		reg = <0x18007680 0x100>;
+		clocks = <&osc27M>;
 	};
-
-	rtc@1801B600 {
-		compatible = "Realtek,rtk-rtc";
-		reg =   <0x1801B600 0x100>,
-			<0x18007000 0x100>;
-			rtc-base-year = <2016>;
-			status = "okay";
-		clocks = <&clk_en_2 CLK_EN_MISC_RTC>;
-		resets = <&rst_2 RSTN_RTC>;
-	};
-
 
 	refclk@1801b540 {
 		compatible = "Realtek,rtk119x-refclk";
