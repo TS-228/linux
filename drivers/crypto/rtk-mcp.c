@@ -10,11 +10,7 @@
  */
 
 #include <crypto/aes.h>
-#include <crypto/sha1.h>
-#include <crypto/sha2.h>
-#include <crypto/hash.h>
 #include <crypto/algapi.h>
-#include <crypto/internal/hash.h>
 #include <crypto/internal/skcipher.h>
 #include <crypto/scatterwalk.h>
 #include <linux/clk.h>
@@ -55,9 +51,6 @@
 #define MCP_MODE_CBC		0x0040
 #define MCP_MODE_ENCRYPT	0x0020
 
-#define MCP_MODE_SHA1		0x0004
-#define MCP_MODE_SHA256		0x000b
-
 /* Descriptor: 14 x u32 = 56 bytes */
 #define MCP_DESC_WORDS		14
 #define MCP_DESC_SIZE		(MCP_DESC_WORDS * 4)
@@ -97,33 +90,6 @@ struct rtk_mcp_ctx {
 	unsigned int keylen;
 };
 
-/* SHA initial states from vendor u-boot mcp.h */
-#define MCP_SHA1_IV0		0x67452301
-#define MCP_SHA1_IV1		0xEFCDAB89
-#define MCP_SHA1_IV2		0x98BADCFE
-#define MCP_SHA1_IV3		0x10325476
-#define MCP_SHA1_IV4		0xC3D2E1F0
-
-#define MCP_SHA256_H0		0x6A09E667
-#define MCP_SHA256_H1		0xBB67AE85
-#define MCP_SHA256_H2		0x3C6EF372
-#define MCP_SHA256_H3		0xA54FF53A
-#define MCP_SHA256_H4		0x510E527F
-#define MCP_SHA256_H5		0x9B05688C
-#define MCP_SHA256_H6		0x1F83D9AB
-#define MCP_SHA256_H7		0x5BE0CD19
-
-struct rtk_mcp_hash_tfm_ctx {
-	struct rtk_mcp_dev *mdev;
-};
-
-struct rtk_mcp_hash_reqctx {
-	/* Buffer used to support update/final by accumulating the whole message. */
-	u8 *buf;
-	u32 used;
-	u32 alloc;
-};
-
 /* Global device pointer (single instance) */
 static struct rtk_mcp_dev *g_mdev;
 
@@ -138,10 +104,10 @@ static inline u32 mcp_read(struct rtk_mcp_dev *mdev, u32 reg)
 }
 
 /*
- * AES completes within microseconds, but SHA1/SHA256 on this engine can
- * take far longer to raise RING_EMPTY. The vendor driver polls for up to
- * (0x3ff << 2) iterations of up to 1ms each (~4s worst case) for every
- * operation; mirror that instead of the AES-only budget this used to have.
+ * AES normally completes within microseconds. The vendor driver polls for
+ * up to (0x3ff << 2) iterations of up to 1ms each (~4s worst case) for
+ * every operation regardless; mirror that budget for robustness against
+ * occasional slow completions.
  */
 #define MCP_POLL_BUSY_LOOPS	1000
 #define MCP_POLL_SLEEP_LOOPS	(0x3ff << 2)
@@ -197,154 +163,6 @@ done:
 		return -EIO;
 	if (!(status & MCP_STATUS_RING_EMPTY))
 		return -ETIMEDOUT;
-
-	return 0;
-}
-
-static int rtk_mcp_hash_once(struct rtk_mcp_dev *mdev, u32 mode,
-				 const u32 *key_words,
-				 const u32 *ini_words,
-				 const u8 *src, unsigned int len,
-				 u8 *out, unsigned int outlen)
-{
-	struct mcp_descriptor desc;
-
-	int ret;
-
-	if (len > MCP_BUF_SIZE)
-		return -E2BIG;
-
-	memcpy(mdev->buf_src, src, len);
-	if (outlen)
-		memset(mdev->buf_dst, 0, outlen);
-
-	memset(&desc, 0, sizeof(desc));
-	desc.mode = cpu_to_le32(mode);
-	if (key_words)
-		memcpy(desc.key, key_words, sizeof(desc.key));
-	if (ini_words)
-		memcpy(desc.ini_key, ini_words, sizeof(desc.ini_key));
-
-	desc.src_addr = cpu_to_le32(mdev->buf_src_dma);
-	desc.dst_addr = cpu_to_le32(mdev->buf_dst_dma);
-	desc.length = cpu_to_le32(len);
-
-	memcpy(&mdev->ring[0], &desc, MCP_DESC_SIZE);
-	memset(&mdev->ring[1], 0, MCP_DESC_SIZE);
-	dma_wmb();
-
-	ret = rtk_mcp_run(mdev);
-	if (ret)
-		return ret;
-
-	if (outlen)
-		memcpy(out, mdev->buf_dst, outlen);
-	return 0;
-}
-
-static int rtk_mcp_sha_init(struct ahash_request *req)
-{
-	struct rtk_mcp_hash_reqctx *rctx = ahash_request_ctx(req);
-
-	/*
-	 * ahash_request_alloc() does not zero the trailing reqctx area, so
-	 * on a freshly allocated request buf/alloc hold garbage. Reset them
-	 * explicitly rather than relying on a prior final() on this same
-	 * request object to have cleaned up (krealloc() on a garbage
-	 * pointer corrupts the heap).
-	 */
-	rctx->buf = NULL;
-	rctx->alloc = 0;
-	rctx->used = 0;
-	return 0;
-}
-
-static int rtk_mcp_sha_update(struct ahash_request *req)
-{
-	struct crypto_ahash *tfm = crypto_ahash_reqtfm(req);
-	struct rtk_mcp_hash_tfm_ctx *tctx = crypto_ahash_ctx(tfm);
-	struct rtk_mcp_hash_reqctx *rctx = ahash_request_ctx(req);
-	unsigned int nbytes = req->nbytes;
-	unsigned int new_used = rctx->used + nbytes;
-	u8 *dst;
-	void *tmp;
-
-	if (new_used > MCP_BUF_SIZE)
-		return -E2BIG;
-
-	if (new_used > rctx->alloc) {
-		unsigned int new_alloc = max(new_used, rctx->alloc ? rctx->alloc * 2 : 256U);
-		tmp = krealloc(rctx->buf, new_alloc, GFP_KERNEL);
-		if (!tmp)
-			return -ENOMEM;
-		rctx->buf = tmp;
-		rctx->alloc = new_alloc;
-	}
-
-	dst = rctx->buf + rctx->used;
-	/* Copy exactly this update's bytes from scatterlist into our buffer. */
-	scatterwalk_map_and_copy(dst, req->src, 0, nbytes, 0);
-
-	rctx->used = new_used;
-	(void)tctx; /* silence unused warning if tctx isn't referenced */
-	return 0;
-}
-
-static int rtk_mcp_sha_final(struct ahash_request *req)
-{
-	struct crypto_ahash *tfm = crypto_ahash_reqtfm(req);
-	struct rtk_mcp_hash_tfm_ctx *tctx = crypto_ahash_ctx(tfm);
-	struct rtk_mcp_hash_reqctx *rctx = ahash_request_ctx(req);
-	struct rtk_mcp_dev *mdev = tctx->mdev;
-	unsigned int outlen = crypto_ahash_digestsize(tfm);
-	u8 *out = req->result;
-	u32 mode;
-	u32 key_words[6] = { 0 };
-	u32 ini_words[4] = { 0 };
-	u8 *src;
-
-	if (!mdev)
-		return -ENODEV;
-
-	/* Descriptor input must be stable even if length==0. */
-	src = rctx->used ? rctx->buf : (u8 *)"";
-
-	mode = (crypto_ahash_digestsize(tfm) == SHA1_DIGEST_SIZE) ? MCP_MODE_SHA1 : MCP_MODE_SHA256;
-
-	if (mode == MCP_MODE_SHA1) {
-		key_words[0] = MCP_SHA1_IV0;
-		key_words[1] = MCP_SHA1_IV1;
-		key_words[2] = MCP_SHA1_IV2;
-		key_words[3] = MCP_SHA1_IV3;
-		key_words[4] = MCP_SHA1_IV4;
-	} else {
-		key_words[0] = MCP_SHA256_H0;
-		key_words[1] = MCP_SHA256_H1;
-		key_words[2] = MCP_SHA256_H2;
-		key_words[3] = MCP_SHA256_H3;
-		key_words[4] = MCP_SHA256_H4;
-		key_words[5] = MCP_SHA256_H5;
-		ini_words[0] = MCP_SHA256_H6;
-		ini_words[1] = MCP_SHA256_H7;
-	}
-
-	mutex_lock(&mdev->engine_lock);
-
-	/* Run hash directly from accumulated bytes. */
-	{
-		int ret = rtk_mcp_hash_once(mdev, mode, key_words, ini_words,
-					   src, rctx->used,
-					   out, outlen);
-		mutex_unlock(&mdev->engine_lock);
-
-		kfree(rctx->buf);
-		rctx->buf = NULL;
-		rctx->alloc = 0;
-		rctx->used = 0;
-
-		if (ret)
-			return ret;
-	}
 
 	return 0;
 }
@@ -489,49 +307,6 @@ static int rtk_mcp_init_tfm(struct crypto_skcipher *tfm)
 	return 0;
 }
 
-static int rtk_mcp_sha_init_tfm(struct crypto_ahash *tfm)
-{
-	struct rtk_mcp_hash_tfm_ctx *tctx = crypto_ahash_ctx(tfm);
-
-	tctx->mdev = g_mdev;
-	return tctx->mdev ? 0 : -ENODEV;
-}
-
-static struct ahash_alg rtk_mcp_sha_algs[] = {
-	{
-		.halg.base.cra_name = "sha1",
-		.halg.base.cra_driver_name = "rtk-mcp-sha1",
-		.halg.base.cra_priority = 300,
-		.halg.base.cra_flags = CRYPTO_ALG_KERN_DRIVER_ONLY,
-		.halg.base.cra_blocksize = SHA1_BLOCK_SIZE,
-		.halg.base.cra_module = THIS_MODULE,
-		.halg.base.cra_ctxsize = sizeof(struct rtk_mcp_hash_tfm_ctx),
-		.halg.digestsize = SHA1_DIGEST_SIZE,
-		.halg.statesize = sizeof(struct rtk_mcp_hash_reqctx),
-		.init = rtk_mcp_sha_init,
-		.update = rtk_mcp_sha_update,
-		.final = rtk_mcp_sha_final,
-		.reqsize = sizeof(struct rtk_mcp_hash_reqctx),
-		.init_tfm = rtk_mcp_sha_init_tfm,
-	},
-	{
-		.halg.base.cra_name = "sha256",
-		.halg.base.cra_driver_name = "rtk-mcp-sha256",
-		.halg.base.cra_priority = 300,
-		.halg.base.cra_flags = CRYPTO_ALG_KERN_DRIVER_ONLY,
-		.halg.base.cra_blocksize = SHA256_BLOCK_SIZE,
-		.halg.base.cra_module = THIS_MODULE,
-		.halg.base.cra_ctxsize = sizeof(struct rtk_mcp_hash_tfm_ctx),
-		.halg.digestsize = SHA256_DIGEST_SIZE,
-		.halg.statesize = sizeof(struct rtk_mcp_hash_reqctx),
-		.init = rtk_mcp_sha_init,
-		.update = rtk_mcp_sha_update,
-		.final = rtk_mcp_sha_final,
-		.reqsize = sizeof(struct rtk_mcp_hash_reqctx),
-		.init_tfm = rtk_mcp_sha_init_tfm,
-	},
-};
-
 static struct skcipher_alg rtk_mcp_algs[] = {
 	{
 		.base.cra_name		= "ecb(aes)",
@@ -635,20 +410,10 @@ static int rtk_mcp_probe(struct platform_device *pdev)
 		goto err_bufs;
 	}
 
-	ret = crypto_register_ahashes(rtk_mcp_sha_algs,
-				      ARRAY_SIZE(rtk_mcp_sha_algs));
-	if (ret) {
-		dev_err(&pdev->dev, "failed to register hash algorithms\n");
-		goto err_skcipher;
-	}
-
 	dev_info(&pdev->dev,
-		 "Realtek MCP crypto: AES-128 ECB/CBC, SHA1/SHA256 (ring@0x%pad)\n",
+		 "Realtek MCP crypto: AES-128 ECB/CBC (ring@0x%pad)\n",
 		 &mdev->ring_dma);
 	return 0;
-
-err_skcipher:
-	crypto_unregister_skciphers(rtk_mcp_algs, ARRAY_SIZE(rtk_mcp_algs));
 
 err_bufs:
 	if (mdev->buf_src)
@@ -669,8 +434,6 @@ static void rtk_mcp_remove(struct platform_device *pdev)
 {
 	struct rtk_mcp_dev *mdev = platform_get_drvdata(pdev);
 
-	crypto_unregister_ahashes(rtk_mcp_sha_algs,
-				  ARRAY_SIZE(rtk_mcp_sha_algs));
 	crypto_unregister_skciphers(rtk_mcp_algs,
 				    ARRAY_SIZE(rtk_mcp_algs));
 

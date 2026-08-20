@@ -6,9 +6,6 @@
  */
 
 #include <crypto/skcipher.h>
-#include <crypto/hash.h>
-#include <crypto/sha1.h>
-#include <crypto/sha2.h>
 #include <linux/module.h>
 #include <linux/random.h>
 #include <linux/scatterlist.h>
@@ -47,140 +44,6 @@ static const struct test_vec vectors[] = {
 			    0xce,0xe9,0x8e,0x9b,0x12,0xe9,0x19,0x7d },
 	},
 };
-
-struct sha_test_vec {
-	const char *name;
-	const char *alg;
-	const u8 *data;
-	u32 data_len;
-	const u8 *digest;
-	unsigned int digest_len;
-};
-
-static const u8 sha1_empty[] = {
-	0xda, 0x39, 0xa3, 0xee, 0x5e, 0x6b, 0x4b, 0x0d,
-	0x32, 0x55, 0xbf, 0xef, 0x95, 0x60, 0x18, 0x90,
-	0xaf, 0xd8, 0x07, 0x09,
-};
-
-static const u8 sha1_abc[] = {
-	0xa9, 0x99, 0x3e, 0x36, 0x47, 0x06, 0x81, 0x6a,
-	0xba, 0x3e, 0x25, 0x71, 0x78, 0x50, 0xc2, 0x6c,
-	0x9c, 0xd0, 0xd8, 0x9d,
-};
-
-static const u8 sha256_empty[] = {
-	0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14,
-	0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
-	0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c,
-	0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55,
-};
-
-static const u8 sha256_abc[] = {
-	0xba, 0x78, 0x16, 0xbf, 0x8f, 0x01, 0xcf, 0xea,
-	0x41, 0x41, 0x40, 0xde, 0x5d, 0xae, 0x22, 0x23,
-	0xb0, 0x03, 0x61, 0xa3, 0x96, 0x17, 0x7a, 0x9c,
-	0xb4, 0x10, 0xff, 0x61, 0xf2, 0x00, 0x15, 0xad,
-};
-
-static const u8 abc_data[] = { 'a', 'b', 'c' };
-
-static const struct sha_test_vec sha_vectors[] = {
-	{
-		.name = "sha1(empty)",
-		.alg = "sha1",
-		.data = (const u8 *)"",
-		.data_len = 0,
-		.digest = sha1_empty,
-		.digest_len = 20,
-	},
-	{
-		.name = "sha1(abc)",
-		.alg = "sha1",
-		.data = abc_data,
-		.data_len = 3,
-		.digest = sha1_abc,
-		.digest_len = 20,
-	},
-	{
-		.name = "sha256(empty)",
-		.alg = "sha256",
-		.data = (const u8 *)"",
-		.data_len = 0,
-		.digest = sha256_empty,
-		.digest_len = 32,
-	},
-	{
-		.name = "sha256(abc)",
-		.alg = "sha256",
-		.data = abc_data,
-		.data_len = 3,
-		.digest = sha256_abc,
-		.digest_len = 32,
-	},
-};
-
-static int run_sha_digest(const struct sha_test_vec *tv)
-{
-	struct crypto_ahash *tfm;
-	struct ahash_request *req;
-	struct scatterlist sg;
-	DECLARE_CRYPTO_WAIT(wait);
-	u8 *out;
-	u8 *data;
-	int ret;
-
-	data = (u8 *)tv->data;
-
-	tfm = crypto_alloc_ahash(tv->alg, 0, 0);
-	if (IS_ERR(tfm)) {
-		pr_err("rtk-mcp-test: alloc %s failed: %ld\n",
-		       tv->alg, PTR_ERR(tfm));
-		return PTR_ERR(tfm);
-	}
-
-	out = kmalloc(tv->digest_len, GFP_KERNEL);
-	if (!out) {
-		ret = -ENOMEM;
-		goto out_tfm;
-	}
-
-	req = ahash_request_alloc(tfm, GFP_KERNEL);
-	if (!req) {
-		ret = -ENOMEM;
-		goto out_buf;
-	}
-
-	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
-				 crypto_req_done, &wait);
-
-	sg_init_one(&sg, data, tv->data_len);
-	ahash_request_set_crypt(req, &sg, out, tv->data_len);
-
-	ret = crypto_wait_req(crypto_ahash_digest(req), &wait);
-	if (ret)
-		goto out_req;
-
-	if (!memcmp(out, tv->digest, tv->digest_len)) {
-		pr_info("rtk-mcp-test: %s digest PASSED\n", tv->name);
-		ret = 0;
-	} else {
-		pr_err("rtk-mcp-test: %s digest FAILED\n", tv->name);
-		print_hex_dump(KERN_ERR, "  got:      ", DUMP_PREFIX_NONE,
-			       tv->digest_len, 1, out, tv->digest_len, false);
-		print_hex_dump(KERN_ERR, "  expected: ", DUMP_PREFIX_NONE,
-			       tv->digest_len, 1, tv->digest, tv->digest_len, false);
-		ret = -EINVAL;
-	}
-
-out_req:
-	ahash_request_free(req);
-out_buf:
-	kfree(out);
-out_tfm:
-	crypto_free_ahash(tfm);
-	return ret;
-}
 
 static int run_test(const struct test_vec *tv, bool encrypt)
 {
@@ -413,135 +276,6 @@ out:
 	return ret;
 }
 
-static int do_ahash_digest(struct crypto_ahash *tfm, const u8 *data,
-			    size_t len, u8 *out)
-{
-	struct ahash_request *req;
-	struct scatterlist sg;
-	DECLARE_CRYPTO_WAIT(wait);
-	int ret;
-
-	req = ahash_request_alloc(tfm, GFP_KERNEL);
-	if (!req)
-		return -ENOMEM;
-
-	sg_init_one(&sg, data, len ? len : 1);
-	ahash_request_set_callback(req, CRYPTO_TFM_REQ_MAY_BACKLOG,
-				   crypto_req_done, &wait);
-	ahash_request_set_crypt(req, &sg, out, len);
-	ret = crypto_wait_req(crypto_ahash_digest(req), &wait);
-	ahash_request_free(req);
-	return ret;
-}
-
-/*
- * The driver buffers the whole message before hashing, capped at
- * MCP_BUF_SIZE (64KiB) in rtk-mcp.c. Verify correctness right up to that
- * cap against the CPU reference, and confirm the kernel-API-legal case of
- * a too-large request is rejected cleanly (-E2BIG) rather than corrupting
- * memory or hanging.
- */
-static int run_sha_boundary_test(const char *hw_alg, const char *cpu_alg,
-				  size_t size)
-{
-	struct crypto_ahash *hw_tfm, *cpu_tfm;
-	u8 *data, *hw_digest, *cpu_digest;
-	unsigned int digest_size;
-	int ret;
-
-	hw_tfm = crypto_alloc_ahash(hw_alg, 0, 0);
-	if (IS_ERR(hw_tfm))
-		return PTR_ERR(hw_tfm);
-	cpu_tfm = crypto_alloc_ahash(cpu_alg, 0, 0);
-	if (IS_ERR(cpu_tfm)) {
-		ret = PTR_ERR(cpu_tfm);
-		crypto_free_ahash(hw_tfm);
-		return ret;
-	}
-
-	digest_size = crypto_ahash_digestsize(hw_tfm);
-	data = vmalloc(size ? size : 1);
-	hw_digest = kmalloc(digest_size, GFP_KERNEL);
-	cpu_digest = kmalloc(digest_size, GFP_KERNEL);
-	if (!data || !hw_digest || !cpu_digest) {
-		ret = -ENOMEM;
-		goto out;
-	}
-	if (size)
-		get_random_bytes(data, size);
-
-	ret = do_ahash_digest(hw_tfm, data, size, hw_digest);
-	if (ret) {
-		pr_err("rtk-mcp-test: sha boundary %s %zu bytes: HW failed: %d\n",
-		       hw_alg, size, ret);
-		goto out;
-	}
-	ret = do_ahash_digest(cpu_tfm, data, size, cpu_digest);
-	if (ret) {
-		pr_err("rtk-mcp-test: sha boundary %s %zu bytes: CPU failed: %d\n",
-		       hw_alg, size, ret);
-		goto out;
-	}
-
-	if (memcmp(hw_digest, cpu_digest, digest_size)) {
-		pr_err("rtk-mcp-test: sha boundary %s %zu bytes MISMATCH vs %s\n",
-		       hw_alg, size, cpu_alg);
-		ret = -EINVAL;
-		goto out;
-	}
-
-	ret = 0;
-out:
-	vfree(data);
-	kfree(hw_digest);
-	kfree(cpu_digest);
-	crypto_free_ahash(hw_tfm);
-	crypto_free_ahash(cpu_tfm);
-	if (ret == 0)
-		pr_info("rtk-mcp-test: sha boundary %s %zu bytes PASSED\n",
-			hw_alg, size);
-	return ret;
-}
-
-/* One byte over the driver's buffering cap must be rejected, not hang or
- * corrupt memory -- this is a legal request under the ahash API (no size
- * limit there), just one this driver's design can't service.
- */
-static int run_sha_too_large_test(const char *hw_alg, size_t size)
-{
-	struct crypto_ahash *tfm;
-	u8 *data, *digest;
-	int ret;
-
-	tfm = crypto_alloc_ahash(hw_alg, 0, 0);
-	if (IS_ERR(tfm))
-		return PTR_ERR(tfm);
-
-	data = vmalloc(size);
-	digest = kmalloc(crypto_ahash_digestsize(tfm), GFP_KERNEL);
-	if (!data || !digest) {
-		ret = -ENOMEM;
-		goto out;
-	}
-	get_random_bytes(data, size);
-
-	ret = do_ahash_digest(tfm, data, size, digest);
-	if (ret == -E2BIG) {
-		pr_info("rtk-mcp-test: sha oversize %s %zu bytes correctly rejected (-E2BIG) PASSED\n",
-			hw_alg, size);
-		ret = 0;
-	} else {
-		pr_err("rtk-mcp-test: sha oversize %s %zu bytes: expected -E2BIG, got %d\n",
-		       hw_alg, size, ret);
-		ret = ret ? ret : -EINVAL; /* ret==0 would itself be wrong here */
-	}
-out:
-	vfree(data);
-	kfree(digest);
-	crypto_free_ahash(tfm);
-	return ret;
-}
-
 static int __init rtk_mcp_test_init(void)
 {
 	int i, ret, fail = 0;
@@ -554,14 +288,6 @@ static int __init rtk_mcp_test_init(void)
 		if (ret)
 			fail++;
 		ret = run_test(&vectors[i], false);
-		if (ret)
-			fail++;
-	}
-
-	pr_info("rtk-mcp-test: running %zu SHA vectors\n",
-		ARRAY_SIZE(sha_vectors));
-	for (i = 0; i < ARRAY_SIZE(sha_vectors); i++) {
-		ret = run_sha_digest(&sha_vectors[i]);
 		if (ret)
 			fail++;
 	}
@@ -582,32 +308,6 @@ static int __init rtk_mcp_test_init(void)
 			if (ret)
 				fail++;
 		}
-	}
-
-	pr_info("rtk-mcp-test: sha1/sha256 size-boundary tests vs generic\n");
-	{
-		static const size_t sha_sizes[] = {
-			0, 1, 55, 56, 63, 64, 65, 127, 128, 999,
-			MCP_TEST_BUF_SIZE - 1, MCP_TEST_BUF_SIZE,
-		};
-
-		for (i = 0; i < ARRAY_SIZE(sha_sizes); i++) {
-			ret = run_sha_boundary_test("rtk-mcp-sha1", "sha1-generic",
-						    sha_sizes[i]);
-			if (ret)
-				fail++;
-			ret = run_sha_boundary_test("rtk-mcp-sha256", "sha256-generic",
-						    sha_sizes[i]);
-			if (ret)
-				fail++;
-		}
-
-		ret = run_sha_too_large_test("rtk-mcp-sha1", MCP_TEST_BUF_SIZE + 1);
-		if (ret)
-			fail++;
-		ret = run_sha_too_large_test("rtk-mcp-sha256", MCP_TEST_BUF_SIZE + 1);
-		if (ret)
-			fail++;
 	}
 
 	if (fail)
