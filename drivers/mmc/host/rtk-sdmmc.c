@@ -1491,6 +1491,17 @@ int rtk_sdmmc_cpu_wait(char* drv_name, struct rtk_sdmmc_host *rtk_host, u8 cmdco
 		}
 	}
 
+	/*
+	 * poll is a driver-wide flag (shared by both the eMMC and SD-slot
+	 * hosts), not per-host state. rtk_sdmmc_timeout() checks it and
+	 * no-ops instead of completing the waiter if it's still set, so
+	 * leaving it at 1 here poisons the *next* interrupt-mode transfer's
+	 * timeout recovery on either host -- observed as an SD card write
+	 * stalling for minutes until unrelated eMMC traffic happened to
+	 * reset it via rtk_sdmmc_int_wait()'s own poll=0 at entry.
+	 */
+	poll = 0;
+
 	if (ret == CR_TRANSFER_TO) {
 		printk(KERN_ERR "%s(%d) trans error(timeout) :\n trans: 0x%08x, st1: 0x%08x, st2: 0x%08x, bus: 0x%08x\n",
 				__func__,
