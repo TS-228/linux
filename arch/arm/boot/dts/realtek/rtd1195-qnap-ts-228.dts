@@ -182,18 +182,6 @@
 			dr_mode = "host";
 		};
 	};
-	suspend@18007400 {
-		compatible = "Realtek,suspend";
-		realtek,wifi-gpio = <&rtk_iso_gpio 13 1 1>;		/*wifi power , output, default high */
-
-	};
-	bt_wakeup_host@0{
-		compatible = "Realtek,bt_wakeup_host";
-		realtek,bt-wakeup-gpio = <&rtk_iso_gpio 2 0 0>;	/* bt wakeup host pin, input, default N/A */
-		activity_level = "high";						/* "high": high active, "low": low active */
-		status = "disabled";							/* "okay"/"disabled" */
-	};
-
 	crsd@18010400 {
 		gpios = <&rtk_misc_gpio 23 1 1>; 		/*sd power , output, default high  (poweroff) */
 	};
@@ -256,6 +244,6 @@
 	pinctrl-0 = <&ir_rx_pins>, <&ir_tx_pins>,
 		<&i2c_pins_0>, <&i2c_pins_1>, <&i2c_pins_3>,
 		<&i2c_pins_5>, <&i2c_pins_6>,
-		<&sdio_pins>, <&uart1_pins_loc_iso>,
+		<&uart1_pins_loc_iso>,
 		<&vfd_pins>, <&mmc_pins>;
 };

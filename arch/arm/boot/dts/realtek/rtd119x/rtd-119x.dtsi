@@ -648,15 +648,6 @@
 		reset-names = "rstn_hdmi";
 		status = "okay";
 	};
-	sdio@18010c00 {
-		compatible = "Realtek,rtk1295-sdio";
-		gpios = <&rtk_iso_gpio 13 1 1>;
-		reg = <0x18010c00 0x200>,<0x18000000 0x200000>;
-		interrupts = <0 45 4>;
-		clocks = <&clk_en_1 CLK_EN_SDIO>, <&clk_en_1 CLK_EN_SDIO_IP>;
-		clock-names = "clk_en_sdio", "clk_en_sdio_ip";
-		resets = <&rst_2 RSTN_SDIO>;
-	};
 	nand@18010000 {
 		compatible = "Realtek,rtk1195-nand";
 		reg = <0x18010000 0x400>, /* NWC */
