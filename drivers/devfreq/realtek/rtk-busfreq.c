@@ -189,7 +189,7 @@ static int busfreq_suspend(struct device *dev)
 	devfreq_suspend_device(priv->devfreq);
 
 #ifdef CONFIG_SUSPEND
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY)
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY)
 		target = priv->min_freq;
 #endif
 	busfreq_set_clk_freq(priv, target);

@@ -287,7 +287,7 @@ static int rtk_ehci_suspend(struct device *dev)
 
 	dev_info(dev, "[USB] Enter %s", __func__);
 
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY) {
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 		goto out;
@@ -322,7 +322,7 @@ static int rtk_ehci_resume(struct device *dev)
 	struct usb_phy *phy;
 
 	dev_info(dev, "[USB] Enter %s", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY) {
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 		goto out;

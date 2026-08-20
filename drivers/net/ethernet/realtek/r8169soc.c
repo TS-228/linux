@@ -7699,7 +7699,7 @@ static int rtl8169_suspend(struct device *dev)
 		(tp->mmio_pinmuxaddr + ISO_TESTMUX_MUXPAD2));
 	#endif /* CONFIG_ARCH_RTD129x | CONFIG_ARCH_RTD139x | CONFIG_ARCH_RTD16xx */
 
-	if(RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if(pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		printk(KERN_ERR "[RTK_ETN] %s Idle mode\n", __func__);
 
@@ -7778,7 +7778,7 @@ static int rtl8169_resume(struct device *dev)
 
 	printk(KERN_ERR "[RTK_ETN] Enter %s\n", __func__);
 
-	if(RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if(pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		printk(KERN_ERR "[RTK_ETN] %s Idle mode\n", __func__);
 

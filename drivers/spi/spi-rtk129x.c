@@ -521,7 +521,7 @@ static int rtk_gspi_suspend(struct device *dev)
 	//struct rtk_gspi *hw = dev_get_drvdata(dev);
 	printk(KERN_ERR "[RTK_SPI] Enter %s\n", __func__);
 
-	if(RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if(pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		printk(KERN_ERR "[RTK_SPI] %s Idle mode\n", __func__);
 	}else{
@@ -540,7 +540,7 @@ static int rtk_gspi_resume(struct device *dev)
 
 	printk(KERN_ERR "[RTK_SPI] Enter %s\n", __func__);
 
-	if(RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if(pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		printk(KERN_ERR "[RTK_SPI] %s Idle mode\n", __func__);
 	}else{

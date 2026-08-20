@@ -2669,7 +2669,7 @@ static int dwc3_suspend(struct device *dev)
 
 #ifdef CONFIG_USB_PATCH_ON_RTK
 	dev_info(dev, "[USB] Enter %s", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 		return 0;
@@ -2710,7 +2710,7 @@ static int dwc3_resume(struct device *dev)
 
 #ifdef CONFIG_USB_PATCH_ON_RTK
 	dev_info(dev, "[USB] Enter %s", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 		return 0;

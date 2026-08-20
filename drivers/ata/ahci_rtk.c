@@ -469,7 +469,7 @@ static int ahci_rtk_suspend(struct device *dev)
 	if (ahci_dev->chip_id == CHIP_ID_RTD1619)
 		writel(0x40, mmio + 0xf18);
 
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY) {
 		ahci_platform_disable_clks(hpriv);
 	} else {
 		ahci_platform_disable_resources(hpriv);
@@ -530,7 +530,7 @@ static int ahci_rtk_resume(struct device *dev)
 		}
 	}
 
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY) {
 		ahci_platform_enable_clks(hpriv);
 		ahci_dev->state = RUNNING;
 	} else {

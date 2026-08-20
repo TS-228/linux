@@ -143,7 +143,7 @@ static int rtk_cgc_suspend(struct device *dev)
 	struct clk_reg clk_reg;
 
 #ifdef CONFIG_SUSPEND
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY)
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY)
 		return 0;
 #endif
 	dev_info(dev, "Enter %s\n", __func__);
@@ -164,7 +164,7 @@ static int rtk_cgc_resume(struct device *dev)
 	int val;
 
 #ifdef CONFIG_SUSPEND
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY)
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY)
 		return 0;
 #endif
 	dev_info(dev, "Enter %s\n", __func__);

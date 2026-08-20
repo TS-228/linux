@@ -335,7 +335,7 @@ MODULE_DEVICE_TABLE(of, rtk_dwc3_match);
 static int dwc3_rtk_suspend(struct device *dev)
 {
 	dev_info(dev, "[USB] Enter %s", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY) {
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 		goto out;
@@ -354,7 +354,7 @@ static int dwc3_rtk_resume(struct device *dev)
 	struct dwc3 *dwc = platform_get_drvdata(rtk->dwc);
 
 	dev_info(dev, "[USB] Enter %s", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY) {
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 		goto out;

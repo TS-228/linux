@@ -1667,7 +1667,7 @@ static int rtk_usb_manager_prepare(struct device *dev) {
 	int ret = 0;
 
 	dev_info(dev, "[USB] Enter %s\n", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 	} else {
@@ -1681,7 +1681,7 @@ static void rtk_usb_manager_complete(struct device *dev) {
 	struct manager_data *data = dev_get_drvdata(dev);
 
 	dev_info(dev, "[USB] Enter %s\n", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		dev_info(dev, "[USB] %s S1 (Standby mode)\n", __func__);
 	} else {
@@ -1694,7 +1694,7 @@ static int rtk_usb_manager_suspend(struct device *dev) {
 	struct manager_data *data = dev_get_drvdata(dev);
 
 	dev_info(dev, "[USB] Enter %s\n", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		dev_info(dev, "[USB] %s S1 (Standby mode)\n", __func__);
 	} else {
@@ -1718,7 +1718,7 @@ static int rtk_usb_manager_resume(struct device *dev) {
 	struct clk *clk_usb = USB_clk_get(NULL, "clk_en_usb");
 
 	dev_info(dev, "[USB] Enter %s\n", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		dev_info(dev, "[USB] %s S1 (Standby mode)\n", __func__);
 	} else {

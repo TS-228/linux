@@ -13,7 +13,7 @@
 #include <linux/suspend.h>
 
 int get_RTK_PM_STATE(void) {
-	return RTK_PM_STATE;
+	return pm_suspend_target_state;
 }
 
 EXPORT_SYMBOL(get_RTK_PM_STATE);

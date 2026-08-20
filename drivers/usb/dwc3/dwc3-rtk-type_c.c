@@ -2221,7 +2221,7 @@ static int dwc3_rtk_type_c_prepare(struct device *dev) {
 	int ret = 0;
 
 	dev_info(dev, "[USB] Enter %s\n", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 	} else {
@@ -2236,7 +2236,7 @@ static void dwc3_rtk_type_c_complete(struct device *dev) {
 	unsigned long		flags;
 
 	dev_info(dev, "[USB] Enter %s\n", __func__);
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY){
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
 		//For idle mode
 		dev_info(dev, "[USB] %s S1 (Standby mode)\n", __func__);
 	} else {
@@ -2283,7 +2283,7 @@ static int dwc3_rtk_type_c_suspend(struct device *dev)
 
 	spin_unlock_irqrestore(&type_c->lock, flags);
 
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY) {
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 		goto out;
@@ -2306,7 +2306,7 @@ static int dwc3_rtk_type_c_resume(struct device *dev)
 
 	dev_info(dev, "[USB] Enter %s", __func__);
 
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY) {
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY) {
 		//For idle mode
 		dev_info(dev, "[USB] %s Idle mode\n", __func__);
 		spin_lock_irqsave(&type_c->lock, flags);

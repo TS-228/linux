@@ -257,7 +257,7 @@ static int rtk_reset_suspend(struct device *dev)
 		return 0;
 
 #ifdef CONFIG_SUSPEND
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY)
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY)
 		return 0;
 #endif
 	dev_info(dev, "Enter %s\n", __func__);
@@ -279,7 +279,7 @@ static int rtk_reset_resume(struct device *dev)
 		return 0;
 
 #ifdef CONFIG_SUSPEND
-	if (RTK_PM_STATE == PM_SUSPEND_STANDBY)
+	if (pm_suspend_target_state == PM_SUSPEND_STANDBY)
 		return 0;
 #endif
 	dev_info(dev, "Enter %s\n", __func__);
