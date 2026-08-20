@@ -1145,6 +1145,10 @@ struct dwc3_scratchpad_array {
  *			instances in park mode.
  * @parkmode_disable_hs_quirk: set if we need to disable all HishSpeed
  *			instances in park mode.
+ * @rtk_tx_rx_thr_quirk: set if we need to configure TX/RX threshold
+ *			control and enable GUCTL auto-retry to avoid
+ *			transaction errors and port resets on Realtek RTD
+ *			SoCs.
  * @gfladj_refclk_lpm_sel: set if we need to enable SOF/ITP counter
  *                          running based on ref_clk
  * @tx_de_emphasis_quirk: set if we enable Tx de-emphasis quirk
@@ -1392,10 +1396,7 @@ struct dwc3 {
 	unsigned		ulpi_ext_vbus_drv:1;
 	unsigned		parkmode_disable_ss_quirk:1;
 	unsigned		parkmode_disable_hs_quirk:1;
-#ifdef CONFIG_USB_DWC3_RTK
-	unsigned		dis_ss_park_mode:1;
-	unsigned		dis_hs_park_mode:1;
-#endif
+	unsigned		rtk_tx_rx_thr_quirk:1;
 	unsigned		gfladj_refclk_lpm_sel:1;
 
 	unsigned		tx_de_emphasis_quirk:1;
