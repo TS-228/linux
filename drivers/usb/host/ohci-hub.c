@@ -43,7 +43,6 @@
 static void update_done_list(struct ohci_hcd *);
 static void ohci_work(struct ohci_hcd *);
 
-
 #ifdef	CONFIG_PM
 static int ohci_rh_suspend (struct ohci_hcd *ohci, int autostop)
 __releases(ohci->lock)
@@ -525,17 +524,6 @@ int ohci_hub_status_data(struct usb_hcd *hcd, char *buf)
 	else
 		clear_bit(HCD_FLAG_POLL_RH, &hcd->flags);
 
-#ifdef CONFIG_USB_PATCH_ON_RTK
-	/* add to check OHCI register deadbeef */
-	if (true) {
-		u32 status = roothub_portstatus (ohci, 0);
-		if (status == 0xdeadbeef) {
-			ohci_err(ohci, "OHCI register is 0x%x"
-					" to clear HCD_FLAG_POLL_RH", status);
-			clear_bit(HCD_FLAG_POLL_RH, &hcd->flags);
-		}
-	}
-#endif //CONFIG_USB_PATCH_ON_RTK
 
 done:
 	spin_unlock_irqrestore (&ohci->lock, flags);
