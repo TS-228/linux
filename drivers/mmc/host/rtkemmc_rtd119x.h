@@ -34,7 +34,21 @@
 #define MMC_IOS_SET_PAD_DRV     0x2
 #define MMC_IOS_RESTORE_PAD_DRV 0x4
 
-#define cr_readb(offset)        (*(volatile unsigned char *)GET_MAPPED_RBUS_ADDR(offset))
+/*
+ * Register access base. GET_MAPPED_RBUS_ADDR (mach/system.h) resolves
+ * through the vendor's static .map_io table and is left alone here -
+ * it's still used elsewhere (the IORESOURCE_MEM entry below) for
+ * bookkeeping unrelated to actual register I/O. All real hardware
+ * access in this driver funnels through the cr_readb/cr_writeb/
+ * cr_readl/cr_writel macros below, which use this dynamically
+ * ioremap'd base instead (set once in rtkemmc_init(), well before any
+ * probe/register access happens) - no static mapping table exists
+ * under mainline's machine descriptor.
+ */
+extern void __iomem *rtkemmc_rbus_base;
+#define RTKEMMC_REG(offset)      (rtkemmc_rbus_base + ((offset) - 0x18000000))
+
+#define cr_readb(offset)        (*(volatile unsigned char *)RTKEMMC_REG(offset))
 #if 0
 #define cr_writeb(val, offset)  do { 							\
 				(*(volatile unsigned char *) (offset)) = val;\
@@ -42,14 +56,14 @@
 				} while(0);
 #else
 #define cr_writeb(val, offset)  do { 							\
-				(*(volatile unsigned char *) GET_MAPPED_RBUS_ADDR(offset)) = val;           \
+				(*(volatile unsigned char *) RTKEMMC_REG(offset)) = val;           \
                                 asm ("DMB");						\
 				} while(0);
 //#define cr_writeb(val, offset)  ((*(volatile unsigned char *) (offset)) = val)
 #endif
-#define cr_readl(offset)        (*(volatile unsigned int *)GET_MAPPED_RBUS_ADDR(offset))
+#define cr_readl(offset)        (*(volatile unsigned int *)RTKEMMC_REG(offset))
 #define cr_writel(val, offset)  do { 							\
-				(*(volatile unsigned int *) GET_MAPPED_RBUS_ADDR(offset)) = val;            \
+				(*(volatile unsigned int *) RTKEMMC_REG(offset)) = val;            \
                                 asm ("DMB");						\
 				} while(0)
 

@@ -90,6 +90,7 @@ struct clk * clk_cr;
 
 
 int mmc_select_hs200(struct mmc_card *card);
+void __iomem *rtkemmc_rbus_base;
 static int maxfreq = RTKSD_CLOCKRATE_MAX;
 static int nodma;
 struct mmc_host * mmc_host_local = NULL;
@@ -399,9 +400,13 @@ void rtk_int_waitfor(struct rtksd_host *sdport, u8 cmdcode, u8 cmd_idx, unsigned
     #ifndef ENABLE_EMMC_INT_MODE
     unsigned long timeend=0;
     u32 sd_trans=0,sd_status1=0,sd_status2=0,bus_status=0,dma_trans=0;
-    unsigned long flags;
 
-    spin_lock_irqsave(&sdport->lock,flags);
+    /*
+     * Used to hold spin_lock_irqsave(&sdport->lock) across this multi-second
+     * busy-poll, hard-disabling local IRQs long enough to trip unrelated
+     * drivers' watchdogs (observed with r8169). rtksd_request() already
+     * serializes callers via cr_rw_sem, so the lock here was redundant.
+     */
 
     if(sdport->rtflags & RTKCR_FOPEN_LOG){
         MMCPRINTF(" rtkemmc : register settings(base=0x%08x,0x%08x)\n", sdport->base_io, sdport->base_io+SD_CMD0);
@@ -5280,6 +5285,12 @@ static int __init rtkemmc_init(void)
     int rc = 0;
 
     MMCPRINTF("\n");
+
+    rtkemmc_rbus_base = ioremap(0x18000000, 0x00070000);
+    if (!rtkemmc_rbus_base) {
+        printk(KERN_ERR "%s : failed to map RBUS\n", DRIVER_NAME);
+        return -ENOMEM;
+    }
 
     rtkcr_display_version();
 
