@@ -4,16 +4,35 @@
 #include <linux/err.h>
 #include <linux/cpu.h>
 #include <linux/delay.h>
+#include <linux/init.h>
+#include <linux/io.h>
 
-#include <asm/io.h>
 #include <asm/system_misc.h>
 //#include "include/reg.h"
 
-#define RTK_VIRT_ADDR_MAP(addr) (RBUS_BASE_VIRT + ((unsigned int)addr - RBUS_BASE_PHYS))
-//#define WRITE_REG_INT32U(addr,val)  *(volatile unsigned int *) RTK_VIRT_ADDR_MAP(addr) = (unsigned int)(val)
-#define WRITE_REG_INT32U(addr,val)  writel(val, IOMEM(RTK_VIRT_ADDR_MAP(addr)))
-//#define READ_REG_INT32U(addr)       *(volatile unsigned int *) RTK_VIRT_ADDR_MAP(addr)
-#define READ_REG_INT32U(addr)       readl(IOMEM(RTK_VIRT_ADDR_MAP(addr)))
+/*
+ * Registers this file pokes span the whole RBUS peripheral block
+ * (0x18000000, 0x70000 - clock/reset controller, analog DAC/ISO blocks,
+ * etc.), not a single device's own range, so this maps the same span the
+ * vendor's static .map_io table used to, but dynamically - no static
+ * mapping table exists under mainline's machine descriptor.
+ */
+#define RTD1195_RBUS_PHYS	0x18000000
+#define RTD1195_RBUS_SIZE	0x00070000
+
+static void __iomem *rbus_base;
+
+static int __init rtd119x_ip_power_map_init(void)
+{
+	rbus_base = ioremap(RTD1195_RBUS_PHYS, RTD1195_RBUS_SIZE);
+	if (!rbus_base)
+		pr_err("rtk-ip-power: failed to map RBUS\n");
+	return 0;
+}
+arch_initcall(rtd119x_ip_power_map_init);
+
+#define WRITE_REG_INT32U(addr,val)  writel(val, rbus_base + ((addr) - RTD1195_RBUS_PHYS))
+#define READ_REG_INT32U(addr)       readl(rbus_base + ((addr) - RTD1195_RBUS_PHYS))
 #define rtd_outl(addr,val)          WRITE_REG_INT32U(addr,val)
 #define _sync(x)
 
