@@ -36,7 +36,21 @@
 #include "reg_mmc_rtd119x.h"             //liao
 #include "reg_iso.h"               //liiao
 #include "reg_sys_rtd119x.h"               //liao
-#include <mach/cpu.h>
+/*
+ * Chip ID/revision, exported from arch/arm/mach-realtek/rtd1195.c
+ * (mach-rtd119x/include/mach/cpu.h's realtek_cpu_id/realtek_rev()
+ * equivalent - that header no longer exists once this board switches
+ * off the vendor machine descriptor).
+ */
+extern unsigned int rtd1195_chip_id;
+extern unsigned int rtd1195_chip_rev;
+
+#define RTK1195_CPU_ID		0x00006329
+#define RTK1195_CPU_MASK	0x0000FFFF
+#define RTK1195_REV_B		(0x1)
+
+#define soc_is_rtk1195()	((rtd1195_chip_id & RTK1195_CPU_MASK) == (RTK1195_CPU_ID & RTK1195_CPU_MASK))
+#define realtek_rev()		rtd1195_chip_rev
 #include <mach/system.h>
 #include <mach/irqs.h>
 #include "../core/card.h"
