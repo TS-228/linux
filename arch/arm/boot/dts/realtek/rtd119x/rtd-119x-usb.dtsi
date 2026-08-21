@@ -52,17 +52,15 @@ usb3phy: usb3phy@18013210 {
 };
 
 dwc3: rtk_dwc3@18013200 {
-	compatible = "Realtek,rtk119x-dwc3";
+	compatible = "realtek,rtd-dwc3";
 	reg = <0x18013200 0x200>;
 	interrupts = <0 21 4>;
 	#address-cells = <1>;
 	#size-cells = <1>;
 	ranges;
-	//delay_probe_work; //To delay probe work
-	//ordered_probe; // ordered probe in delay work
 
 	dwc3@18020000 {
-		compatible = "synopsys,dwc3";
+		compatible = "snps,dwc3";
 		reg = <0x18020000 0x9000>;
 		interrupts = <0 21 4>;
 		phys = <&usb2phy &usb3phy>;
