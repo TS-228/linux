@@ -217,7 +217,7 @@ config USB_EHCI_RTK
 	tristate "Support for RTK on-chip EHCI USB controller"
 	depends on USB_EHCI_HCD
 	select USB_RTK_CTRL_MANAGER
-	select RTK_USB_RLE0599_PHY
+	select PHY_RTK_RTD_RLE0599PHY
 	help
 	  The Realtek chips are dual-role host/peripheral USB controllers.
 

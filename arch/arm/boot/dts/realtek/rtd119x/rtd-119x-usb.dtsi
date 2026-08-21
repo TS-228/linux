@@ -77,6 +77,7 @@ phy_rle0599: usb_phy_rle0599@0 {
 	compatible = "Realtek,rtd119x-usb_phy_rle0599";
 	reg = <0x18013824 0x4>, <0x180130A4 0x4>;
 	//Note reg addr: REG_WRAP_VStatusOut2, REG_EHCI_INSNREG05
+	#phy-cells = <0>;
 	phyN = <1>;
 	phy_data_page0_size = <16>;
 	phy_data_page0_addr = /bits/ 8
@@ -97,7 +98,8 @@ ehci: ehci@18013000 {
 	compatible = "Realtek,rtd119x-ehci";
 	reg = <0x18013000 0x100>;
 	interrupts = <0 21 4>;
-	usb-phy = <&phy_rle0599>;
+	phys = <&phy_rle0599>;
+	phy-names = "usb2-phy";
 	//delay_probe_work; //To delay probe work
 	//ordered_probe; // ordered probe in delay work
 	//fixed_async_list_addr_bug; // add to fixed async_list_addr bug
@@ -107,7 +109,8 @@ ohci: ohci@18013400 {
 	compatible = "Realtek,rtd119x-ohci";
 	reg = <0x18013400 0x100>;
 	interrupts = <0 21 4>;
-	usb-phy = <&phy_rle0599>;
+	phys = <&phy_rle0599>;
+	phy-names = "usb2-phy";
 	//delay_probe_work; //To delay probe work
 	//ordered_probe; // ordered probe in delay work
 
@@ -118,7 +121,8 @@ usb2_udc: usb2_udc@18038000 {
 	compatible = "Realtek,rtd119x-usb2-udc";
 	reg = <0x18038000 0x8000>, <0x18013800 0x80>;
 	interrupts = <0 21 4>;
-	usb-phy = <&phy_rle0599>;
+	phys = <&phy_rle0599>;
+	phy-names = "usb2-phy";
 
 	status = "disable";
 };

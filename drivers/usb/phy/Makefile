@@ -2,10 +2,6 @@
 #
 # Makefile for physical layer USB drivers
 #
-include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
-CFLAGS_phy.o += $(rtk_vendor-ccflags)
-CFLAGS_phy-rtk-rle0599.o += $(rtk_vendor-ccflags)
-
 obj-$(CONFIG_USB_PHY)			+= phy.o
 obj-$(CONFIG_OF)			+= of.o
 
@@ -27,4 +23,3 @@ obj-$(CONFIG_USB_MXS_PHY)		+= phy-mxs-usb.o
 obj-$(CONFIG_USB_ULPI)			+= phy-ulpi.o
 obj-$(CONFIG_USB_ULPI_VIEWPORT)		+= phy-ulpi-viewport.o
 obj-$(CONFIG_KEYSTONE_USB_PHY)		+= phy-keystone.o
-obj-$(CONFIG_RTK_USB_RLE0599_PHY)	+= phy-rtk-rle0599.o

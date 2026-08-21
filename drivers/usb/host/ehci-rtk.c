@@ -23,7 +23,7 @@
 #include <linux/usb/hcd.h>
 #include <linux/io.h>
 #include <linux/dma-mapping.h>
-#include <linux/usb/phy.h>
+#include <linux/phy/phy.h>
 #include <linux/of_gpio.h>
 #include <linux/suspend.h>
 
@@ -37,35 +37,34 @@ static struct hc_driver __read_mostly ehci_rtk_hc_driver;
 
 struct ehci_rtk {
 	struct device *dev;
-	struct usb_phy *phy;
+	struct phy *phy;
 	struct ehci_hcd *ehci;
 	int irq;
 
 	struct work_struct work;
 };
 
-#ifdef CONFIG_RTK_USB_RLE0599_PHY
-extern void rtk_rle0599_phy_toggle(struct usb_phy *usb2_phy, bool isConnect);
-#endif
-
 int RTK_ehci_usb2_phy_toggle(struct device *hcd_dev, bool isConnect)
 {
-	struct usb_phy *phy = NULL;
+	struct phy *phy;
 
 	if (hcd_dev == NULL)
 		return -ENODEV;
 
-	phy = devm_usb_get_phy_by_phandle(hcd_dev, "usb-phy", 0);
+	phy = phy_get(hcd_dev, "usb2-phy");
 	if (IS_ERR(phy)) {
 		dev_err(hcd_dev, "No usb phy found\n");
 		return -ENODEV;
 	}
 
 	dev_dbg(hcd_dev, "%s\n", __func__);
-#ifdef CONFIG_RTK_USB_RLE0599_PHY
-	if (phy != NULL)
-		rtk_rle0599_phy_toggle(phy, isConnect);
-#endif
+	if (isConnect)
+		phy_notify_connect(phy, 0);
+	else
+		phy_notify_disconnect(phy, 0);
+
+	phy_put(hcd_dev, phy);
+
 	return 0;
 }
 
@@ -77,7 +76,7 @@ static void ehci_rtk_probe_work(struct work_struct *work)
 	struct ehci_rtk *rtk = container_of(work, struct ehci_rtk, work);
 	struct device		*dev = rtk->dev;
 	struct usb_hcd *hcd = ehci_to_hcd(rtk->ehci);
-	struct usb_phy *phy = rtk->phy;
+	struct phy *phy = rtk->phy;
 
 	int irq = rtk->irq;
 	int ret = 0;
@@ -86,7 +85,7 @@ static void ehci_rtk_probe_work(struct work_struct *work)
 
 	dev_info(dev, "%s Start ...\n", __func__);
 
-	usb_phy_init(phy);
+	phy_init(phy);
 
 	ret = usb_add_hcd(hcd, irq, IRQF_SHARED);
 	if (ret) {
@@ -108,7 +107,7 @@ static int ehci_rtk_drv_probe(struct platform_device *pdev)
 	struct ehci_hcd *ehci;
 	void __iomem *regs;
 	int irq, err = 0;
-	struct usb_phy *phy;
+	struct phy *phy;
 	unsigned long probe_time = jiffies;
 
 	if (usb_disabled())
@@ -116,8 +115,7 @@ static int ehci_rtk_drv_probe(struct platform_device *pdev)
 
 	dev_info(&pdev->dev, "Probe Realtek-SoC USB EHCI Host Controller\n");
 
-	//phy = devm_usb_get_phy(&pdev->dev, USB_PHY_TYPE_USB2);
-	phy = devm_usb_get_phy_by_phandle(&pdev->dev, "usb-phy", 0);
+	phy = devm_phy_get(&pdev->dev, "usb2-phy");
 	if (IS_ERR(phy)) {
 		dev_err(&pdev->dev, "No usb phy found\n");
 		return -ENODEV;
@@ -202,7 +200,7 @@ static int ehci_rtk_drv_probe(struct platform_device *pdev)
 		else
 			schedule_work(&rtk->work);
 	} else {
-		usb_phy_init(phy);
+		phy_init(phy);
 
 		err = usb_add_hcd(hcd, irq, IRQF_SHARED);
 		if (err) {
@@ -281,7 +279,7 @@ static int rtk_ehci_suspend(struct device *dev)
 {
 	struct usb_hcd *hcd = dev_get_drvdata(dev);
 	struct platform_device *pdev = to_platform_device(dev);
-	struct usb_phy *phy;
+	struct phy *phy;
 	bool do_wakeup = device_may_wakeup(dev);
 	int rc = 0;
 
@@ -296,13 +294,13 @@ static int rtk_ehci_suspend(struct device *dev)
 
 	rc = ehci_suspend(hcd, do_wakeup);
 
-	phy = devm_usb_get_phy_by_phandle(&pdev->dev, "usb-phy", 0);
+	phy = phy_get(&pdev->dev, "usb2-phy");
 	if (IS_ERR(phy)) {
 		dev_err(&pdev->dev, "No usb phy found\n");
 		return -ENODEV;
-	} else {
-		usb_phy_shutdown(phy);
 	}
+	phy_exit(phy);
+	phy_put(&pdev->dev, phy);
 
 out:
 	dev_info(dev, "[USB] Exit %s", __func__);
@@ -319,7 +317,7 @@ static int rtk_ehci_resume(struct device *dev)
 {
 	struct usb_hcd *hcd = dev_get_drvdata(dev);
 	struct platform_device *pdev = to_platform_device(dev);
-	struct usb_phy *phy;
+	struct phy *phy;
 
 	dev_info(dev, "[USB] Enter %s", __func__);
 	if (pm_suspend_target_state == PM_SUSPEND_STANDBY) {
@@ -329,13 +327,13 @@ static int rtk_ehci_resume(struct device *dev)
 	}
 	dev_info(dev, "[USB] %s Suspend mode\n", __func__);
 
-	phy = devm_usb_get_phy_by_phandle(&pdev->dev, "usb-phy", 0);
+	phy = phy_get(&pdev->dev, "usb2-phy");
 	if (IS_ERR(phy)) {
 		dev_err(&pdev->dev, "No usb phy found\n");
 		return -ENODEV;
-	} else {
-		usb_phy_init(phy);
 	}
+	phy_init(phy);
+	phy_put(&pdev->dev, phy);
 
 	ehci_resume(hcd, false);
 

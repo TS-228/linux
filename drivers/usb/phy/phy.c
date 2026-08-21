@@ -11,10 +11,6 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/of.h>
-#include <linux/of_device.h>
-#include <linux/of_platform.h>
-#include <linux/platform_device.h>
-#include <linux/debugfs.h>
 
 #include <linux/usb/phy.h>
 
@@ -29,20 +25,6 @@
 #define DEFAULT_CDP_CUR_MAX	5000
 #define DEFAULT_ACA_CUR_MIN	1500
 #define DEFAULT_ACA_CUR_MAX	5000
-
-#ifdef CONFIG_DYNAMIC_DEBUG
-static struct dentry *phy_debug_root = NULL;
-
-struct dentry *create_phy_debug_root(void) {
-	if (!phy_debug_root)
-		phy_debug_root = debugfs_create_dir("phy", usb_debug_root);
-
-	if (!phy_debug_root) {
-		pr_err("%s Error phy_debug_root is NULL", __func__);
-	}
-	return phy_debug_root;
-}
-#endif
 
 static LIST_HEAD(phy_list);
 static DEFINE_SPINLOCK(phy_lock);
@@ -567,7 +549,6 @@ struct  usb_phy *devm_usb_get_phy_by_node(struct device *dev,
 	spin_lock_irqsave(&phy_lock, flags);
 
 	phy = __of_usb_find_phy(node);
-
 	if (IS_ERR(phy)) {
 		devres_free(ptr);
 		goto err1;

@@ -29,4 +29,13 @@ config PHY_RTK_RTD_USB3PHY
 	  DWC3 USB IP. This driver will do the PHY initialization
 	  of the parameters.
 
+config PHY_RTK_RTD_RLE0599PHY
+	tristate "Realtek RTD RLE0599 USB2 PHY Transceiver Driver"
+	depends on USB_SUPPORT
+	select GENERIC_PHY
+	help
+	  Enable this to support the Realtek RLE0599 USB2 phy transceiver
+	  used as the companion PHY for the SoC's EHCI/OHCI host controller
+	  port on RTD119x/RTD129x.
+
 endif # ARCH_REALTEK || RTK_PLATFORM || COMPILE_TEST
