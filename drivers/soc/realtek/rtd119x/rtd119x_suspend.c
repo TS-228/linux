@@ -64,8 +64,22 @@ extern volatile void __iomem *rpc_common_base;
 
 #define SUSPEND_VERSION_MASK(v)     ((v&0xffff) << 16)
 #define BT_WAKEUP_IGPIO(n)	        (0x1 << n)//n:0 to 20
-#define RTK_VIRT_ADDR_MAP(addr)     (RBUS_BASE_VIRT + ((unsigned int)addr - RBUS_BASE_PHYS))
-#define WRITE_REG_INT32U(addr,val)  writel(val, IOMEM(RTK_VIRT_ADDR_MAP(addr)))
+/*
+ * Registers this file pokes span the RBUS peripheral block and a
+ * separate GIC-adjacent block; this maps the same spans the vendor's
+ * static .map_io table used to, but dynamically - no static mapping
+ * table exists under mainline's machine descriptor.
+ */
+#define RTD1195_RBUS_PHYS	0x18000000
+#define RTD1195_RBUS_SIZE	0x00070000
+#define RTD1195_GIC_AREA_PHYS	0xff010000
+#define RTD1195_GIC_AREA_SIZE	0x00010000
+
+static void __iomem *rbus_base;
+static void __iomem *gic_area_base;
+
+#define RTK_VIRT_ADDR_MAP(addr)     (rbus_base + ((unsigned int)(addr) - RTD1195_RBUS_PHYS))
+#define WRITE_REG_INT32U(addr,val)  writel(val, RTK_VIRT_ADDR_MAP(addr))
 
 static void hexdump(char *note, unsigned char *buf, unsigned int len)
 {
@@ -198,13 +212,13 @@ int rtk_suspend_wakeup_etn(void)
     void __iomem * reg;
 
     /* Release reset */
-    reg = IOMEM(RTK_VIRT_ADDR_MAP(0x18000000));
+    reg = RTK_VIRT_ADDR_MAP(0x18000000);
     writel(readl(reg) | BIT(14), reg);
 
     __delay(100);
 
     /* Turn on clock */
-    reg = IOMEM(RTK_VIRT_ADDR_MAP(0x1800000c));
+    reg = RTK_VIRT_ADDR_MAP(0x1800000c);
     writel(readl(reg) | BIT(9), reg);
 
     return 0;
@@ -441,7 +455,7 @@ static void rtk_suspend_irq_report(enum irq_report_state state)
 {
     int i;
     static unsigned int data [32];
-    void __iomem * interrupt_state = IOMEM(0xff011200);
+    void __iomem * interrupt_state = gic_area_base + (0xff011200 - RTD1195_GIC_AREA_PHYS);
 
     switch (state) {
         case IRQ_REPORT_PREPARE:
@@ -489,7 +503,7 @@ static int rtk_suspend_to_ram(void)
     const int  MEM_VERIFIED_CNT = 20;
     int ret = 0, i;
     memory_verified_handle_t mem_vhandle[MEM_VERIFIED_CNT];
-    void __iomem * resumeAddr   = IOMEM(RTK_VIRT_ADDR_MAP(ISO_DUMMY1));
+    void __iomem * resumeAddr   = RTK_VIRT_ADDR_MAP(ISO_DUMMY1);
     unsigned int ISODummy1Data  = readl(resumeAddr);
 
     pr_info("rtk-suspend: " "[%s] cpu resume vaddr:0x%08x paddr:0x%08x\n", __func__,
@@ -525,15 +539,15 @@ static int rtk_suspend_to_ram(void)
     writel(ISODummy1Data, resumeAddr);
 
     //writel(0xFFFFFFFE, IOMEM(0xfe007008));
-    writel(readl(IOMEM(0xfe007418)) | BIT(0), IOMEM(0xfe007418));
-    writel(readl(IOMEM(0xfe007410)) & ~BIT(10), IOMEM(0xfe007410));
+    writel(readl(RTK_VIRT_ADDR_MAP(0x18007418)) | BIT(0), RTK_VIRT_ADDR_MAP(0x18007418));
+    writel(readl(RTK_VIRT_ADDR_MAP(0x18007410)) & ~BIT(10), RTK_VIRT_ADDR_MAP(0x18007410));
 
 #ifdef CONFIG_ARM_ARCH_TIMER
 
     // TEDTED
     //arch_timer_resume();
     //rtk_clocksource_resume();
-    writel(0x1, IOMEM(0xff018000));
+    writel(0x1, gic_area_base + (0xff018000 - RTD1195_GIC_AREA_PHYS));
 #endif
 
     rtk_suspend_irq_report(IRQ_REPORT_PRINT);
@@ -541,7 +555,7 @@ static int rtk_suspend_to_ram(void)
     rtk_suspend_wakeup_acpu();
     rtk_suspend_wakeup_etn();
 
-    writel(readl(IOMEM(0xfe01d100)) & ~BIT(5), IOMEM(0xfe01d100));		// wrap_a7 issue nCORERESET
+    writel(readl(RTK_VIRT_ADDR_MAP(0x1801d100)) & ~BIT(5), RTK_VIRT_ADDR_MAP(0x1801d100));		// wrap_a7 issue nCORERESET
     //mcpm_cpu_powered_up();
 
     cpu_pm_exit();
@@ -767,6 +781,11 @@ int __init rtk_suspend_init(void)
 {
     struct device_node  *p_suspend_nd       = NULL;
 	struct device_node  *p_bt_wakeup_nd     = NULL;
+
+    rbus_base = ioremap(RTD1195_RBUS_PHYS, RTD1195_RBUS_SIZE);
+    gic_area_base = ioremap(RTD1195_GIC_AREA_PHYS, RTD1195_GIC_AREA_SIZE);
+    if (!rbus_base || !gic_area_base)
+        pr_err("rtk-suspend: failed to map control registers\n");
 
     acpu_set_flag(0x00000000);
     rtk_suspend_wakeup_flags_set(0);
