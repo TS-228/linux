@@ -103,13 +103,11 @@ ehci: ehci@18013000 {
 };
 
 ohci: ohci@18013400 {
-	compatible = "Realtek,rtd119x-ohci";
+	compatible = "generic-ohci";
 	reg = <0x18013400 0x100>;
 	interrupts = <0 21 4>;
 	phys = <&phy_rle0599>;
 	phy-names = "usb2-phy";
-	//delay_probe_work; //To delay probe work
-	//ordered_probe; // ordered probe in delay work
 
 	//wrap_reg = <0x18013820>;
 };

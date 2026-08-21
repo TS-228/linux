@@ -32,7 +32,7 @@
 	};
 
 	ohci@18013400 {
-		compatible = "Realtek,rtd119x-ohci";
+		compatible = "generic-ohci";
 
 		status = "okay";
 	};
