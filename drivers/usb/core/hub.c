@@ -31,12 +31,6 @@
 #include <linux/random.h>
 #include <linux/pm_qos.h>
 #include <linux/kobject.h>
-#ifdef CONFIG_USB_PATCH_ON_RTK
-#include <linux/platform_device.h>
-#include <linux/timer.h>
-#include <linux/syscalls.h>
-#endif
-
 
 #include <linux/bitfield.h>
 #include <linux/uaccess.h>
