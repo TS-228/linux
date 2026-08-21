@@ -646,14 +646,9 @@ static int rtk_usb_rle0599_phy_probe(struct platform_device *pdev)
 
 	}
 
-#if 0
-	/* Due to usb_add_phy only support one USB2_phy and one USB3_phy
-	 * DWC3 use USB2_phy and USB3_phy, EHCI don't add it
-	 */
 	ret = usb_add_phy(&rtk_usb_phy->phy, USB_PHY_TYPE_USB2);
 	if (ret)
 		goto err;
-#endif
 
 	platform_set_drvdata(pdev, rtk_usb_phy);
 
@@ -669,14 +664,9 @@ err:
 
 static void rtk_usb_rle0599_phy_remove(struct platform_device *pdev)
 {
-//	struct rtk_usb_phy_s *rtk_usb_phy = platform_get_drvdata(pdev);
+	struct rtk_usb_phy_s *rtk_usb_phy = platform_get_drvdata(pdev);
 
-#if 0
-	/* Due to usb_add_phy only support one USB2_phy and one USB3_phy
-	 * DWC3 use USB2_phy and USB3_phy, EHCI don't add it
-	 */
 	usb_remove_phy(&rtk_usb_phy->phy);
-#endif
 
 	return;
 }
