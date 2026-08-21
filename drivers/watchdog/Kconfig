@@ -1014,7 +1014,7 @@ config UNIPHIER_WATCHDOG
 
 config RTD119X_WATCHDOG
 	bool "Realtek RTD119x/RTD129x watchdog support"
-	depends on ARCH_REALTEK || ARM || ARM64 || COMPILE_TEST
+	depends on ARCH_REALTEK || COMPILE_TEST
 	depends on OF
 	select WATCHDOG_CORE
 	default ARCH_REALTEK
