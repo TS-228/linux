@@ -17,7 +17,7 @@
 
 / {
 	model= "Realtek_CA7_CA7";
-	compatible = "Realtek,FPGA_v6", "Realtek,rtd-119x";
+	compatible = "realtek,rtd1195";
 
 	aliases {
 		serial0 = &uart0;
