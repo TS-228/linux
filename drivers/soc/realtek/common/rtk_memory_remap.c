@@ -241,8 +241,8 @@ static int __init rtk_mem_remap_late_init(void)
 
 		ret_iomap = ioremap(rmem->base, rmem->size);
 		if (!ret_iomap) {
-			pr_err("[%s] ioremap(%llx,%llx) failed for %s\n",
-				DRIVER_NAME, rmem->base, rmem->size, save_remap_name);
+			pr_err("[%s] ioremap(%pa,%pa) failed for %s\n",
+				DRIVER_NAME, &rmem->base, &rmem->size, save_remap_name);
 			continue;
 		}
 

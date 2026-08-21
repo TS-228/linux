@@ -63,6 +63,22 @@ static void __init rtd1195_reserve(void)
 	 * that it's always been protected, so keep protecting it.
 	 */
 	rtd1195_memblock_remove(0x10000000, 0x00100000);
+
+	/*
+	 * RPC shared-memory regions with the ACPU (rpc_common/rpc_ringbuf,
+	 * see drivers/soc/realtek/common/rtk_memory_remap.c and the
+	 * /reserved-memory "common"/"ringbuf" DT nodes). The vendor's
+	 * mach-rtd119x statically mapped these via .map_io; the DT's own
+	 * reserved-memory mechanism marks them memblock_reserve()'d
+	 * (still ordinary System RAM to pfn_valid()), but the runtime
+	 * ioremap() of them only succeeds once they're also fully
+	 * excised from memblock like this - verified on hardware: without
+	 * this, ioremap() of the "ringbuf" region silently fails and
+	 * rtk_rpc_probe() crashes dereferencing a near-NULL pointer
+	 * derived from it.
+	 */
+	rtd1195_memblock_remove(0x0000b000, 0x00001000);
+	rtd1195_memblock_remove(0x01ffe000, 0x00004000);
 }
 
 static const char *const rtd1195_dt_compat[] __initconst = {
