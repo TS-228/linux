@@ -78,8 +78,18 @@ static int rtd1195_boot_secondary(unsigned int cpu, struct task_struct *idle)
 	return pen_release != -1 ? -ENOSYS : 0;
 }
 
-static void __init rtd1195_smp_init_cpus(void)
+/*
+ * NOT done in .smp_init_cpus: that hook runs from setup_arch(), before
+ * the slab/vmalloc allocator exists, so ioremap() there crashes
+ * (verified on hardware - panics in __get_vm_area_node before mm_init
+ * has run). .smp_prepare_cpus runs much later (kernel_init/smp_init),
+ * safely after ioremap() is usable, and still well before
+ * .smp_boot_secondary can ever be invoked.
+ */
+static void __init rtd1195_smp_prepare_cpus(unsigned int max_cpus)
 {
+	int i;
+
 	wrap_a7_base = ioremap(RTD1195_WRAP_A7_PHYS, 4);
 	boot_vector_base = ioremap(RTD1195_BOOT_VECTOR_PHYS, 4);
 	if (!wrap_a7_base || !boot_vector_base) {
@@ -90,18 +100,12 @@ static void __init rtd1195_smp_init_cpus(void)
 	/* Hold CPU1 in reset until we're ready to release it */
 	writel(readl(wrap_a7_base) & ~RTD1195_WRAP_A7_CORE1_RESET, wrap_a7_base);
 	writel(virt_to_phys(secondary_startup), boot_vector_base);
-}
-
-static void __init rtd1195_smp_prepare_cpus(unsigned int max_cpus)
-{
-	int i;
 
 	for (i = 0; i < max_cpus; i++)
 		set_cpu_present(i, true);
 }
 
 const struct smp_operations rtd1195_smp_ops __initconst = {
-	.smp_init_cpus		= rtd1195_smp_init_cpus,
 	.smp_prepare_cpus	= rtd1195_smp_prepare_cpus,
 	.smp_secondary_init	= rtd1195_secondary_init,
 	.smp_boot_secondary	= rtd1195_boot_secondary,

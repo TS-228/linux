@@ -55,6 +55,14 @@ static void __init rtd1195_reserve(void)
 	/* Exclude peripheral register spaces from RAM */
 	rtd1195_memblock_remove(0x18000000, 0x00070000);
 	rtd1195_memblock_remove(0x18100000, 0x01000000);
+
+	/*
+	 * Always excluded by the vendor's own machine descriptor,
+	 * unconditionally (not gated behind any Kconfig) - likely holds
+	 * ACPU/secure-world state. Can't prove what's unused here, only
+	 * that it's always been protected, so keep protecting it.
+	 */
+	rtd1195_memblock_remove(0x10000000, 0x00100000);
 }
 
 static const char *const rtd1195_dt_compat[] __initconst = {
