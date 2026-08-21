@@ -593,8 +593,6 @@ void rtk_int_waitfor(struct rtksd_host *sdport, u8 cmdcode, u8 cmd_idx, unsigned
 /* remove from c file &&& */
 
 /* rtk function definition */
-#define ENABLE_EMMC_INT_MODE
-/* rtk function definition */
 int error_handling(struct rtksd_host *sdport, unsigned int cmd_idx, unsigned int bIgnore);
 int rtkcr_send_cmd25(struct rtksd_host *sdport);
 int rtkcr_send_cmd18(struct rtksd_host *sdport);

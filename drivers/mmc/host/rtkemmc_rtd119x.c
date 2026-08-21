@@ -322,9 +322,6 @@ int rtk_int_enable_and_waitfor(struct rtksd_host *sdport, u8 cmdcode, u8 cmd_idx
     sdport->bus_status   = 0;
     sdport->dma_trans   = 0;
 
-    #ifndef ENABLE_EMMC_INT_MODE
-    sdport->int_waiting = NULL;
-    #else
     sdport->int_waiting = &rtk_emmc_wait;
     MMCPRINTF("rtk wait complete addr = %08x\n", (unsigned int) sdport->int_waiting);
     /* timeout timer fire */
@@ -345,7 +342,6 @@ int rtk_int_enable_and_waitfor(struct rtksd_host *sdport, u8 cmdcode, u8 cmd_idx
     }
 
     //wait for ^M
-    #endif
 
     if ((cmdcode == 25)&&(cr_readl(sdport->base_io+EMMC_DMA_CTL3)&0x2))
     {
@@ -397,71 +393,6 @@ EXPORT_SYMBOL_GPL(rtk_int_enable_and_waitfor);
 
 void rtk_int_waitfor(struct rtksd_host *sdport, u8 cmdcode, u8 cmd_idx, unsigned long msec,unsigned long dma_msec)
 {
-    #ifndef ENABLE_EMMC_INT_MODE
-    unsigned long timeend=0;
-    u32 sd_trans=0,sd_status1=0,sd_status2=0,bus_status=0,dma_trans=0;
-
-    /*
-     * Used to hold spin_lock_irqsave(&sdport->lock) across this multi-second
-     * busy-poll, hard-disabling local IRQs long enough to trip unrelated
-     * drivers' watchdogs (observed with r8169). rtksd_request() already
-     * serializes callers via cr_rw_sem, so the lock here was redundant.
-     */
-
-    if(sdport->rtflags & RTKCR_FOPEN_LOG){
-        MMCPRINTF(" rtkemmc : register settings(base=0x%08x,0x%08x)\n", sdport->base_io, sdport->base_io+SD_CMD0);
-        MMCPRINTF(" cmd0:0x%02x cmd1:0x%02x cmd2:0x%02x cmd3:0x%02x cmd4:0x%02x cmd5:0x%02x\n",cr_readb(sdport->base_io+SD_CMD0),cr_readb(sdport->base_io+SD_CMD1),cr_readb(sdport->base_io+SD_CMD2),cr_readb(sdport->base_io+SD_CMD3),cr_readb(sdport->base_io+SD_CMD4),cr_readb(sdport->base_io+SD_CMD5));
-        MMCPRINTF(" trans:0x%02x status1:0x%02x status2:0x%02x bus_status:0x%02x\n",cr_readb(sdport->base_io+SD_TRANSFER),cr_readb(sdport->base_io+SD_STATUS1),cr_readb(sdport->base_io+SD_STATUS2),cr_readb(sdport->base_io+SD_BUS_STATUS));
-        MMCPRINTF(" configure1:0x%02x configure2:0x%02x configure3:0x%02x\n",cr_readb(sdport->base_io+SD_CONFIGURE1),cr_readb(sdport->base_io+SD_CONFIGURE2),cr_readb(sdport->base_io+SD_CONFIGURE3));
-        MMCPRINTF(" byteH:0x%02x byteL:0x%02x blkH:0x%02x blkL:0x%02x\n",cr_readb(sdport->base_io+SD_BYTE_CNT_H),cr_readb(sdport->base_io+SD_BYTE_CNT_L),cr_readb(sdport->base_io+SD_BLOCK_CNT_H),cr_readb(sdport->base_io+SD_BLOCK_CNT_L));
-        MMCPRINTF(" CPU_ACC:0x%08x dma_ctl1:0x%08x dma_ctl2:0x%08x dma_ctl3:0x%08x\n",cr_readl(sdport->base_io+EMMC_CPU_ACC),cr_readl(sdport->base_io+CR_DMA_CTL1),cr_readl(sdport->base_io+CR_DMA_CTL2),cr_readl(sdport->base_io+EMMC_DMA_CTL3));
-        MMCPRINTF(" card_pad_drv:0x%08x cmd_pad_drv:0x%08x data_pad_drv:0x%08x EMMC_CKGEN_CTL:0x%08x, SYS_PLL_EMMC3=0x%08x\n",cr_readb(sdport->base_io+EMMC_CARD_PAD_DRV),cr_readb(sdport->base_io+EMMC_CMD_PAD_DRV),cr_readb(sdport->base_io+EMMC_DATA_PAD_DRV),cr_readl(sdport->base_io+EMMC_CKGEN_CTL),cr_readl(SYS_PLL_EMMC3));
-    }
-
-    //cmd fire
-    #ifdef MMC_DBG
-    sd_reg = cr_readb(sdport->base_io+SD_CMD0);
-    #endif
-    sync();
-    cr_writeb((u8) (cmdcode|START_EN), sdport->base_io+SD_TRANSFER );
-    sync();
-
-    timeend = jiffies + msecs_to_jiffies(msec);
-
-    while(time_before(jiffies, timeend))
-    {
-        if ((cr_readb(sdport->base_io+SD_TRANSFER) & (END_STATE|IDLE_STATE))==(END_STATE|IDLE_STATE))
-            break;
-        if ((cr_readb(sdport->base_io+SD_TRANSFER) & ERR_STATUS)==(ERR_STATUS))
-            break;
-    }
-
-    if (dma_msec>0)
-    {
-        timeend = jiffies + msecs_to_jiffies(dma_msec);
-        while(time_before(jiffies, timeend))
-        {
-                sync();
-                if ((cr_readl(sdport->base_io+EMMC_DMA_CTL3) & DMA_XFER)!=(DMA_XFER))
-                        break;
-        }
-        rtkcr_get_dma_trans(sdport->base_io,&dma_trans);
-        sync();
-        sdport->dma_trans    = dma_trans;
-    }
-    MMCPRINTF("exit from polling\n");
-
-    rtkcr_get_sd_trans(sdport->base_io,&sd_trans);
-    rtkcr_get_sd_sta(sdport->base_io,&sd_status1,&sd_status2,&bus_status);
-
-    sdport->sd_trans    = sd_trans;
-    sdport->sd_status1   = sd_status1;
-    sdport->sd_status2   = sd_status2;
-    sdport->bus_status   = bus_status;
-    MMCPRINTF("int sts : 0x%08x sd_trans : 0x%08x, sd_st1 : 0x%08x\n", sdport->int_status, sdport->sd_trans, sdport->sd_status1);
-    MMCPRINTF("int st2 : 0x%08x bus_sts : 0x%08x dma_trans : 0x%08x\n", sdport->sd_status2, sdport->bus_status, sdport->dma_trans);
-    spin_unlock_irqrestore(&sdport->lock,flags);
-    #else
     sync();
     if(sdport->rtflags & RTKCR_FOPEN_LOG){
         printk(" rtkemmc : register settings(base=0x%08x,0x%02x)\n", sdport->base_io, cr_readb(sdport->base_io+SD_CMD0));
@@ -499,7 +430,6 @@ void rtk_int_waitfor(struct rtksd_host *sdport, u8 cmdcode, u8 cmd_idx, unsigned
         sync();
         MMCPRINTF("do wait for 2\n");
     }
-    #endif
 }
 EXPORT_SYMBOL_GPL(rtk_int_waitfor);
 
@@ -2305,22 +2235,16 @@ static void rtksd_timeout_timer(struct timer_list *t)
     MMCPRINTF("%s - int_wait=%08x\n", __func__, sdport->int_waiting);
     spin_lock_irqsave(&sdport->lock,flags);
     //down_write(&cr_rw_sem);
-    #ifdef ENABLE_EMMC_INT_MODE
     if(sdport->int_waiting)
-    #else
-    if (1)
-    #endif
     {
         MMCPRINTF("0. get sd trans \n");
         wflag = 0x01;
-        #ifdef ENABLE_EMMC_INT_MODE
         MMCPRINTF("========== C1 ==========\n");
         rtkcr_hold_int_dec(sdport->base_io);
         rtkcr_clr_int_sta(sdport->base_io);
         sync();
         rtkcr_get_int_sta(sdport->base_io,&int_status);
         sdport->int_status  = int_status;
-        #endif
         MMCPRINTF("1. get sd trans \n");
         MMCPRINTF("baseio=0x%08x\n",sdport->base_io);
         rtkcr_get_sd_trans(sdport->base_io,&sd_trans);
@@ -2336,9 +2260,7 @@ static void rtksd_timeout_timer(struct timer_list *t)
         sdport->dma_trans    = dma_trans;
         MMCPRINTF("int sts : 0x%08x sd_trans : 0x%08x, sd_st1 : 0x%08x\n", sdport->int_status, sdport->sd_trans, sdport->sd_status1);
         MMCPRINTF("int st2 : 0x%08x bus_sts : 0x%08x dma_trans : 0x%08x\n", sdport->sd_status2, sdport->bus_status, sdport->dma_trans);
-        #ifdef ENABLE_EMMC_INT_MODE
         //rtkcr_en_int(sdport->base_io);
-        #endif
     }else{
         WARN_ON(1);
     }
@@ -2348,12 +2270,10 @@ static void rtksd_timeout_timer(struct timer_list *t)
 
     spin_unlock_irqrestore(&sdport->lock, flags);
     //up_write(&cr_rw_sem);
-    #ifdef ENABLE_EMMC_INT_MODE
     MMCPRINTF(KERN_WARNING "%s: %s %s card access time out!\n",
             DRIVER_NAME,
             (wflag & 0x01) ? "int error;" : "",
             (wflag & 0x10) ? "dma error;" : "" );
-    #endif
 
 }
 
@@ -4976,10 +4896,8 @@ static int rtkemmc_probe(struct platform_device *pdev)
 		ret = -ENOMEM;
 		goto out;
 	}
-#ifdef ENABLE_EMMC_INT_MODE
 	rtkcr_hold_int_dec(sdport->base_io);       /* hold status interrupt */
 	rtkcr_clr_int_sta(sdport->base_io);
-#endif
 
 	ret = request_irq(irq, rtksd_irq, IRQF_SHARED, DRIVER_NAME, sdport);   //rtkcr_interrupt
 	if (ret) {
@@ -5081,9 +4999,7 @@ AC_DET_OUT:
 		sdport->ops->reset_card(sdport);
 	sdport->ops->chk_card_insert(sdport);
 
-#ifdef ENABLE_EMMC_INT_MODE
 	//rtkcr_en_int(sdport->base_io);
-#endif
 
 	platform_set_drvdata(pdev, mmc);
 	ret = mmc_add_host(mmc);
@@ -5304,9 +5220,7 @@ static int __init rtkemmc_init(void)
         printk(KERN_INFO "Realtek EMMC Controller Driver installation fails.\n\n");
         return -ENODEV;
     }else{
-#ifdef ENABLE_EMMC_INT_MODE
         printk(KERN_INFO "Realtek EMMC Controller Driver is running interrupt mode.\n\n");
-#endif
         printk(KERN_INFO "Realtek EMMC Controller Driver is successfully installing.\n\n");
         return 0;
     }
