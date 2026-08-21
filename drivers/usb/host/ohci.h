@@ -8,10 +8,6 @@
  * This file is licenced under the GPL.
  */
 
-#ifdef CONFIG_USB_PATCH_ON_RTK
-#include <soc/realtek/rtd129x_lockapi.h>
-#endif
-
 /*
  * __hc32 and __hc16 are "Host Controller" types, they may be equivalent to
  * __leXX (normally) or __beXX (given OHCI_BIG_ENDIAN), depending on the
@@ -371,10 +367,6 @@ struct ohci_hcd {
 	 */
 	struct ohci_regs __iomem *regs;
 
-#ifdef CONFIG_USB_PATCH_ON_RTK
-	void __iomem *wrap_reg;
-#endif
-
 	/*
 	 * main memory used to communicate with the HC (dma-consistent).
 	 * hcd adds to schedule for a live hc any time, but removals finish
@@ -569,23 +561,6 @@ static inline struct usb_hcd *ohci_to_hcd (const struct ohci_hcd *ohci)
 static inline unsigned int _ohci_readl (const struct ohci_hcd *ohci,
 					__hc32 __iomem * regs)
 {
-#ifdef CONFIG_USB_PATCH_ON_RTK
-#if defined(CONFIG_ARCH_RTD129x)
-	unsigned long flags;
-
-	rtk_lockapi_lock(flags, __func__); /* Add global lock for emmc issue */
-#endif
-	if (ohci->wrap_reg && readl(ohci->wrap_reg) == 0x0) {
-		ohci_err(ohci, "%s [USB Workaround] fixed force to enable "
-			    "ohci clock \n", __func__);
-		writel(0x40, ohci->wrap_reg);
-		mdelay(1);
-	}
-#if defined(CONFIG_ARCH_RTD129x)
-	rtk_lockapi_unlock(flags, __func__); /* Add global lock for emmc issue */
-#endif
-#endif
-
 #ifdef CONFIG_USB_OHCI_BIG_ENDIAN_MMIO
 	return big_endian_mmio(ohci) ?
 		readl_be (regs) :
@@ -598,22 +573,6 @@ static inline unsigned int _ohci_readl (const struct ohci_hcd *ohci,
 static inline void _ohci_writel (const struct ohci_hcd *ohci,
 				 const unsigned int val, __hc32 __iomem *regs)
 {
-#ifdef CONFIG_USB_PATCH_ON_RTK
-#if defined(CONFIG_ARCH_RTD129x)
-	unsigned long flags;
-
-	rtk_lockapi_lock(flags, __func__); /* Add global lock for emmc issue */
-#endif
-	if (ohci->wrap_reg && readl(ohci->wrap_reg) == 0x0) {
-		ohci_err(ohci, "%s [USB Workaround] fixed force to enable ohci clock \n", __func__);
-		writel(0x40, ohci->wrap_reg);
-		mdelay(1);
-	}
-#if defined(CONFIG_ARCH_RTD129x)
-	rtk_lockapi_unlock(flags, __func__); /* Add global lock for emmc issue */
-#endif
-#endif
-
 #ifdef CONFIG_USB_OHCI_BIG_ENDIAN_MMIO
 	big_endian_mmio(ohci) ?
 		writel_be (val, regs) :
