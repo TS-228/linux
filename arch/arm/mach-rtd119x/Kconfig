@@ -23,5 +23,6 @@ config ARCH_RTD119X
 	select GENERIC_IRQ_MULTI_HANDLER
 	select RTK_PLATFORM
 	select PM_OPP
+	select ARCH_REALTEK
 	help
 	  Support for Realtek RTD119x family.
