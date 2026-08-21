@@ -3949,6 +3949,16 @@ static void rtl_rar_set(struct rtl8169_private *tp, u8 *addr)
 	rtl_unlock_work(tp);
 }
 
+/*
+ * rtl_phy_work()/rtl8169_suspend()/__rtl8169_resume() poke registers
+ * across the RBUS peripheral block via a fixed virtual address that
+ * only resolved because of the vendor's static .map_io table - map
+ * the same 0x18000000/0x70000 span dynamically instead (once, in
+ * probe, since it's needed by all three), no static mapping table
+ * exists under mainline's machine descriptor.
+ */
+static void __iomem *r8169soc_rbus_base;
+
 static void rtl_phy_work(struct rtl8169_private *tp)
 {
 	struct timer_list *timer = &tp->timer;
@@ -3986,22 +3996,22 @@ static void rtl_phy_work(struct rtl8169_private *tp)
 
 	netif_err(tp, drv, tp->dev, "gphy check failed, reset start\n");
 
-	i=readl(IOMEM(0xFE000000));
+	i=readl((r8169soc_rbus_base + 0x0000));
 	i = i & 0xffffbfff;
-	writel(i,IOMEM(0xFE000000));
+	writel(i,(r8169soc_rbus_base + 0x0000));
 
-	j=readl(IOMEM(0xFE007088));
+	j=readl((r8169soc_rbus_base + 0x7088));
 	j = j & 0xfffff9ff;
-	writel(j,IOMEM(0xFE007088));
+	writel(j,(r8169soc_rbus_base + 0x7088));
 
 
-	i=readl(IOMEM(0xFE000000));
+	i=readl((r8169soc_rbus_base + 0x0000));
 	i = i | 0x00004000;
-	writel(i,IOMEM(0xFE000000));
+	writel(i,(r8169soc_rbus_base + 0x0000));
 
-	j=readl(IOMEM(0xFE007088));
+	j=readl((r8169soc_rbus_base + 0x7088));
 	j = j | 0x00000600;
-	writel(j,IOMEM(0xFE007088));
+	writel(j,(r8169soc_rbus_base + 0x7088));
 
 	msleep(300);
 
@@ -6982,7 +6992,7 @@ static int rtl8169_suspend(struct device *dev)
 	rtl8169_net_suspend(ndev);
 
 	//FIXME: disable LED, current solution is switch pad to GPIO input
-	writel(readl(IOMEM(0xfe007310)) & ~0xf0000000, IOMEM(0xfe007310));
+	writel(readl((r8169soc_rbus_base + 0x7310)) & ~0xf0000000, (r8169soc_rbus_base + 0x7310));
 
 	return 0;
 }
@@ -6996,27 +7006,27 @@ static void __rtl8169_resume(struct net_device *dev)
 
 	printk(KERN_INFO "resume r8169 eth0 gphy work \n");
 
-	i=readl(IOMEM(0xFE000000));
+	i=readl((r8169soc_rbus_base + 0x0000));
 	i = i & 0xffffbfff;
-	writel(i,IOMEM(0xFE000000));
+	writel(i,(r8169soc_rbus_base + 0x0000));
 
-	j=readl(IOMEM(0xFE007088));
+	j=readl((r8169soc_rbus_base + 0x7088));
 	j = j & 0xfffff9ff;
-	writel(j,IOMEM(0xFE007088));
+	writel(j,(r8169soc_rbus_base + 0x7088));
 
 
-	i=readl(IOMEM(0xFE000000));
+	i=readl((r8169soc_rbus_base + 0x0000));
 	i = i | 0x00004000;
-	writel(i,IOMEM(0xFE000000));
+	writel(i,(r8169soc_rbus_base + 0x0000));
 
-	j=readl(IOMEM(0xFE007088));
+	j=readl((r8169soc_rbus_base + 0x7088));
 	j = j | 0x00000600;
-	writel(j,IOMEM(0xFE007088));
+	writel(j,(r8169soc_rbus_base + 0x7088));
 
 	msleep(300);
 
 	//FIXME: switch pad to MAC control
-	writel(readl(IOMEM(0xfe007310)) | 0x50000000, IOMEM(0xfe007310));
+	writel(readl((r8169soc_rbus_base + 0x7310)) | 0x50000000, (r8169soc_rbus_base + 0x7310));
 
 	rtl_pll_power_up(tp);
 	rtl_rar_set(tp, tp->dev->dev_addr);
@@ -7411,6 +7421,14 @@ rtl_init_one(struct platform_device *pdev)
 	int mac_version;
 	int irq;
 	u8 mac_addr[ETH_ALEN];
+
+	if (!r8169soc_rbus_base) {
+		r8169soc_rbus_base = ioremap(0x18000000, 0x00070000);
+		if (!r8169soc_rbus_base) {
+			printk(KERN_ERR "%s: failed to map RBUS\n", __func__);
+			return -ENOMEM;
+		}
+	}
 
 	struct clk *clk_etn  = clk_get(&pdev->dev, "etn");
 	if (IS_ERR(clk_etn)) {
