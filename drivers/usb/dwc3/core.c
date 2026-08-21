@@ -578,18 +578,6 @@ int dwc3_event_buffers_setup(struct dwc3 *dwc)
 	return 0;
 }
 
-#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
-int rtk_dwc3_drd_core_soft_reset(struct dwc3 *dwc)
-{
-    return dwc3_core_soft_reset(dwc);
-}
-
-int rtk_dwc3_drd_event_buffers_setup(struct dwc3 *dwc)
-{
-	return dwc3_event_buffers_setup(dwc);
-}
-#endif
-
 void dwc3_event_buffers_cleanup(struct dwc3 *dwc)
 {
 	struct dwc3_event_buffer	*evt;

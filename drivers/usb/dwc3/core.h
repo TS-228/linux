@@ -1247,12 +1247,6 @@ struct dwc3 {
 	u32			current_otg_role;
 	u32			desired_otg_role;
 	bool			otg_restart_host;
-
-#ifdef CONFIG_USB_RTK_DWC3_DRD_MODE
-	bool has_gadget;
-	bool has_xhci;
-#endif
-
 	u32			u1u2;
 	u32			maximum_speed;
 	u32			gadget_max_speed;

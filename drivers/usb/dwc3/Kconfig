@@ -62,12 +62,6 @@ config USB_DWC3_RTK
 	  RTK SoCs with DesignWare Core USB3 IP inside,
 	  say 'Y' or 'M' if you have such device.
 
-config USB_RTK_DWC3_DRD_MODE
-	bool "RTK DWC3 DRD (dynamical host/device mode switch)"
-	depends on USB_DWC3_DUAL_ROLE
-	help
-		Support Realtek dwc3 drd type c dynamical host/device mode switch
-
 config USB_DWC3_OMAP
 	tristate "Texas Instruments OMAP5 and similar Platforms"
 	depends on ARCH_OMAP2PLUS || COMPILE_TEST
