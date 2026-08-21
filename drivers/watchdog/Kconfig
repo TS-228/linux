@@ -1014,20 +1014,13 @@ config UNIPHIER_WATCHDOG
 
 config RTD119X_WATCHDOG
 	bool "Realtek RTD119x/RTD129x watchdog support"
-	depends on ARCH_REALTEK || COMPILE_TEST
+	depends on ARCH_REALTEK || ARM || ARM64 || COMPILE_TEST
 	depends on OF
 	select WATCHDOG_CORE
 	default ARCH_REALTEK
 	help
 	  Say Y here to include support for the watchdog timer in
 	  Realtek RTD1295 SoCs.
-
-config RTK_WATCHDOG
-	tristate "Realtek watchdog support"
-	depends on RTK_PLATFORM
-	select WATCHDOG_CORE
-	help
-	  Realtek watchdog support.
 
 config REALTEK_OTTO_WDT
 	tristate "Realtek Otto MIPS watchdog support"
