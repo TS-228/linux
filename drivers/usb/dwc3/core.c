@@ -35,21 +35,12 @@
 #include <linux/usb/of.h>
 #include <linux/usb/otg.h>
 
-#ifdef CONFIG_USB_DWC3_RTK
-#include <linux/of_address.h>
-#endif
-
-#ifdef CONFIG_USB_PATCH_ON_RTK
-#include <linux/suspend.h>
-#endif
-
 #include "core.h"
 #include "gadget.h"
 #include "io.h"
 
 #include "debug.h"
 #include "../host/xhci-ext-caps.h"
-
 
 #define DWC3_DEFAULT_AUTOSUSPEND_DELAY	5000 /* ms */
 
@@ -2166,7 +2157,7 @@ static struct power_supply *dwc3_get_usb_power_supply(struct dwc3 *dwc)
 static int dwc3_probe(struct platform_device *pdev)
 {
 	struct device		*dev = &pdev->dev;
-	struct resource		*res;
+	struct resource		*res, dwc_res;
 	unsigned int		hw_mode;
 	void __iomem		*regs;
 	struct dwc3		*dwc;
@@ -2190,19 +2181,6 @@ static int dwc3_probe(struct platform_device *pdev)
 	dwc->xhci_resources[0].flags = res->flags;
 	dwc->xhci_resources[0].name = res->name;
 
-	res->start += DWC3_GLOBALS_REGS_START;
-
-#ifdef CONFIG_USB_DWC3_RTK
-	/* due to rtk dwc3 ip DWC3_GLOBALS_REGS_START is not standard (0xc100)
-	 * we need to fixed it
-	 */
-	regs = of_iomap(dev->of_node, 0);
-	regs += 0x8100;
-	dev_info(dev, "rtk dwc3 fixed dwc3 globals register start address 0x%p\n", regs);
-#else
-	{
-		struct resource dwc_res;
-
 	/*
 	 * Request memory region but exclude xHCI regs,
 	 * since it will be requested by the xhci-plat driver.
@@ -2222,16 +2200,11 @@ static int dwc3_probe(struct platform_device *pdev)
 	}
 
 	regs = devm_ioremap_resource(dev, &dwc_res);
-	dwc->regs_size = resource_size(&dwc_res);
-	}
-#endif
 	if (IS_ERR(regs))
 		return PTR_ERR(regs);
 
 	dwc->regs	= regs;
-#ifdef CONFIG_USB_DWC3_RTK
-	dwc->regs_size = resource_size(res) - 0x8100;
-#endif
+	dwc->regs_size	= resource_size(&dwc_res);
 
 	dwc3_get_properties(dwc);
 
@@ -2650,34 +2623,10 @@ static int dwc3_runtime_idle(struct device *dev)
 #endif /* CONFIG_PM */
 
 #ifdef CONFIG_PM_SLEEP
-
-#ifdef CONFIG_USB_PATCH_ON_RTK
-/* [DEV_FIX]implement New USB reset mechanism with CRT reset to workaround any HW or IP issues
- * commit 319ff9f5c298b94517a10d4ced59812b54994347
- */
-static int dwc3_suspend(struct device *dev);
-int RTK_dwc3_suspend(struct device *dev)
-{
-	return dwc3_suspend(dev);
-}
-#endif
-
 static int dwc3_suspend(struct device *dev)
 {
 	struct dwc3	*dwc = dev_get_drvdata(dev);
 	int		ret;
-
-#ifdef CONFIG_USB_PATCH_ON_RTK
-	dev_info(dev, "[USB] Enter %s", __func__);
-	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
-		//For idle mode
-		dev_info(dev, "[USB] %s Idle mode\n", __func__);
-		return 0;
-	}
-	//For suspend mode
-	dev_info(dev,  "[USB] %s Suspend mode\n", __func__);
-
-#endif
 
 	ret = dwc3_suspend_common(dwc, PMSG_SUSPEND);
 	if (ret)
@@ -2685,39 +2634,13 @@ static int dwc3_suspend(struct device *dev)
 
 	pinctrl_pm_select_sleep_state(dev);
 
-#ifdef CONFIG_USB_PATCH_ON_RTK
-	dev_info(dev, "[USB] Exit %s", __func__);
-#endif
-
 	return 0;
 }
-
-#ifdef CONFIG_USB_PATCH_ON_RTK
-/* [DEV_FIX]implement New USB reset mechanism with CRT reset to workaround any HW or IP issues
- * commit 319ff9f5c298b94517a10d4ced59812b54994347
- */
-static int dwc3_resume(struct device *dev);
-int RTK_dwc3_resume(struct device *dev)
-{
-	return dwc3_resume(dev);
-}
-#endif
 
 static int dwc3_resume(struct device *dev)
 {
 	struct dwc3	*dwc = dev_get_drvdata(dev);
 	int		ret = 0;
-
-#ifdef CONFIG_USB_PATCH_ON_RTK
-	dev_info(dev, "[USB] Enter %s", __func__);
-	if (pm_suspend_target_state == PM_SUSPEND_STANDBY){
-		//For idle mode
-		dev_info(dev, "[USB] %s Idle mode\n", __func__);
-		return 0;
-	}
-	//For suspend mode
-	dev_info(dev,  "[USB] %s Suspend mode\n", __func__);
-#endif
 
 	pinctrl_pm_select_default_state(dev);
 
