@@ -407,10 +407,6 @@ struct ohci_hcd {
 	 * driver state
 	 */
 	enum ohci_rh_state	rh_state;
-#ifdef CONFIG_USB_PATCH_ON_RTK
-	int 		resuming;
-	struct completion resuming_done;
-#endif
 	int			num_ports;
 	int			load [NUM_INTS];
 	u32			hc_control;	/* copy of hc control reg */

@@ -44,13 +44,6 @@ static void update_done_list(struct ohci_hcd *);
 static void ohci_work(struct ohci_hcd *);
 
 
-#ifdef CONFIG_USB_PATCH_ON_RTK
-#ifdef CONFIG_USB_EHCI_RTK
-/* Add Workaround to fixed EHCI/OHCI Wrapper can't work simultaneously */
-extern bool RTK_ehci_check_schedule_actived(const char *func);
-#endif
-#endif
-
 #ifdef	CONFIG_PM
 static int ohci_rh_suspend (struct ohci_hcd *ohci, int autostop)
 __releases(ohci->lock)
@@ -165,20 +158,6 @@ __acquires(ohci->lock)
 	u32			temp, enables;
 	int			status = -EINPROGRESS;
 	int			autostopped = ohci->autostop;
-
-#ifdef CONFIG_USB_PATCH_ON_RTK
-#ifdef CONFIG_USB_EHCI_RTK
-	/* Add Workaround to fixed EHCI/OHCI Wrapper can't work simultaneously */
-	/* When EHCI schedule actived, don't resume OHCI*/
-	if (RTK_ehci_check_schedule_actived(__func__)) {
-		ohci_info (ohci, "[Workaround] %s EHCI schedule actived, skip resume OHCI\n", __func__);
-		return 0;
-	} else {
-		ohci->resuming = 1;
-		init_completion(&ohci->resuming_done);
-	}
-#endif
-#endif
 
 	ohci->autostop = 0;
 	ohci->hc_control = ohci_readl (ohci, &ohci->regs->control);
@@ -320,12 +299,6 @@ skip_resume:
 	}
 
 	ohci->rh_state = OHCI_RH_RUNNING;
-#ifdef CONFIG_USB_PATCH_ON_RTK
-	if (ohci->resuming) {
-		complete(&ohci->resuming_done);
-		ohci->resuming = 0;
-	}
-#endif
 	return 0;
 }
 

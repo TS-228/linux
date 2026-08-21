@@ -26,7 +26,7 @@
 	};
 
 	ehci@18013000 {
-		compatible = "Realtek,rtd119x-ehci";
+		compatible = "generic-ehci";
 
 		status = "okay";
 	};

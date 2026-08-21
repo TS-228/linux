@@ -4,7 +4,6 @@
 #
 
 include $(srctree)/drivers/soc/realtek/rtk-vendor-ccflags.mk
-CFLAGS_ehci-rtk.o += $(rtk_vendor-ccflags)
 CFLAGS_rtk-usb-manager.o += $(rtk_vendor-ccflags)
 
 # tell define_trace.h where to find the xhci trace header
@@ -49,7 +48,6 @@ obj-$(CONFIG_USB_EHCI_HCD_STI)	+= ehci-st.o
 obj-$(CONFIG_USB_EHCI_EXYNOS)	+= ehci-exynos.o
 obj-$(CONFIG_USB_EHCI_HCD_AT91) += ehci-atmel.o
 obj-$(CONFIG_USB_EHCI_TEGRA)	+= ehci-tegra.o
-obj-$(CONFIG_USB_EHCI_RTK)	+= ehci-rtk.o
 obj-$(CONFIG_USB_EHCI_BRCMSTB)	+= ehci-brcm.o
 
 obj-$(CONFIG_USB_OXU210HP_HCD)	+= oxu210hp-hcd.o
