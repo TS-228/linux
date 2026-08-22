@@ -24,7 +24,7 @@ extern void ta_hdcp_lib_set_i2c_enable(unsigned int  i2c_enable_value);
 #define ADDR_10BITS_MASK 0x3FF
 #define ADDR_7BITS_MASK 0x7F
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 #define I2C_ID_MASK 0x7F
 
 #elif defined(CONFIG_ARCH_RTD129x)

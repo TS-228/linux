@@ -1201,7 +1201,7 @@ struct rtk_i2c_reg_map rtk_i2c_setup_reg_base(unsigned int id,
 		reg_map.IC_SDA_DEL = (base & ~0xFFF) | ISO_I2C0_SDA_DEL;
 		break;
 	case 1:
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 		reg_map.I2C_ISR = (base & ~0xFFF) | 0x000C;
 		reg_map.I2C_INT = MISC_ISR_I2C1;
 		reg_map.IC_SDA_DEL = (base & ~0xFFF) | MISC_I2C1_SDA_DEL;

@@ -78,7 +78,7 @@ static inline void rtk_se_enable_icg(struct device *dev)
 	struct se_uio_info *priv = dev_get_drvdata(dev);
 	unsigned int val;
 
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 	val = readl(priv->base + 0x80c);
 	val &= ~0xf8000000;
 	writel(val, priv->base + 0x80c);

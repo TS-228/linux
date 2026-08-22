@@ -17,7 +17,7 @@ struct module_id {
 	char *name;
 };
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 
 #define MODULE_NUM 17
 

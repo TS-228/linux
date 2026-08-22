@@ -41,14 +41,14 @@ struct rtk_sdmmc_host {
     void __iomem *emmc;
 #endif
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
     void __iomem *sdio;
 #endif
     spinlock_t lock;
 
     struct tasklet_struct req_end_tasklet;
     struct timer_list timer;
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
     struct timer_list plug_timer;
 #endif
     struct timer_list rtk_sdmmc_stop_cmd; //CMD25_WO_STOP_COMMAND

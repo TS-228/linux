@@ -154,7 +154,7 @@ smp_mb(); \
 
 #define rtk_rpc_wmb(start, size) wmb()
 
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 #define AVCPU_NOCACHE 0xa0000000
 #else
 #define AVCPU_NOCACHE 0x0
@@ -259,7 +259,7 @@ typedef struct RPC_SYNC_Struct {
  *be extracted from the ring buffer
  */
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 
 typedef struct RPC_DEV { /*size should be 64 bytes*/
 	uint32_t ringBuf;

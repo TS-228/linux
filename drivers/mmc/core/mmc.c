@@ -1059,7 +1059,7 @@ static int mmc_select_bus_width(struct mmc_card *card)
 		bus_width = bus_widths[idx];
 		mmc_set_bus_width(host, bus_width);
 
-#if IS_ENABLED(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_ARCH_RTD119X)
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_ARCH_REALTEK)
 		/*
 		 * RTD119x eMMC: re-reading EXT_CSD after an 8-bit switch often
 		 * fails; trust the switch and run PHY tuning in mmc_init_card().
@@ -1816,7 +1816,7 @@ reinit:
 	}
 
 #if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_HS_TIMING, 1, 0);
 	if (err)
 		goto free_card;
@@ -1850,7 +1850,7 @@ reinit:
 		mmc_set_erase_size(card);
 	}
 #if IS_ENABLED(CONFIG_MMC_RTK_EMMC)
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 	if (!(card->mmc_avail_type & EXT_CSD_CARD_TYPE_HS200)) {
 		err = mmc_switch(card, EXT_CSD_CMD_SET_NORMAL,
 		EXT_CSD_HS_TIMING, EXT_CSD_TIMING_HS, 0);
@@ -1977,7 +1977,7 @@ reinit:
 	} else {
 		/* Select the desired bus width optionally */
 		err = mmc_select_bus_width(card);
-#if IS_ENABLED(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_ARCH_RTD119X)
+#if IS_ENABLED(CONFIG_MMC_RTK_EMMC) && defined(CONFIG_ARCH_REALTEK)
 		if (err > 0 && host->ops->execute_tuning) {
 			host->mode = MODE_SDR;
 			host->card = card;

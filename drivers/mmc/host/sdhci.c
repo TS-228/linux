@@ -4122,7 +4122,7 @@ void __sdhci_read_caps(struct sdhci_host *host, const u16 *ver,
 	}
 
 #ifdef CONFIG_MMC_SDHCI_RTK
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	host->caps |= SDHCI_CAN_VDD_330;
 #else
         host->caps |= (SDHCI_CAN_VDD_180 | SDHCI_CAN_VDD_330);
@@ -4259,7 +4259,7 @@ int sdhci_setup_host(struct sdhci_host *host)
 
 	override_timeout_clk = host->timeout_clk;
 #ifdef CONFIG_MMC_SDHCI_RTK
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	host->version = SDHCI_SPEC_200;
 #else
         host->version = SDHCI_SPEC_300;         //workaround, kylin register cannot be showed correctly, so just set host capability 3.0

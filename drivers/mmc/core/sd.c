@@ -44,7 +44,7 @@ void set_mmc_runtime_resume_flag(int flag)
 EXPORT_SYMBOL(set_mmc_runtime_resume_flag);
 #endif
 
-#if defined(CONFIG_ARCH_RTD119X) && (defined(CONFIG_MMC_RTK_SDMMC) || defined(CONFIG_MMC_RTK_SDMMC_MODULE))
+#if defined(CONFIG_ARCH_REALTEK) && (defined(CONFIG_MMC_RTK_SDMMC) || defined(CONFIG_MMC_RTK_SDMMC_MODULE))
 int Menfid=0x0;
 int get_manfid(void)
 {
@@ -105,7 +105,7 @@ void mmc_decode_cid(struct mmc_card *card)
 	 * have to assume we can parse this.
 	 */
 	card->cid.manfid		= unstuff_bits(resp, 120, 8);
-#if defined(CONFIG_ARCH_RTD119X) && (defined(CONFIG_MMC_RTK_SDMMC) || defined(CONFIG_MMC_RTK_SDMMC_MODULE))
+#if defined(CONFIG_ARCH_REALTEK) && (defined(CONFIG_MMC_RTK_SDMMC) || defined(CONFIG_MMC_RTK_SDMMC_MODULE))
 	Menfid = card->cid.manfid;
 #endif
 

@@ -14,7 +14,7 @@
 #  define SE_NUM_ENGINES       1
 #elif defined(CONFIG_ARCH_RTD16xx)
 #  define SE_NUM_ENGINES       1
-#elif defined(CONFIG_ARCH_RTD119X)
+#elif defined(CONFIG_ARCH_REALTEK)
 #  define SE_NUM_ENGINES       2
 #elif defined(CONFIG_ARCH_RTD13xx)
 #  define SE_NUM_ENGINES       1

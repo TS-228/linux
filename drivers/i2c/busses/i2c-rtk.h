@@ -79,7 +79,7 @@
 #define I2C_COMP_TYPE           0x00fc
 
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 #define MISC_ISR_I2C1    (0x00000001 << 4)
 #define MISC_I2C1_SDA_DEL	0x0088
 #else

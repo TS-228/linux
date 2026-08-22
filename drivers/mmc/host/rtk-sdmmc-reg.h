@@ -26,7 +26,7 @@
 #define CR_PLL_SD3                    (0x01E8)
 #define CR_PLL_SD4                    (0x01EC)
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 #define CR_PFUNC_CR                   (0x0380)
 #else
 #define CR_PFUNC_CR                   (0x0610)

@@ -66,14 +66,14 @@ static const unsigned freqs[] = { 400000, 300000, 200000, 100000 };
 bool use_spi_crc = 1;
 module_param(use_spi_crc, bool, 0);
 
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 #ifdef CONFIG_MMC_SDHCI_RTK
 bool SDIO_flag = false;
 bool SDIO_fini = false;
 extern bool SDIO_card;
 #endif /* CONFIG_RTK_PLATFORM */
 #endif
-#if (!defined(CONFIG_ARCH_RTD119X)) && (!defined(CONFIG_ARCH_RTD129x))
+#if (!defined(CONFIG_ARCH_REALTEK)) && (!defined(CONFIG_ARCH_RTD129x))
 #ifdef CONFIG_MMC_RTK_SDMMC
 void rtk_sdmmc_close_clk(struct mmc_host *host);
 int rtk_sdmmc_clk_cls_chk(struct mmc_host *host);
@@ -2124,7 +2124,7 @@ EXPORT_SYMBOL(mmc_sw_reset);
 
 static int mmc_rescan_try_freq(struct mmc_host *host, unsigned freq)
 {
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 #ifdef CONFIG_MMC_SDHCI_RTK
 	int ret=0;
 #endif /* CONFIG_RTK_PLATFORM */
@@ -2162,7 +2162,7 @@ static int mmc_rescan_try_freq(struct mmc_host *host, unsigned freq)
 
 	/* Order's important: probe SDIO, then SD, then MMC */
 #ifdef CONFIG_MMC_SDHCI_RTK
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 	if (!(host->caps2 & MMC_CAP2_NO_SDIO)) {
 		if (!(ret = mmc_attach_sdio(host))) {
 			SDIO_flag = true;
@@ -2370,7 +2370,7 @@ void mmc_rescan(struct work_struct *work)
  out:
 	if (host->caps & MMC_CAP_NEEDS_POLL)
 		mmc_schedule_delayed_work(&host->detect, HZ);
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 #ifdef CONFIG_MMC_SDHCI_RTK
 	if(SDIO_fini==true && SDIO_flag == false && SDIO_card==false) {
 		SDIO_fini= false;
@@ -2379,7 +2379,7 @@ void mmc_rescan(struct work_struct *work)
 	}
 #endif
 #endif
-#if (!defined(CONFIG_ARCH_RTD119X)) && (!defined(CONFIG_ARCH_RTD129x))
+#if (!defined(CONFIG_ARCH_REALTEK)) && (!defined(CONFIG_ARCH_RTD129x))
 #ifdef CONFIG_MMC_RTK_SDMMC
 	//We close the SD clock for power saving if no SD card
 	if(!(host->caps2 & MMC_CAP2_NO_SD) && rtk_sdmmc_clk_cls_chk(host)) rtk_sdmmc_close_clk(host);

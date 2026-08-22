@@ -148,7 +148,7 @@ struct mmc_request {
 	/* Allow other commands during this ongoing data transfer or busy wait */
 	bool			cap_cmd_during_tfr;
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 #define MMC_ERR_NONE        0
 #define MMC_ERR_TIMEOUT     1
 #define MMC_ERR_BADCRC      2

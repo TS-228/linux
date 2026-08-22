@@ -112,14 +112,14 @@ static int rtk_sdmmc_send_cmd_get_rsp(struct sdmmc_cmd_pkt *cmd_info);
 static int rtk_sdmmc_stream(struct sdmmc_cmd_pkt *cmd_info);
 static void rtk_sdmmc_hw_initial(struct rtk_sdmmc_host *rtk_host);
 static void rtk_sdmmc_timeout(struct timer_list *t);
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 static void rtk_sdmmc_plug(struct timer_list *t);
 #endif
 static void rtk_sdmmc_cmd12_fun(struct timer_list *t);
 static void rtk_sdmmc_set_access_mode(struct rtk_sdmmc_host *rtk_host,u8 level);
 void remove_sdcard(struct rtk_sdmmc_host *rtk_host);
 
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 #ifdef CONFIG_MMC_RTK_EMMC
 int get_RTK_initial_flag(void);
 #endif
@@ -148,7 +148,7 @@ struct task_struct *rtk_SD_task = NULL;
 struct mmc_command cmd12_stop_cmd;
 #endif
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 int get_manfid(void);
 int magic_num = 0xff;
 #endif
@@ -266,7 +266,7 @@ void remove_sdcard(struct rtk_sdmmc_host *rtk_host)
 void remove_sdcard(struct rtk_sdmmc_host *rtk_host)
 {
 	u32 det_time = 0;
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	unsigned long timeout = 0;
 #endif
 	void __iomem *sdmmc_base = rtk_host->sdmmc;
@@ -274,7 +274,7 @@ void remove_sdcard(struct rtk_sdmmc_host *rtk_host)
 	rtk_host->rtflags &= ~RTKCR_FCARD_DETECTED;
 	det_time = 1;
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	//reset
 	timeout = jiffies + msecs_to_jiffies(100);
 
@@ -285,7 +285,7 @@ void remove_sdcard(struct rtk_sdmmc_host *rtk_host)
 	}
 #endif
 
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 	writel(readl(sdmmc_base + 0x20) & (~0x01), sdmmc_base + 0x20);	//modified by JIM 2016.9.1 for power saving, set L4 gated enabled
 	writel(readl(sdmmc_base + 0x20) | 0x00000001, sdmmc_base + 0x20);   //reset the DMA
 #endif
@@ -320,7 +320,7 @@ static void rtk_sdmmc_shutdown(struct platform_device *pdev)
 
 	printk(KERN_ERR "[SD] Realtek SD card reader shutdown!!\n");
 	del_timer_sync(&rtk_host->timer);
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 	del_timer_sync(&rtk_host->plug_timer);
 #endif
 	pm_runtime_force_suspend(dev);
@@ -336,7 +336,7 @@ static void rtk_sdmmc_shutdown(struct platform_device *pdev)
 		rtk_host->ins_event = EVENT_REMOV;
 		rtk_host->rtflags &= ~RTKCR_FCARD_DETECTED;
 		det_time = 1;
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 		writel(readl(sdmmc_base + 0x20) & (~0x01), sdmmc_base + 0x20);          //modified by JIM 2016.9.1 for power saving, set L4 gated enabled
 		writel(readl(sdmmc_base + 0x20) | 0x00000001, sdmmc_base + 0x20);   //reset the DMA
 #endif
@@ -360,7 +360,7 @@ static int rtk_sdmmc_pm_suspend(struct device *dev)
 {
 	int ret = 0;
 	u32 det_time = 0;
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	unsigned long timeout = 0;
 #endif
 	u32 reginfo = 0;
@@ -375,7 +375,7 @@ static int rtk_sdmmc_pm_suspend(struct device *dev)
 		printk(KERN_ERR "[SD] Realtek SD card reader suspend to ram start!!\n");
 
 	del_timer_sync(&rtk_host->timer);
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 	del_timer_sync(&rtk_host->plug_timer);
 #endif
 #ifdef CMD25_WO_STOP_COMMAND
@@ -395,7 +395,7 @@ static int rtk_sdmmc_pm_suspend(struct device *dev)
 		rtk_host->ins_event = EVENT_REMOV;
 		rtk_host->rtflags &= ~RTKCR_FCARD_DETECTED;
 		det_time = 1;
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 		//reset
 		timeout = jiffies + msecs_to_jiffies(100);
 
@@ -405,7 +405,7 @@ static int rtk_sdmmc_pm_suspend(struct device *dev)
 			}
 		}
 #endif
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 		writel(readl(sdmmc_base + 0x20) & (~0x01), sdmmc_base + 0x20);		//modified by JIM 2016.9.1 for power saving, set L4 gated enabled
 		writel(readl(sdmmc_base + 0x20) | 0x00000001, sdmmc_base + 0x20);   //reset the DMA
 #endif
@@ -458,7 +458,7 @@ static int rtk_sdmmc_pm_resume(struct device *dev)
 	}
 #endif
 	if (get_RTK_PM_STATE() == PM_SD_SUSPEND_STANDBY) {
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 		writel(0x003E0003, pll_base + CR_PLL_SD1);
 		mdelay(10);
 #else
@@ -505,14 +505,14 @@ static int rtk_sdmmc_pm_resume(struct device *dev)
 
     ret = pm_runtime_force_resume(dev);
     timer_setup(&rtk_host->timer, rtk_sdmmc_timeout, 0);
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
     timer_setup(&rtk_host->plug_timer, rtk_sdmmc_plug, 0);
 #endif
 #ifdef CMD25_WO_STOP_COMMAND
     timer_setup(&rtk_host->rtk_sdmmc_stop_cmd, rtk_sdmmc_cmd12_fun, 0);
 #endif
 	rtk_sdmmc_sync(rtk_host);
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 	mod_timer(&rtk_host->plug_timer, jiffies + 3*HZ);
 #endif
 
@@ -1067,7 +1067,7 @@ static void rtk_sdmmc_speed(struct rtk_sdmmc_host *rtk_host, enum sdmmc_clock_sp
 		if (rtk_host->mmc->ios.timing == MMC_TIMING_UHS_DDR50) {
 
 			//writel(readl(pll_base + CR_PLL_SD2) | 0x00000003, pll_base + CR_PLL_SD2); //PLL_SD2
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 			writeb(0X3F, sdmmc_base+CARD_SD_CLK_PAD_DRIVE);
 			writeb(0X3F, sdmmc_base+CARD_SD_CMD_PAD_DRIVE);
 			writeb(0X3F, sdmmc_base+CARD_SD_DAT_PAD_DRIVE);
@@ -1118,7 +1118,7 @@ static void rtk_sdmmc_speed(struct rtk_sdmmc_host *rtk_host, enum sdmmc_clock_sp
 		writel(0x00005555, emmc_base + 0x634);
 		writel(0x55555555, emmc_base + 0x638);
 		rtk_lockapi_unlock(flags2, __FUNCTION__);
-#elif defined(CONFIG_ARCH_RTD119X)
+#elif defined(CONFIG_ARCH_REALTEK)
 		writeb(0x3F, sdmmc_base+CARD_SD_CLK_PAD_DRIVE);
 		writeb(0x3F, sdmmc_base+CARD_SD_CMD_PAD_DRIVE);
 		writeb(0x3F, sdmmc_base+CARD_SD_DAT_PAD_DRIVE);
@@ -1128,7 +1128,7 @@ static void rtk_sdmmc_speed(struct rtk_sdmmc_host *rtk_host, enum sdmmc_clock_sp
 		break;
 	case SDMMC_CLOCK_208000KHZ:
 		pr_debug("rtk-sdmmc: " "%s: speed SDMMC_CLOCK_208000KHZ\n", __func__);
-#if defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_REALTEK)
                 if(magic_num == 0x0 || magic_num == 0x1){
 			writeb(0X3F, sdmmc_base+CARD_SD_CLK_PAD_DRIVE);
 			writeb(0X3F, sdmmc_base+CARD_SD_CMD_PAD_DRIVE);
@@ -2280,7 +2280,7 @@ static int rtk_sdmmc_stream(struct sdmmc_cmd_pkt *cmd_info)
 	return ret;
 }
 
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 static void rtk_sdmmc_swap_data(u8 *buffer, void __iomem *sdmmc_base)
 {
 	buffer[3] = buffer[2];
@@ -2314,7 +2314,7 @@ static int rtk_sdmmc_send_cmd_get_rsp(struct sdmmc_cmd_pkt *cmd_info)
 	u32 dma_val = 0;
 	u32 byte_count = 0x200;
 	u32 block_count = 1;
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	u32 sa = 0;
 	u32 buf_ptr=0;
 #else
@@ -2377,7 +2377,7 @@ static int rtk_sdmmc_send_cmd_get_rsp(struct sdmmc_cmd_pkt *cmd_info)
 	if (RESP_TYPE_17B & rsp_para2) {
 		INT4_flag = true;
 		/*remap the resp dst buffer to un-cache*/
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 		buf_ptr = ((u32)dma_virt_addr&~0xff);
 		sa = buf_ptr/8;
 #else
@@ -2401,7 +2401,7 @@ static int rtk_sdmmc_send_cmd_get_rsp(struct sdmmc_cmd_pkt *cmd_info)
 //printk(KERN_ERR "get_rsp:  pre_cmd=%d,cmd=%d, INT4_flag=%d\n",pre_cmd,cmd_idx,INT4_flag);
 	ret = rtk_sdmmc_int_wait(DRIVER_NAME, rtk_host, SD_SENDCMDGETRSP);
 	if (ret == CR_TRANS_OK) {
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 		if (buf_ptr != 0) {
 			*(((unsigned int *)buf_ptr)+4) = readb(sdmmc_base + SD_CMD5);
 			buf_ptr++;
@@ -2859,7 +2859,7 @@ static void rtk_sdmmc_hw_initial(struct rtk_sdmmc_host *rtk_host)
 	writel(readl(pll_base + CR_PLL_SD4) | 0x00000004, pll_base + CR_PLL_SD4);
 	writel(readl(pll_base + CR_PLL_SD4) | 0x00000007, pll_base + CR_PLL_SD4);
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	writel(0x003E0003, pll_base + CR_PLL_SD1);
 	mdelay(10);
 #else
@@ -2899,7 +2899,7 @@ static void rtk_sdmmc_hw_initial(struct rtk_sdmmc_host *rtk_host)
 	if (readl(sysbrdg_base+0x204)!=0x0)
 		writel(0x00000000,sdmmc_base+0x2c);
 #endif
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 	writel(readl(sdmmc_base + 0x20) |0x02, sdmmc_base + 0x20);      //Disable L4 gate
 #endif
 	writeb(0x3,sdmmc_base + SD_BUS_TA_STATE);
@@ -2950,7 +2950,7 @@ static void rtk_sdmmc_hw_initial(struct rtk_sdmmc_host *rtk_host)
 	writel(0x00003333, emmc_base + 0x634);
 	writel(0x33333333, emmc_base + 0x638);
 	rtk_lockapi_unlock(flags2, __FUNCTION__);
-#elif defined(CONFIG_ARCH_RTD119X)
+#elif defined(CONFIG_ARCH_REALTEK)
 	writeb(0X0, sdmmc_base+CARD_SD_CLK_PAD_DRIVE);
 	writeb(0X0, sdmmc_base+CARD_SD_CMD_PAD_DRIVE);
 	writeb(0X0, sdmmc_base+CARD_SD_DAT_PAD_DRIVE);
@@ -3048,7 +3048,7 @@ static int rtk_sdmmc_switch_voltage(struct mmc_host *mmc, struct mmc_ios *ios)
 		msleep(500);
 		writel(0x0004003, pll_base + CR_PLL_SD1);
 		mdelay(10); //delay 5 ms to fit SD spec
-#elif defined(CONFIG_ARCH_RTD119X)
+#elif defined(CONFIG_ARCH_REALTEK)
 		writel(0x00e0003, pll_base + CR_PLL_SD1);
 		mdelay(10);
 #endif
@@ -3116,7 +3116,7 @@ static int rtk_sdmmc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 			udelay(200);
 			if (readl(sysbrdg_base+0x204)!=0x0)
 				writel(0x00000000,sdmmc_base+0x2c);
-#elif defined(CONFIG_ARCH_RTD119X)
+#elif defined(CONFIG_ARCH_REALTEK)
 			writel(reg_tmp, pll_base + CR_PLL_SD3);
 			mdelay(2);
 #endif
@@ -3273,12 +3273,12 @@ static irqreturn_t rtk_sdmmc_wp_irq(int irq, void *data)
 	}
 	return IRQ_HANDLED;
 }
-#elif defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#elif defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 static void rtk_sdmmc_plug(struct timer_list *t)
 {
 	u32 reginfo = 0;
 	u32 det_time = 0;
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	unsigned long timeout = 0;
 #endif
  struct rtk_sdmmc_host *rtk_host = from_timer(rtk_host, t, plug_timer);
@@ -3287,7 +3287,7 @@ static void rtk_sdmmc_plug(struct timer_list *t)
 	unsigned long flags2;
 #endif
 
-#ifndef CONFIG_ARCH_RTD119X
+#ifndef CONFIG_ARCH_REALTEK
 #ifdef CONFIG_MMC_RTK_EMMC
 	if(get_RTK_initial_flag()==0) {
 		printk(KERN_ERR "need to wait until emmc tuning done...\n");
@@ -3332,7 +3332,7 @@ static void rtk_sdmmc_plug(struct timer_list *t)
 			writel(0x00003333, rtk_host->emmc + 0x634);
 			writel(0x33333333, rtk_host->emmc + 0x638);
 			rtk_lockapi_unlock(flags2, __FUNCTION__);
-#elif defined(CONFIG_ARCH_RTD119X)
+#elif defined(CONFIG_ARCH_REALTEK)
 			writeb(0X0, sdmmc_base+CARD_SD_CLK_PAD_DRIVE);
 			writeb(0X0, sdmmc_base+CARD_SD_CMD_PAD_DRIVE);
 			writeb(0X0, sdmmc_base+CARD_SD_DAT_PAD_DRIVE);
@@ -3340,7 +3340,7 @@ static void rtk_sdmmc_plug(struct timer_list *t)
 			mini_SD=0;
 			broken_flag=false;
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 			//reset, this is workaround for phoenix, phoenix 1195 DMA reset will have impact in EMMC SDIO, so we need to make sure that emmc and sdio dma is inactive now
 			timeout = jiffies + msecs_to_jiffies(100);
 
@@ -3365,7 +3365,7 @@ static void rtk_sdmmc_plug(struct timer_list *t)
 		}
 
 		rtk_sdmmc_sync(rtk_host);
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 		printk(KERN_INFO "[SD] SD card power register=%x\n",readl(rtk_host->pll + CR_PFUNC_CR));
 #else
 		rtk_lockapi_lock(flags2, __FUNCTION__);
@@ -3454,7 +3454,7 @@ static void rtk_sdmmc_card_power(struct rtk_sdmmc_host *rtk_host, u8 status)
 {
 	int res = 0;
 	u32 power_status = rtk_host->power_status;
-#if defined(CONFIG_ARCH_RTD119X) || defined(CONFIG_ARCH_RTD16xx) || defined(CONFIG_ARCH_RTD13xx)
+#if defined(CONFIG_ARCH_REALTEK) || defined(CONFIG_ARCH_RTD16xx) || defined(CONFIG_ARCH_RTD13xx)
 	u32 tmp;
 #endif
 	//void __iomem *pll_base = rtk_host->pll;
@@ -3486,7 +3486,7 @@ static void rtk_sdmmc_card_power(struct rtk_sdmmc_host *rtk_host, u8 status)
                 writel(0x000CF99F,isopad_base + 0x38);
                 writel(0x000CF99F,isopad_base + 0x3c);
 #else
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 		tmp = readl(rtk_host->pll + CR_PFUNC_CR );
 		writel(0x33333223 | (tmp & 0x00000F00), rtk_host->pll + CR_PFUNC_CR);   //Jim modified
 #else
@@ -3512,7 +3512,7 @@ static void rtk_sdmmc_card_power(struct rtk_sdmmc_host *rtk_host, u8 status)
                 writel(readl(isopad_base + 0x38) & 0xfffff7fe,isopad_base + 0x38);
                 writel(readl(isopad_base + 0x3c) & 0xfffff7fe,isopad_base + 0x3c);
 #else
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
                 tmp = readl(rtk_host->pll + CR_PFUNC_CR );
                 writel(0x22223222 | (tmp & 0x00000F00), rtk_host->pll + CR_PFUNC_CR);   //Jim modified
 #else
@@ -3686,7 +3686,7 @@ static int rtk_sdmmc_probe(struct platform_device *pdev)
 #else
 	rtk_host->emmc = of_iomap(sdmmc_node, 3);
 #endif
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	rtk_host->sdio = of_iomap(sdmmc_node, 4);
 #endif
 #if defined(CONFIG_ARCH_RTD139x) || defined(CONFIG_ARCH_RTD16xx) || defined(CONFIG_ARCH_RTD13xx)
@@ -3702,7 +3702,7 @@ static int rtk_sdmmc_probe(struct platform_device *pdev)
 	} else {
 		printk(KERN_ERR "%s: gpio %d is not valid\n", __func__, rtk_host->sdmmc_gpio);
 	}
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	magic_num = readl(rtk_host->sysbrdg + 0x204) >> 16;
 #endif
 
@@ -3794,7 +3794,7 @@ static int rtk_sdmmc_probe(struct platform_device *pdev)
                 printk(KERN_ERR "%s: cannot assign irq %d\n", __func__, irq);
                 goto out;
 	}
-#elif defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#elif defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
     timer_setup(&rtk_host->plug_timer, rtk_sdmmc_plug, 0);
 #endif
     timer_setup(&rtk_host->timer, rtk_sdmmc_timeout, 0);
@@ -3815,7 +3815,7 @@ static int rtk_sdmmc_probe(struct platform_device *pdev)
 	ret = mmc_add_host(mmc);
 	if (ret)
 		goto out;
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 	mod_timer(&rtk_host->plug_timer, jiffies + 3*HZ);
 #endif
 	return 0;
@@ -3845,7 +3845,7 @@ static void rtk_sdmmc_remove(struct platform_device *pdev)
 		free_irq(rtk_host->irq, rtk_host);
 
 		del_timer_sync(&rtk_host->timer);
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 		del_timer_sync(&rtk_host->plug_timer);
 #endif
 #ifdef CMD25_WO_STOP_COMMAND

@@ -388,7 +388,7 @@ void rpc_ion_handler(RPC_DEV_EXTRA *extra)
 		rpc_entry->handle = handle;
 		rpc_entry->phys_addr = phys_addr;
 		r_program_add(rpc_entry);
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 		reply_value = phys_addr + 0x80000000;
 #else
 		reply_value = phys_addr;
@@ -396,7 +396,7 @@ void rpc_ion_handler(RPC_DEV_EXTRA *extra)
 		pr_debug("[%s] ion_alloc addr : 0x%x\n", __func__, reply_value);
 	} else if(ntohl(rpc->procedureID) == 2) { /*free*/
 		tmp = (uint32_t *)(tmpbuf + sizeof(RPC_STRUCT));
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 		phys_addr = ntohl(*tmp) - 0x80000000;
 #else
 		phys_addr = ntohl(*tmp);
@@ -435,7 +435,7 @@ void rpc_ion_handler(RPC_DEV_EXTRA *extra)
 		rpc_entry->handle = handle;
 		rpc_entry->phys_addr = phys_addr;
 		r_program_add(rpc_entry);
-#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_RTD119X)
+#if defined(CONFIG_ARCH_RTD129x) || defined(CONFIG_ARCH_REALTEK)
 		reply_value = phys_addr + 0x80000000;
 #else
 		reply_value = phys_addr;

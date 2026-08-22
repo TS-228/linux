@@ -596,7 +596,7 @@ struct mmc_host {
 	bool			hsq_enabled;
 	int			hsq_depth;
 
-#ifdef CONFIG_ARCH_RTD119X
+#ifdef CONFIG_ARCH_REALTEK
 	unsigned int		card_type_pre;
 #define CR_SD			0 /* for card reader */
 #define CR_EM			2 /* for eMMC */
