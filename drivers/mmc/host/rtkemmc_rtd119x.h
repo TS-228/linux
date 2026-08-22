@@ -163,18 +163,9 @@ struct rtksd_host {
 };
 
 struct rtk_host_ops {
-    irqreturn_t (*func_irq)(int irq, void *dev);
-    int (*re_init_proc)(struct mmc_card *card);
-    int (*card_det)(struct rtksd_host *sdport);
-    void (*card_power)(struct rtksd_host *sdport,u8 status);
     void (*chk_card_insert)(struct rtksd_host *rtkhost);
     void (*set_crt_muxpad)(struct rtksd_host *rtkhost);
-    void (*set_clk)(struct rtksd_host *rtkhost,u32 mmc_clk);
-    void (*reset_card)(struct rtksd_host *rtkhost);
-    void (*reset_host)(struct rtksd_host *rtkhost);
     void (*bus_speed_down)(struct rtksd_host *sdport);
-    u32 (*get_cmdcode)(u32 opcode );
-    u32 (*get_r1_type)(u32 opcode );
     u32 (*chk_cmdcode)(struct mmc_command* cmd);
     u32 (*chk_r1_type)(struct mmc_command* cmd);
     u32 (*backup_regs)(struct rtksd_host *sdport);
@@ -574,13 +565,6 @@ void emmc_show_config123(struct rtksd_host *sdport);
 void rtkcr_set_mis_gpio(u32 gpio_num,u8 dir,u8 level);
 void rtkcr_set_iso_gpio(u32 gpio_num,u8 dir,u8 level);
 
-int mmc_fast_write( unsigned int blk_addr,
-                    unsigned int data_size,
-                    unsigned char * buffer );
-
-int mmc_fast_read( unsigned int blk_addr,
-                   unsigned int data_size,
-                   unsigned char * buffer );
 struct completion* rtk_int_enable(struct rtksd_host *sdport, unsigned long msec);
 int rtk_int_enable_and_waitfor(struct rtksd_host *sdport, u8 cmdcode, u8 cmd_dix, unsigned long msec, unsigned long dma_msec);
 void rtk_int_waitfor(struct rtksd_host *sdport, u8 cmdcode, u8 cmd_idx, unsigned long msec, unsigned long dma_msec);
