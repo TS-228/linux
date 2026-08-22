@@ -1,7 +1,7 @@
 comment "RTD119X Device Drivers"
 
 menu "Realtek NAS support"
-	depends on ARCH_RTD119X
+	depends on ARCH_REALTEK
 
 config SENDFILE_PATCH
 	bool "Reverse sendfile patch"

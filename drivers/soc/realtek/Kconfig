@@ -1,6 +1,6 @@
 config RTD119X
 	bool "Realtek RTD119X SoC family specific drivers"
-	depends on ARCH_RTD119X
+	depends on ARCH_REALTEK
 	default y
 	help
 	  Realtek RTD119X SoC family specific support.

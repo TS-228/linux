@@ -25,7 +25,7 @@ config PINCTRL_RTD1315E
 
 config PINCTRL_RTD119X
         bool "RTD119X pin controller driver"
-        depends on ARCH_RTD119X
+        depends on ARCH_REALTEK
         default y
         select PINMUX
         select GENERIC_PINCONF
