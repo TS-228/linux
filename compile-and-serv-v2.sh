@@ -22,7 +22,7 @@ is_arm_rtd119x_config() {
 	local f=$1
 	[[ -f "$f" ]] || return 1
 	grep -q '^# Linux/arm' "$f" || return 1
-	grep -q '^CONFIG_ARCH_RTD119X=y' "$f" || return 1
+	grep -q '^CONFIG_ARCH_REALTEK=y' "$f" || return 1
 	return 0
 }
 
@@ -85,10 +85,10 @@ ensure_arm_config() {
 		echo "No .config — creating ARM RTD119x baseline"
 	else
 		echo "WARNING: .config is not a valid RTD119x ARM config ($hdr)"
-		echo "Reinitializing: multi_v7_defconfig + ARCH_RTD119X"
+		echo "Reinitializing: multi_v7_defconfig + ARCH_REALTEK"
 	fi
 	make multi_v7_defconfig
-	./scripts/config --enable ARCH_RTD119X
+	./scripts/config --enable ARCH_REALTEK
 	./scripts/config --enable COMMON_CLK_RTD119X
 	./scripts/config --disable COMMON_CLK_REALTEK_DEBUG
 	make olddefconfig

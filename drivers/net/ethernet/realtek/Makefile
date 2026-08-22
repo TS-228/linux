@@ -13,7 +13,7 @@ r8169-y += r8169_main.o r8169_firmware.o r8169_phy_config.o
 r8169-$(CONFIG_R8169_LEDS) += r8169_leds.o
 obj-$(CONFIG_R8169) += r8169.o
 obj-$(CONFIG_RTASE) += rtase/
-ifeq ($(CONFIG_ARCH_RTD119X),y)
+ifeq ($(CONFIG_ARCH_REALTEK),y)
 obj-$(CONFIG_R8169SOC) += r8169soc_rtd119x.o
 else
 obj-$(CONFIG_R8169SOC) += r8169soc.o

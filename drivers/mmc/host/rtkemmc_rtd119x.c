@@ -34,7 +34,6 @@
 #include <linux/workqueue.h>            //liao
 #include <linux/completion.h>           //liao
 #include "reg_mmc_rtd119x.h"             //liao
-#include "reg_iso.h"               //liiao
 #include "reg_sys_rtd119x.h"               //liao
 /*
  * Chip ID/revision, exported from arch/arm/mach-realtek/rtd1195.c

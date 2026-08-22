@@ -5,12 +5,11 @@
 /dts-v1/;
 
 #include <dt-bindings/input/input.h>
-#include "../../../mach-rtd119x/include/mach/memory.h"
 
-/memreserve/ 0x00000000				SYS_BOOTCODE_MEMSIZE;				/* ROM code */
-/memreserve/ PLAT_NOR_PHYS			PLAT_NOR_SIZE;						/* NOR */
-/memreserve/ ACPU_FIREWARE_PHYS 	ACPU_FIREWARE_SIZE;					/* Audio Firmware */
-/memreserve/ RPC_RINGBUF_PHYS 		RPC_RINGBUF_SIZE;					/* RPC ring buffer */
+/memreserve/ 0x00000000     0x0000c000;	/* ROM code */
+/memreserve/ 0x18100000     0x01000000;	/* NOR */
+/memreserve/ 0x01b00000     0x00400000;	/* Audio Firmware */
+/memreserve/ 0x01ffe000     0x00004000;	/* RPC ring buffer */
 
 #include "rtd119x/rtd-119x.dtsi"
 #include "rtd119x/rtd-1195-usb.dtsi"
@@ -50,23 +49,23 @@
 		#size-cells = <1>;
 		ranges;
 
-		rbus@0 {
+		rbus@18000000 {
 			compatible = "rsvmem-remap";
 			save_remap_name = "rbus";
-			reg = <RBUS_BASE_PHYS RBUS_BASE_SIZE>;
+			reg = <0x18000000 0x00070000>;
 			rtk_rbus_barrier_flag;
 		};
 
-		common@0 {
+		common@b000 {
 			compatible = "rsvmem-remap";
 			save_remap_name = "common";
-			reg = <RPC_COMM_PHYS RPC_COMM_SIZE>;
+			reg = <0x0000b000 0x00001000>;
 		};
 
-		ringbuf@0 {
+		ringbuf@1ffe000 {
 			compatible = "rsvmem-remap";
 			save_remap_name = "ringbuf";
-			reg = <RPC_RINGBUF_PHYS RPC_RINGBUF_SIZE>;
+			reg = <0x01ffe000 0x00004000>;
 		};
 	};
 

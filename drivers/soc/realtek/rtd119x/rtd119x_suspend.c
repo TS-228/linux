@@ -50,9 +50,23 @@ unsigned int pm_wakelock_mode;
  */
 unsigned int pm_block_wakelock;
 
-extern void rtk119x_prepare_cpus(unsigned int max_cpus);
 extern void rtk_clocksource_suspend(void);
 extern void rtk_clocksource_resume(void);
+
+/*
+ * Re-mark CPUs present after resume. mach-realtek/platsmp.c's own
+ * .smp_prepare_cpus does this plus register setup at boot time, but that
+ * register setup (wrap_a7 nCORERESET) is redone separately just above the
+ * call site below - this only needs the cpu_present bookkeeping.
+ */
+static void rtd119x_suspend_mark_cpus_present(unsigned int max_cpus)
+{
+	unsigned int i;
+
+	for (i = 0; i < max_cpus; i++)
+		set_cpu_present(i, true);
+	smp_wmb();
+}
 extern int arch_timer_suspend(void);
 extern void arch_timer_resume(void);
 
@@ -562,7 +576,7 @@ static int rtk_suspend_to_ram(void)
     //clockevents_resume();
 	//clocksource_resume();
 
-    rtk119x_prepare_cpus(NR_CPUS);
+    rtd119x_suspend_mark_cpus_present(NR_CPUS);
     outer_resume();
 
     pr_info("rtk-suspend: " "[%s] resume memory verifying ... state 0\n", __func__);

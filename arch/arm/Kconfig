@@ -434,8 +434,6 @@ source "arch/arm/mach-qcom/Kconfig"
 
 source "arch/arm/mach-realtek/Kconfig"
 
-source "arch/arm/mach-rtd119x/Kconfig"
-
 source "arch/arm/mach-rpc/Kconfig"
 
 source "arch/arm/mach-rockchip/Kconfig"

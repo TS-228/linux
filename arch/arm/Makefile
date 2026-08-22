@@ -168,7 +168,6 @@ endif
 textofs-$(CONFIG_ARCH_QCOM_RESERVE_SMEM) := 0x00208000
 textofs-$(CONFIG_ARCH_MESON) := 0x00208000
 textofs-$(CONFIG_ARCH_AXXIA) := 0x00308000
-textofs-$(CONFIG_ARCH_RTD119X) := 0x00108000
 textofs-$(CONFIG_ARCH_RTD129x) := 0x00208000
 textofs-$(CONFIG_ARCH_RTD139x) := 0x00208000
 textofs-$(CONFIG_ARCH_RTD16xx) := 0x00208000
@@ -231,7 +230,6 @@ machine-$(CONFIG_ARCH_VT8500)		+= vt8500
 machine-$(CONFIG_ARCH_ZYNQ)		+= zynq
 machine-$(CONFIG_PLAT_VERSATILE)	+= versatile
 machine-$(CONFIG_PLAT_SPEAR)		+= spear
-machine-$(CONFIG_ARCH_RTD119X)	+= rtd119x
 
 # legacy platforms provide their own mach/*.h headers globally,
 # these three are mutually exclusive

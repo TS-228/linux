@@ -9,7 +9,7 @@ config RTK_THERMAL
 
 config RTK_THERMAL_RTD119X
 	bool "RTD-119X thermal sensor support"
-	default y if ARCH_RTD119X
+	default y if ARCH_REALTEK
 	select RTK_THERMAL
 
 config RTK_THERMAL_RTD129X

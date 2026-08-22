@@ -25,9 +25,11 @@ static void __iomem *boot_vector_base;
 /*
  * pen_release was removed from the ARM core in 5.x; keep a local copy for
  * the secondary-boot handshake (same pattern used by several other
- * platsmp.c files elsewhere in the tree, e.g. spear, exynos).
+ * platsmp.c files elsewhere in the tree, e.g. spear, exynos). Not static:
+ * drivers/soc/realtek/rtd119x/rtd119x_hotplug.c's cpu_die path also spins
+ * on this to know when a dying CPU has re-entered the pen.
  */
-static volatile int pen_release = -1;
+volatile int pen_release = -1;
 
 static void write_pen_release(int val)
 {
@@ -105,8 +107,15 @@ static void __init rtd1195_smp_prepare_cpus(unsigned int max_cpus)
 		set_cpu_present(i, true);
 }
 
+#ifdef CONFIG_HOTPLUG_CPU
+extern void rtk119x_cpu_die(unsigned int cpu);
+#endif
+
 const struct smp_operations rtd1195_smp_ops __initconst = {
 	.smp_prepare_cpus	= rtd1195_smp_prepare_cpus,
 	.smp_secondary_init	= rtd1195_secondary_init,
 	.smp_boot_secondary	= rtd1195_boot_secondary,
+#ifdef CONFIG_HOTPLUG_CPU
+	.cpu_die		= rtk119x_cpu_die,
+#endif
 };

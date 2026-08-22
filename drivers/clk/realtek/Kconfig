@@ -13,7 +13,7 @@ config COMMON_CLK_REALTEK_DEBUG
 config COMMON_CLK_RTD119X
 	bool "Clock driver for RTD119x"
 	select COMMON_CLK_REALTEK
-	default y if ARCH_RTD119X
+	default y if ARCH_REALTEK
 
 config COMMON_CLK_RTD129X
 	bool "Clock driver for RTD129x"
