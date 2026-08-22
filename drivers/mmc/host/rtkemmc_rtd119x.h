@@ -35,15 +35,9 @@
 #define MMC_IOS_RESTORE_PAD_DRV 0x4
 
 /*
- * Register access base. GET_MAPPED_RBUS_ADDR (mach/system.h) resolves
- * through the vendor's static .map_io table and is left alone here -
- * it's still used elsewhere (the IORESOURCE_MEM entry below) for
- * bookkeeping unrelated to actual register I/O. All real hardware
- * access in this driver funnels through the cr_readb/cr_writeb/
- * cr_readl/cr_writel macros below, which use this dynamically
- * ioremap'd base instead (set once in rtkemmc_init(), well before any
- * probe/register access happens) - no static mapping table exists
- * under mainline's machine descriptor.
+ * Register access base, dynamically ioremap'd (set once in
+ * rtkemmc_init(), well before any probe/register access happens) - no
+ * static mapping table exists under mainline's machine descriptor.
  */
 extern void __iomem *rtkemmc_rbus_base;
 #define RTKEMMC_REG(offset)      (rtkemmc_rbus_base + ((offset) - 0x18000000))

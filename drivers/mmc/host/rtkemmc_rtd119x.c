@@ -51,8 +51,10 @@ extern unsigned int rtd1195_chip_rev;
 
 #define soc_is_rtk1195()	((rtd1195_chip_id & RTK1195_CPU_MASK) == (RTK1195_CPU_ID & RTK1195_CPU_MASK))
 #define realtek_rev()		rtd1195_chip_rev
-#include <mach/system.h>
-#include <mach/irqs.h>
+
+/* CR (card-reader/eMMC) controller IRQ, formerly mach/irqs.h's IRQ_CR. */
+#define RTKEMMC_IRQ_CR		74
+
 #include "../core/card.h"
 #include "../core/core.h"
 #include "rtkemmc_rtd119x.h"                  //liao
@@ -143,13 +145,13 @@ typedef void (*set_gpio_func_t)(u32 gpio_num,u8 dir,u8 level);
 
 static struct resource rtkemmc_resources[] = {
     [0] = {
-        .start  = GET_MAPPED_RBUS_ADDR((u32)EM_BASE_ADDR),
-        .end    = GET_MAPPED_RBUS_ADDR((u32)EM_BASE_ADDR + 0x200),
+        .start  = EM_BASE_ADDR,
+        .end    = EM_BASE_ADDR + 0x200,
         .flags  = IORESOURCE_MEM,
     },
     [1] = {
-        .start  = IRQ_CR,
-        .end    = IRQ_CR,
+        .start  = RTKEMMC_IRQ_CR,
+        .end    = RTKEMMC_IRQ_CR,
         .flags  = IORESOURCE_IRQ,
     },
 };
