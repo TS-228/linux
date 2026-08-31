@@ -203,6 +203,19 @@ config ASM9260_TIMER
 	help
 	  Enables support for the ASM9260 timer.
 
+config RTK_TIMER
+	bool "Realtek System Timer"
+	depends on ARCH_REALTEK
+	select CLKSRC_MMIO
+	select TIMER_OF if OF
+	default y
+	help
+	  Enables the system timer block found on Realtek RTD119x/RTD129x
+	  SoCs. It provides the kernel's clocksource, per-CPU clockevent,
+	  and the udelay() implementation on these platforms.
+
+	  This is required for RTD1195-based boards to boot.
+
 config CLKSRC_NOMADIK_MTU
 	bool "Nomakdik clocksource driver" if COMPILE_TEST
 	depends on ARM
