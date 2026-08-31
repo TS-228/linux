@@ -72,6 +72,9 @@
  */
 #define DW_UART_QUIRK_IER_KICK_THRES	4
 
+/* UCV/CPR unimplemented (read 0); still has a 16-byte DW FIFO */
+#define DW_UART_QUIRK_FORCE_FIFO	BIT(7)
+
 struct dw8250_platform_data {
 	u8 usr_reg;
 	u32 cpr_value;
@@ -828,6 +831,19 @@ static int dw8250_probe(struct platform_device *pdev)
 	if (!data->skip_autocfg)
 		dw8250_setup_port(p);
 
+	/*
+	 * RTD119x DW UART leaves UCV/CPR unimplemented (read as 0), so
+	 * setup_port never enables FIFO and we stay on PORT_8250 (1-byte).
+	 * Console TX clears IER while transmitting; without an RX FIFO,
+	 * keystrokes during boot/login printk are overrun and lost.
+	 */
+	if ((data->pdata->quirks & DW_UART_QUIRK_FORCE_FIFO) && !p->fifosize) {
+		p->type = PORT_16550A;
+		p->flags |= UPF_FIXED_TYPE;
+		p->fifosize = 16;
+		up->capabilities = UART_CAP_FIFO | UART_CAP_NOTEMT;
+	}
+
 	/* If we have a valid fifosize, try hooking up DMA */
 	if (p->fifosize) {
 		data->data.dma.rxconf.src_maxburst = p->fifosize / 4;
@@ -936,6 +952,11 @@ static const struct dw8250_platform_data dw8250_dw_apb = {
 	.usr_reg = DW_UART_USR,
 };
 
+static const struct dw8250_platform_data dw8250_rtd119x_data = {
+	.usr_reg = DW_UART_USR,
+	.quirks = DW_UART_QUIRK_FORCE_FIFO,
+};
+
 static const struct dw8250_platform_data dw8250_octeon_3860_data = {
 	.usr_reg = OCTEON_UART_USR,
 	.quirks = DW_UART_QUIRK_OCTEON,
@@ -963,6 +984,8 @@ static const struct dw8250_platform_data dw8250_intc10ee = {
 };
 
 static const struct of_device_id dw8250_of_match[] = {
+	/* More specific entries before generic snps,dw-apb-uart */
+	{ .compatible = "realtek,rtd1195-uart", .data = &dw8250_rtd119x_data },
 	{ .compatible = "snps,dw-apb-uart", .data = &dw8250_dw_apb },
 	{ .compatible = "cavium,octeon-3860-uart", .data = &dw8250_octeon_3860_data },
 	{ .compatible = "marvell,armada-38x-uart", .data = &dw8250_armada_38x_data },
