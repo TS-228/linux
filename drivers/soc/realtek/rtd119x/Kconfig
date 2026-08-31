@@ -1,0 +1,3 @@
+config SCPU_SRAMCTL_RTD119X
+	bool "SCPU Wraper SRAM Control"
+	default y if ARCH_REALTEK
