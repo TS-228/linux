@@ -1,0 +1,4 @@
+uart_probe
+# Proprietary QNAP binaries/logs pulled from a live stock NAS for local
+# reverse-engineering (pull-stock.sh). Never check these in.
+stock-firmware/

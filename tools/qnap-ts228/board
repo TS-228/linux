@@ -1,0 +1,295 @@
+#!/bin/bash
+# TS-228 board control: power, serial console, and TFTP boot.
+# All state lives in two places: the serial log, and the USB relay.
+set -uo pipefail
+
+SERIAL=/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller-if00-port0
+LOG=/tmp/ts228-serial.log
+PIDF=/tmp/ts228-logger.pid
+RELAY=BITFT_2
+# The board's MAC depends on which firmware booted -- the PIC EEPROM MAC
+# preload fails under our kernel, so it falls back to a placeholder -- and the
+# DHCP lease follows the MAC. A fixed address is therefore wrong sooner or
+# later; find the board by MAC instead. Override with BOARD_IP=... if needed.
+BOARD_NET=${BOARD_NET:-192.168.178}
+BOARD_MACS=${BOARD_MACS:-"24:5e:be:0a:18:94 00:10:20:30:40:50"}
+IPCACHE=${IPCACHE:-/tmp/ts228-board-ip}
+BOARD_IP_FORCED=${BOARD_IP:-}
+_board_ip=""
+TFTPDIR=/var/lib/tftpboot
+DTB=$TFTPDIR/rescue.emmc.dtb
+UIMG=$TFTPDIR/emmc.uImage
+FDT_ADDR=0x01FF2000
+KERNEL_ADDR=0x03000000
+
+die(){ echo "board: $*" >&2; exit 1; }
+have_dev(){ [ -e "$SERIAL" ]; }
+port_setup(){ have_dev && stty -F "$SERIAL" 115200 raw -echo -crtscts -ixon -ixoff \
+                -parenb -parodd cs8 -cstopb clocal 2>/dev/null; }
+
+# ---- serial logger: the single reader of the port ------------------------
+logger_running(){ [ -s "$PIDF" ] && kill -0 "$(cat "$PIDF")" 2>/dev/null; }
+
+logger_start(){
+    logger_running && return 0
+    local holder
+    holder=$(fuser "$SERIAL" 2>/dev/null | tr -d ' ')
+    if [ -n "$holder" ]; then
+        die "$SERIAL is held by PID $holder ($(ps -o comm= -p "$holder" 2>/dev/null)).
+     Stop it first - only one reader can use the port."
+    fi
+    touch "$LOG"
+    setsid bash -c '
+        while true; do
+            if [ -e "'"$SERIAL"'" ]; then
+                stty -F "'"$SERIAL"'" 115200 raw -echo -crtscts -ixon -ixoff \
+                     -parenb -parodd cs8 -cstopb clocal 2>/dev/null
+                cat "'"$SERIAL"'" >> "'"$LOG"'" 2>/dev/null
+            fi
+            sleep 1
+        done' >/dev/null 2>&1 &
+    echo $! > "$PIDF"
+    sleep 1
+    logger_running || die "logger failed to start"
+}
+
+logger_stop(){ logger_running && { kill "$(cat "$PIDF")" 2>/dev/null; pkill -P "$(cat "$PIDF")" 2>/dev/null; }; rm -f "$PIDF"; }
+
+# ---- writing to the board ----------------------------------------------
+esc(){ have_dev && printf '\033' > "$SERIAL" 2>/dev/null; }
+say_cmd(){ have_dev && printf '%s\r' "$1" > "$SERIAL" 2>/dev/null; }
+
+# wait_for <regex> <timeout-s> [from-offset] -> prints matching line, rc 0/1
+wait_for(){
+    local re=$1 t=$2 off=${3:-0} end=$((SECONDS+$2)) line
+    while [ $SECONDS -lt $end ]; do
+        line=$(tail -c +$((off+1)) "$LOG" 2>/dev/null | tr -d '\r' | grep -aE "$re" | tail -1)
+        [ -n "$line" ] && { echo "$line"; return 0; }
+        sleep 0.3
+    done
+    return 1
+}
+mark(){ wc -c < "$LOG" 2>/dev/null || echo 0; }
+
+# ---- finding the board on the network -----------------------------------
+# Neighbours whose MAC is one of the board's, live entries first. The board can
+# hold more than one address at once (it runs two DHCP clients), so prefer the
+# one the kernel currently considers reachable and keep the choice stable.
+neigh_candidates(){
+    ip neigh show 2>/dev/null | tr 'A-Z' 'a-z' | awk -v macs=" $BOARD_MACS " '
+        { for (i = 1; i < NF; i++)
+              if ($i == "lladdr" && index(macs, " " $(i+1) " ")) {
+                  if ($0 ~ /reachable/) live = live $1 "\n"; else rest = rest $1 "\n"
+                  break
+              } }
+        END { printf "%s%s", live, rest }'
+}
+
+# true if $1 answers and really is the board
+is_board(){
+    [ -n "${1:-}" ] || return 1
+    ping -c1 -W1 "$1" >/dev/null 2>&1 || return 1
+    local m
+    m=$(ip neigh show "$1" 2>/dev/null | tr 'A-Z' 'a-z' | awk '/lladdr/{print $5; exit}')
+    [ -n "$m" ] || return 1
+    case " $BOARD_MACS " in *" $m "*) return 0 ;; esac
+    return 1
+}
+
+# ping the whole /24 so the neighbour table is populated
+arp_sweep(){
+    local i
+    for i in $(seq 1 254); do ping -c1 -W1 "$BOARD_NET.$i" >/dev/null 2>&1 & done
+    wait 2>/dev/null
+}
+
+# print the board's address, empty and rc 1 if it cannot be found
+board_ip(){
+    [ -n "$_board_ip" ] && { echo "$_board_ip"; return 0; }
+
+    # an explicit override is taken at face value, it just has to answer
+    if [ -n "$BOARD_IP_FORCED" ]; then
+        ping -c1 -W1 "$BOARD_IP_FORCED" >/dev/null 2>&1 || return 1
+        _board_ip=$BOARD_IP_FORCED; echo "$_board_ip"; return 0
+    fi
+
+    local ip
+    for ip in "$(cat "$IPCACHE" 2>/dev/null)" $(neigh_candidates); do
+        is_board "$ip" && { _board_ip=$ip; echo "$ip" > "$IPCACHE" 2>/dev/null
+                            echo "$ip"; return 0; }
+    done
+
+    arp_sweep
+    for ip in $(neigh_candidates); do
+        is_board "$ip" && { _board_ip=$ip; echo "$ip" > "$IPCACHE" 2>/dev/null
+                            echo "$ip"; return 0; }
+    done
+    return 1
+}
+
+# Run a command on the board wherever it is. No timeout: the command may
+# legitimately run for a long time, and its exit status is passed straight
+# back so a failing command is not mistaken for a missing board.
+board_ssh(){
+    local ip; ip=$(board_ip) || return 1
+    ssh -o ConnectTimeout=4 -o StrictHostKeyChecking=no "root@$ip" "$@"
+}
+
+# Same, but for the short status probes below, which must never hang.
+board_probe(){
+    local ip; ip=$(board_ip) || return 1
+    timeout 15 ssh -o ConnectTimeout=4 -o StrictHostKeyChecking=no "root@$ip" "$@"
+}
+
+# ---- relay --------------------------------------------------------------
+relay_press(){                       # $1 = seconds to hold
+    trap 'usbrelay '"$RELAY"'=0 >/dev/null 2>&1' EXIT INT TERM
+    usbrelay "$RELAY"=1 >/dev/null || die "relay press failed"
+    sleep "$1"
+    usbrelay "$RELAY"=0 >/dev/null
+    trap - EXIT INT TERM
+}
+power_on(){ relay_press 1; }
+power_off(){ relay_press 10; }
+
+# ---- commands -----------------------------------------------------------
+cmd_status(){
+    logger_running && echo "logger:  running (log $LOG)" || echo "logger:  stopped"
+    have_dev && echo "serial:  present ($(readlink -f "$SERIAL"))" || echo "serial:  absent (board off?)"
+    echo "relay:   $(usbrelay 2>/dev/null | tr '\n' ' ')"
+    local ip
+    if ip=$(board_ip); then
+        echo "network: up ($ip) kernel $(board_probe uname -r 2>/dev/null)"
+    else
+        echo "network: down (no host with a board MAC on $BOARD_NET.0/24)"
+    fi
+}
+
+cmd_uboot(){                         # power-cycle and stop at the u-boot prompt
+    logger_start
+    echo "board: power cycling"
+    power_off; sleep 3; power_on
+    local off; off=$(mark)
+    echo "board: catching u-boot (ESC direct to device)"
+    local end=$((SECONDS+90))
+    while [ $SECONDS -lt $end ]; do
+        esc
+        tail -c +$((off+1)) "$LOG" 2>/dev/null | tr -d '\r' | grep -qaE 'Realtek>|=>' && {
+            port_setup
+            say_cmd ""; sleep 0.4; say_cmd ""; sleep 0.4      # sync dropped chars
+            echo "board: at u-boot prompt"
+            return 0
+        }
+        sleep 0.08
+    done
+    die "never reached the u-boot prompt (see $LOG)"
+}
+
+cmd_boot(){                          # u-boot + tftp + bootm, fully verified
+    [ -r "$DTB" ]  || die "missing $DTB - run compile-and-serv-v2.sh first"
+    [ -r "$UIMG" ] || die "missing $UIMG - run compile-and-serv-v2.sh first"
+    local dtb_sz uimg_sz off line
+    dtb_sz=$(stat -c%s "$DTB"); uimg_sz=$(stat -c%s "$UIMG")
+
+    local try
+    for try in 1 2; do
+        cmd_uboot && break
+        [ "$try" = 2 ] && die "could not reach u-boot after 2 attempts"
+    done
+
+    # Match the complete line, up to the "(hex)" u-boot appends. Waiting for
+    # the bare "Bytes transferred" can catch the line half-drawn and compare
+    # against a truncated byte count.
+    off=$(mark); say_cmd "tftp $FDT_ADDR rescue.emmc.dtb"
+    line=$(wait_for 'Bytes transferred = [0-9]+ \(|Retry count exceeded' 40 "$off") \
+        || die "dtb tftp produced no result"
+    grep -q "Bytes transferred = $dtb_sz " <<<"$line" \
+        || die "dtb transfer wrong: expected $dtb_sz bytes, got: $line"
+    echo "board: dtb  $dtb_sz bytes OK"
+
+    off=$(mark); say_cmd "md $FDT_ADDR 1"
+    # wait for the *complete* magic word; the console renders it in pieces, so
+    # matching '01ff2000' alone can catch a half-drawn line.
+    line=$(wait_for 'edfe0dd0' 15 "$off") || {
+        line=$(wait_for '01ff2000' 5 "$off")
+        die "no device tree at $FDT_ADDR (got: ${line:-nothing}) - refusing to boot"
+    }
+    echo "board: fdt  magic OK"
+
+    off=$(mark); say_cmd "tftp $KERNEL_ADDR emmc.uImage"
+    line=$(wait_for 'Bytes transferred = [0-9]+ \(|Retry count exceeded' 90 "$off") \
+        || die "uImage tftp produced no result"
+    grep -q "Bytes transferred = $uimg_sz " <<<"$line" \
+        || die "uImage transfer wrong: expected $uimg_sz bytes, got: $line"
+    echo "board: uImage $uimg_sz bytes OK"
+
+    off=$(mark); say_cmd "bootm $KERNEL_ADDR - $FDT_ADDR"
+    echo "board: booting"
+    if line=$(wait_for 'login:|Kernel panic|Unable to handle|not syncing' 120 "$off"); then
+        case $line in
+            *login:*) echo "board: BOOT OK - $line" ;;
+            *)        echo "board: BOOT FAILED - $line"
+                      tail -c +$((off+1)) "$LOG" | tr -d '\r' | tail -25 >&2
+                      return 1 ;;
+        esac
+    else
+        die "no login prompt within 120s (see $LOG)"
+    fi
+
+    local end=$((SECONDS+90)) ip
+    while [ $SECONDS -lt $end ]; do
+        if ip=$(board_ip); then
+            echo "board: network up at $ip, kernel $(board_probe uname -r 2>/dev/null)"
+            return 0
+        fi
+        sleep 3
+    done
+    echo "board: booted but never appeared on the network (may be stock firmware)"
+}
+
+cmd_console(){                       # interactive: type commands, see output
+    logger_start; port_setup
+    echo "--- console: type commands, Ctrl-C to leave (board keeps running) ---"
+    tail -n 20 -f "$LOG" &
+    CONSOLE_TAIL=$!
+    trap "kill $CONSOLE_TAIL 2>/dev/null; echo; echo '--- left console ---'" EXIT INT TERM
+    local l; while IFS= read -r l; do say_cmd "$l"; done
+    kill "$CONSOLE_TAIL" 2>/dev/null
+}
+
+case "${1:-help}" in
+  on)       logger_start; power_on; echo "board: powered on" ;;
+  off)      power_off; echo "board: powered off" ;;
+  cycle)    power_off; sleep 3; power_on; echo "board: power cycled" ;;
+  reboot)   if ip=$(board_ip); then board_ssh reboot 2>/dev/null
+                echo "board: reboot sent to $ip"
+            else die "cannot find the board on the network"; fi ;;
+  uboot)    cmd_uboot ;;
+  boot)     cmd_boot ;;
+  console)  cmd_console ;;
+  watch)    logger_start; tail -n 40 -f "$LOG" ;;
+  log)      echo "$LOG" ;;
+  ip)       board_ip || die "cannot find the board on $BOARD_NET.0/24" ;;
+  ssh)      shift; board_ip >/dev/null || die "cannot find the board on $BOARD_NET.0/24"
+            board_ssh "$@" ;;
+  status)   cmd_status ;;
+  start)    logger_start; echo "board: logger started" ;;
+  stop)     logger_stop; echo "board: logger stopped" ;;
+  *) cat <<EOF
+usage: board <command>
+
+  boot      power-cycle, stop at u-boot, TFTP the built kernel+dtb, verify, boot
+  uboot     power-cycle and stop at the u-boot prompt
+  console   interactive serial console (type commands, Ctrl-C to leave)
+  watch     follow the serial console read-only
+  status    logger / serial / relay / network state
+  ip        print the board's current address (found by MAC, not hardcoded)
+  ssh       run a command on the board, e.g. board ssh uname -r
+
+  on | off | cycle | reboot     power control
+  start | stop | log            serial logger control, print log path
+
+Log: $LOG
+EOF
+     ;;
+esac
