@@ -1502,6 +1502,11 @@
 			kexec loader will pass this option to capture kernel.
 			See Documentation/admin-guide/kdump/kdump.rst for details.
 
+	emmc_bus=	[ARM]
+			Force the RTD1195 eMMC host driver (rtkemmc) to a fixed
+			bus width instead of auto-detecting it from the card.
+			Format: <bus width in bits>, e.g. emmc_bus=8
+
 	enable_mtrr_cleanup [X86,EARLY]
 			The kernel tries to adjust MTRR layout from continuous
 			to discrete, to make X server driver able to add WB
