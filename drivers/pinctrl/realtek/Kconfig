@@ -22,3 +22,13 @@ config PINCTRL_RTD1315E
 	tristate "Realtek DHC 1315E pin controller driver"
 	depends on PINCTRL_RTD
 	default y
+
+config PINCTRL_RTD1195
+	tristate "Realtek DHC 1195 pin controller driver"
+	depends on PINCTRL_RTD
+	default y
+	help
+	  This option enables the pin controller driver for the CRT and
+	  ISO pin muxes on the Realtek RTD1195 SoC, sharing the generic
+	  Realtek DHC pin controller core (PINCTRL_RTD) with the driver
+	  for the later RTD1315E/RTD1319D/RTD1619B SoCs.
