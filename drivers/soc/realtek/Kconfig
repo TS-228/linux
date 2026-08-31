@@ -12,9 +12,4 @@ source "drivers/soc/realtek/rtd119x/Kconfig"
 endif
 
 
-# Selected by COMMON_CLK_REALTEK and other drivers; must not live only
-# inside the SoC-specific if RTD* blocks or Kconfig reports unmet deps.
-config RTK_MMIO
-	bool
-	select REGMAP_MMIO
 

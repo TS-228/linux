@@ -1,0 +1,8 @@
+config COMMON_CLK_REALTEK
+	bool "Clock driver for realtek"
+	select RESET_CONTROLLER
+
+config COMMON_CLK_RTD119X
+	bool "Clock driver for RTD119x"
+	select COMMON_CLK_REALTEK
+	default y if ARCH_REALTEK
