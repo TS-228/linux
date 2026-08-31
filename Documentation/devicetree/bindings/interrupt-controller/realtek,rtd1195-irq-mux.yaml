@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/interrupt-controller/realtek,rtd1195-irq-mux.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTD1195 interrupt mux
+
+maintainers:
+  - Stephan Eicher <stephan.eicher@web.de>
+
+description:
+  Two register blocks on the RTD1195, MISC_TOP and MISC_ISO, each gather up
+  to 32 peripheral interrupts onto a single GIC line. Which register in a
+  block carries the status and which the enable mask is fixed by the SoC and
+  is known to the driver, so it is not described here.
+
+properties:
+  compatible:
+    const: realtek,rtd1195-irq-mux
+
+  reg:
+    items:
+      - description: MISC_TOP block
+      - description: MISC_ISO block
+
+  reg-names:
+    items:
+      - const: misc
+      - const: iso
+
+  interrupts:
+    description: parent interrupt of each block, in the same order as reg
+    minItems: 2
+    maxItems: 2
+
+  interrupt-controller: true
+
+  "#interrupt-cells":
+    const: 2
+    description: |
+      First cell is the block, 0 for MISC_TOP and 1 for MISC_ISO. Second
+      cell is the bit within that block's 32-bit status register.
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - interrupt-controller
+  - "#interrupt-cells"
+
+additionalProperties: false
+
+examples:
+  - |
+    interrupt-controller@1801b000 {
+        compatible = "realtek,rtd1195-irq-mux";
+        reg = <0x1801b000 0x100>, <0x18007000 0x100>;
+        reg-names = "misc", "iso";
+        interrupts = <0 40 4>, <0 41 4>;
+        interrupt-controller;
+        #interrupt-cells = <2>;
+    };

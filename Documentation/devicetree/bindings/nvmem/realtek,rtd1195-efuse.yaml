@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/nvmem/realtek,rtd1195-efuse.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTD1195 eFuse
+
+maintainers:
+  - Stephan Eicher <stephan.eicher@web.de>
+
+description:
+  One-time-programmable fuses holding per-part calibration written during
+  manufacturing, such as the thermal sensor's correction values and the USB
+  PHY's DP/DM trim.
+
+allOf:
+  - $ref: nvmem.yaml#
+
+properties:
+  compatible:
+    const: realtek,rtd1195-efuse
+
+  reg:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    efuse@18017000 {
+        compatible = "realtek,rtd1195-efuse";
+        reg = <0x18017000 0x400>;
+        read-only;
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        thermal-calibration@1 {
+            reg = <0x1 0x1>;
+        };
+    };

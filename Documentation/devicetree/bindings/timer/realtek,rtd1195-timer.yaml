@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/timer/realtek,rtd1195-timer.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTD1195 timer
+
+maintainers:
+  - Stephan Eicher <stephan.eicher@web.de>
+
+description:
+  The RTD1195 timer block holds several 32-bit counters sharing one register
+  window. Two of them have an interrupt of their own and are used as the tick
+  device of one CPU each; a third free-running counter provides the
+  clocksource and sched_clock.
+
+properties:
+  compatible:
+    const: realtek,rtd1195-timer
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    description:
+      One per timer channel usable as a tick device, in channel order. The
+      first is given to CPU0 and the second to CPU1.
+    minItems: 2
+    maxItems: 2
+
+  clocks:
+    maxItems: 1
+
+  clock-frequency:
+    description:
+      Counter input frequency, for device trees that do not describe the
+      clock. Ignored when "clocks" is present.
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+anyOf:
+  - required: [clocks]
+  - required: [clock-frequency]
+
+additionalProperties: false
+
+examples:
+  - |
+    timer@1801b000 {
+        compatible = "realtek,rtd1195-timer";
+        reg = <0x1801b000 0x600>;
+        interrupts = <0 17 4>, <0 18 4>;
+        clocks = <&osc27M>;
+    };

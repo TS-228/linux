@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/hwmon/qnap,ts228-pic.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: QNAP TS-228 front-panel PIC (UART)
+
+maintainers:
+  - Stephan <linux-qnap-ts228>
+
+description: |
+  The TS-228 (RTD1195) routes fan control, system temperature, front-panel
+  LEDs, board serial/MAC EEPROM, and AC power-recovery mode through a PIC
+  microcontroller on UART1 (/dev/ttyS1 at 19200 8N1), not the SoC PWM block.
+
+  Fan speed is set with single-byte commands 0x30..0x34. Fan RPM and board
+  temperature are read with a 0xf6/0xaa framed query using 0xf7 and 0xf8.
+
+  LED commands (stock se_sys_set_*_led PIC backend). Status is one bi-color
+  LED::
+
+    status: off 0x59; green 0x56; red 0x57; blink 0x58
+    USB on 0x60; blink 0x61; off 0x62
+
+  EEPROM (0xf6 sync, then 0xa1 read / 0xa0 write + offset + length)::
+
+    MAC ASCII at offset 0x10 (18 bytes)
+    Board SN ("SN:…") at offset 0x38 (24 bytes)
+
+  Power recovery: 0x48 (modes 0/2), 0x49 (mode 3).
+  Buzzer: short 0x50, long 0x51 (vendor QNAP_PIC_BUZZER_*).
+
+  Soft KEY_POWER is not exposed: the front power button does not emit a PIC
+  UART event on TS-228 (long-press is handled in PIC hardware).
+
+properties:
+  compatible:
+    const: qnap,ts228-pic
+
+  fan-0:
+    type: object
+    additionalProperties: false
+    description: Optional thermal cooling map target for the system fan.
+    properties:
+      cooling-levels:
+        description:
+          PWM duty values (0-255) mapped to discrete PIC fan levels 0..N-1.
+        $ref: /schemas/types.yaml#/definitions/uint32-array
+      "#cooling-cells":
+        const: 2
+    required:
+      - cooling-levels
+      - "#cooling-cells"
+
+required:
+  - compatible
+
+additionalProperties: false
+
+examples:
+  - |
+    serial {
+        compatible = "snps,dw-apb-uart";
+        reg = <0x1801b200 0x100>;
+        status = "okay";
+
+        pic {
+            compatible = "qnap,ts228-pic";
+
+            fan-0 {
+                cooling-levels = <0 64 128 192 255>;
+                #cooling-cells = <2>;
+            };
+        };
+    };

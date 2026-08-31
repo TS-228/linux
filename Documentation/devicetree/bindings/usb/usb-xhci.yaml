@@ -25,6 +25,14 @@ properties:
     description: Set if the controller has broken port disable mechanism
     type: boolean
 
+  xhci-reset-ep0-ring-quirk:
+    description:
+      Set if the controller takes control transfers from the wrong place in
+      the endpoint 0 ring after a device is addressed a second time, because
+      stale cycle bits are left behind. The ring is rewound and its cycle
+      bits cleared before the dequeue pointer is handed to the controller.
+    type: boolean
+
   imod-interval-ns:
     description: Interrupt moderation interval
     default: 5000

@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/clock/realtek,rtd1195-clock-gate-controller.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTD1195 clock gates
+
+maintainers:
+  - Stephan Eicher <stephan.eicher@web.de>
+
+description:
+  One register whose bits each gate a peripheral clock. Which bit gates
+  what is given by clock-output-names, in bit order, with an empty string
+  where a bit is unused.
+
+properties:
+  compatible:
+    const: realtek,rtd1195-clock-gate-controller
+
+  reg:
+    maxItems: 1
+
+  "#clock-cells":
+    const: 1
+    description: bit number within the register
+
+  clock-output-names:
+    minItems: 1
+    maxItems: 32
+
+required:
+  - compatible
+  - reg
+  - "#clock-cells"
+  - clock-output-names
+
+additionalProperties: false
+
+examples:
+  - |
+    clock-controller@1800000c {
+        compatible = "realtek,rtd1195-clock-gate-controller";
+        reg = <0x1800000c 0x4>;
+        #clock-cells = <1>;
+        clock-output-names = "", "hdmirx", "", "gspi";
+    };

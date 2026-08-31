@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/i2c/realtek,rtd1195-i2c.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTD1195 I2C controller
+
+maintainers:
+  - Stephan Eicher <stephan.eicher@web.de>
+
+description:
+  The RTD1195 has seven of these controllers, two in the ISO register block
+  and five in MISC. Each reports its interrupt through the SoC's interrupt
+  multiplexer rather than directly to the GIC, so the node's interrupt
+  parent is that multiplexer and its interrupt specifier has two cells.
+
+allOf:
+  - $ref: /schemas/i2c/i2c-controller.yaml#
+
+properties:
+  compatible:
+    const: realtek,rtd1195-i2c
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+  clocks:
+    maxItems: 1
+
+  resets:
+    maxItems: 1
+
+  clock-frequency:
+    default: 100000
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - clocks
+  - resets
+
+unevaluatedProperties: false
+
+examples:
+  - |
+    i2c@1801b900 {
+        compatible = "realtek,rtd1195-i2c";
+        reg = <0x1801b900 0x400>;
+        interrupt-parent = <&mux_intc>;
+        interrupts = <0 23>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        clocks = <&clk_en_2 14>;
+        resets = <&reset2 24>;
+
+        rtc@32 {
+            compatible = "epson,rx8010";
+            reg = <0x32>;
+        };
+    };
