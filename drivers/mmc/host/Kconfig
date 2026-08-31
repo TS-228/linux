@@ -23,6 +23,55 @@ config MMC_SUNPLUS
 
 	  If unsure, say N
 
+menuconfig MMC_RTK_EMMC
+	tristate "Realtek EMMC host driver"
+	select MMC_RTK_CRSD_OPS
+	help
+	  This selects support for the eMMC host controller found on
+	  Realtek RTD119x/RTD129x SoCs.
+
+	  This driver can also be built as a module. If so, the module
+	  will be called rtkemmc_rtd119x.
+
+config MMC_RTK_EMMC_HW_SEMAPHORE
+	bool "Enable Realtek EMMC host driver hardware semaphore"
+	depends on MMC_RTK_EMMC
+	default n
+	help
+	  Serialize eMMC register access against the ACPU/audio DSP
+	  co-processor using the SoC's SB2 hardware semaphore, on SoCs
+	  where the eMMC controller registers are shared with it.
+
+	  Say N unless you know your platform needs this.
+
+menuconfig MMC_RTK_SDMMC
+	tristate "Realtek SD/MMC host driver"
+	select MMC_RTK_CRSD_OPS
+	help
+	  This selects support for the SD/SDIO card-slot host controller
+	  found on Realtek RTD119x/RTD129x SoCs.
+
+	  This driver can also be built as a module. If so, the module
+	  will be called rtk-sdmmc.
+
+config MMC_RTK_CRSD_OPS
+	tristate
+	help
+	  Low-level register helpers shared between the Realtek eMMC and
+	  SD/MMC host drivers, which both drive independent instances of
+	  the same "Card Reader" IP core. Not user-selectable -- pulled in
+	  by whichever of MMC_RTK_EMMC/MMC_RTK_SDMMC is enabled.
+
+config MMC_RTK_SDMMC_DEBUG
+	bool "Enable Realtek SD/MMC host driver debug messages"
+	depends on MMC_RTK_SDMMC
+	default n
+	help
+	  Enable extra pr_debug() logging in the Realtek SD/MMC host
+	  driver, for diagnosing card detection and transfer issues.
+
+	  Say N unless you're debugging this driver.
+
 config MMC_ARMMMCI
 	tristate "ARM AMBA Multimedia Card Interface support"
 	depends on ARM_AMBA
