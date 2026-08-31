@@ -634,8 +634,8 @@ config GPIO_RTD
 	select GPIOLIB_IRQCHIP
 	help
 	  This option enables support for GPIOs found on Realtek DHC(Digital
-	  Home Center) SoCs family, including RTD1295, RTD1315E, RTD1319,
-	  RTD1319D, RTD1395, RTD1619 and RTD1619B.
+	  Home Center) SoCs family, including RTD1195, RTD1295, RTD1315E,
+	  RTD1319, RTD1319D, RTD1395, RTD1619 and RTD1619B.
 
 	  Say yes here to support GPIO functionality and GPIO interrupt on
 	  Realtek DHC SoCs.
