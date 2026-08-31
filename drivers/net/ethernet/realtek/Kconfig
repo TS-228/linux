@@ -6,7 +6,7 @@
 config NET_VENDOR_REALTEK
 	bool "Realtek devices"
 	default y
-	depends on PCI || (PARPORT && X86)
+	depends on PCI || (PARPORT && X86) || ARCH_REALTEK
 	help
 	  If you have a network (Ethernet) card belonging to this class, say Y.
 
@@ -138,5 +138,19 @@ config RTASE
 
 	  To compile this driver as a module, choose M here: the module
 	  will be called rtase. This is recommended.
+
+config R8169SOC
+	tristate "Realtek RTD1195 SoC gigabit ethernet support"
+	depends on ARCH_REALTEK
+	select FW_LOADER
+	select CRC32
+	select MII
+	help
+	  Say Y here if you have a Realtek RTD1195 SoC, whose gigabit
+	  Ethernet MAC is on-chip rather than on the PCI bus that the
+	  r8169 driver expects.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called r8169soc_rtd119x.
 
 endif # NET_VENDOR_REALTEK
