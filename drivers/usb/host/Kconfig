@@ -424,6 +424,7 @@ config USB_OHCI_HCD
 
 if USB_OHCI_HCD
 
+
 config USB_OHCI_HCD_OMAP1
 	tristate "OHCI support for OMAP1/2 chips"
 	depends on ARCH_OMAP1
@@ -727,6 +728,7 @@ config USB_HCD_TEST_MODE
 	  This option is of interest only to developers who need to validate
 	  their USB hardware designs.  It is not needed for normal use.  If
 	  unsure, say N.
+
 
 config USB_XEN_HCD
 	tristate "Xen usb virtual host driver"

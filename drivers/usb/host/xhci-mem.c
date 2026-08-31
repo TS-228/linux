@@ -1046,6 +1046,38 @@ void xhci_copy_ep0_dequeue_into_input_ctx(struct xhci_hcd *xhci,
 	virt_dev = xhci->devs[udev->slot_id];
 	ep0_ctx = xhci_get_ep_ctx(xhci, virt_dev->in_ctx, 0);
 	ep_ring = virt_dev->eps[0].ring;
+
+	/*
+	 * Some hosts leave stale cycle bits in the ep0 ring when a device is
+	 * addressed a second time, and then take a control transfer from the
+	 * wrong place in the ring. Observed as roughly one control transfer
+	 * in 45 failing. Rewind the ring and clear the cycle bit of every TRB
+	 * in the two segments it spans before handing the dequeue pointer to
+	 * the host.
+	 */
+	if (xhci->quirks & XHCI_RESET_EP0_RING) {
+		struct xhci_segment *seg = ep_ring->first_seg;
+		int i;
+
+		ep_ring->enq_seg = seg;
+		ep_ring->enqueue = seg->trbs;
+
+		for (; seg; seg = seg->next) {
+			for (i = 0; i < TRBS_PER_SEGMENT; i++)
+				seg->trbs[i].generic.field[3] &=
+					cpu_to_le32(~TRB_CYCLE);
+			if (seg->next == ep_ring->first_seg)
+				break;
+		}
+
+		ep_ring->cycle_state = 1;
+		/*
+		 * Ensure the cleared cycle bits and new cycle_state are
+		 * visible to the xHC before it's re-armed.
+		 */
+		wmb();
+	}
+
 	/*
 	 * FIXME we don't keep track of the dequeue pointer very well after a
 	 * Set TR dequeue pointer, so we're setting the dequeue pointer of the
