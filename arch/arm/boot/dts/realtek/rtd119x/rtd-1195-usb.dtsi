@@ -1,0 +1,39 @@
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	/include/ "rtd119x/rtd-119x-usb.dtsi"
+
+	dwc3: rtk_dwc3@18013200 {
+		status = "okay";
+
+		dwc3@18020000 {
+			dr_mode = "host";
+			/*
+			 * The vendor's original TX/RX threshold + auto-retry
+			 * register workaround was tested against mainline's
+			 * dwc3 driver and dropped: 12 iterations of parallel
+			 * checksum-verified writes to both SATA-bridge drives
+			 * (sda+sdb, ~1.15GB total) produced zero transaction
+			 * errors or port resets without it.
+			 */
+		};
+	};
+
+	ehci@18013000 {
+		compatible = "generic-ehci";
+		/*
+		 * ehci-platform/ohci-platform enable every clock listed
+		 * here. Naming the USB gate keeps it out of the unused-clock
+		 * sweep, which otherwise switches it off and turns any later
+		 * access to the 0x18013000 block into an SB2 bus error.
+		 */
+		clocks = <&clk_en_1 CLK_EN_USB>;
+		status = "okay";
+	};
+
+	ohci@18013400 {
+		compatible = "generic-ohci";
+		clocks = <&clk_en_1 CLK_EN_USB>;
+		status = "okay";
+	};
+};

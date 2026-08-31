@@ -1,0 +1,211 @@
+/*
+ *
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/input/input.h>
+
+/memreserve/ 0x18100000     0x01000000;	/* NOR */
+
+#include <dt-bindings/gpio/gpio.h>
+#include "rtd119x/rtd-119x.dtsi"
+#include "rtd119x/rtd-1195-usb.dtsi"
+
+/ {
+	model= "Realtek_CA7_CA7";
+	compatible = "realtek,rtd1195";
+
+	aliases {
+		serial0 = &uart0;
+		serial1 = &uart1;
+	};
+
+	chosen {
+		/*
+		 * Provide earlycon + extras only. Do not repeat console=ttyS0 here:
+		 * U-Boot already passes console=, and CONFIG_CMDLINE_EXTEND would
+		 * otherwise register the console twice (doubled printk output).
+		 *
+		 * USB rescue: PARTUUID=f04240a9-02 (GPT on sdc). eMMC is mmcblk1
+		 * (MBR); native eMMC root needs the rtkemmc module in initramfs
+		 * and root=/dev/mmcblk1p2 (see linux-3.10 CONFIG_CMDLINE).
+		 */
+		bootargs = "earlycon=uart8250,mmio32,0x18007800 loglevel=4 quiet clk_ignore_unused root=PARTUUID=f04240a9-02 init=/usr/sbin/init rootwait rw";
+		stdout-path = "serial0:115200n8";
+		linux,initrd-start = <0x02200000>;
+		linux,initrd-end = <0x02600000>;
+	};
+
+	memory {
+		device_type = "memory";
+		reg =  <0x00000000 0x40000000>;					/* 1024 MB */
+	};
+
+
+	/*
+	 * Vendor quirk: early USB mass-storage unbind + msleep(10000) before
+	 * rebind (rtk-usb-manager). That delays root-on-USB by ~10s. Not needed
+	 * for openSUSE on a stick; leave shared rtd-119x-usb.dtsi alone.
+	 */
+
+	/*
+	 * Front-panel GPIO from stock model_QX421_12.conf (GPIO:I2x → misc hex pin):
+	 *   USB_COPY_BUTTON = GPIO:I2C:P → misc 44 (0x2c)
+	 *   RESET_BUTTON    = GPIO:I2D:P → misc 45 (0x2d)
+	 *   disk1 ERR_LED   = GPIO:I2E:P → misc 46 (0x2e)
+	 *   disk2 ERR_LED   = GPIO:I2F:P → misc 47 (0x2f)
+	 *
+	 * Realtek gpio cells are <pin dir default>; input <pin 0 1> = active-low.
+	 * Disk bay LEDs are bi-color on one GPIO: stock HAL :P inverts so ERR on
+	 * drives the line low (red); deasserted/high shows green. No PRESENT_LED
+	 * in the model file. Encode as <pin 1 2> (active-low out, idle high).
+	 * Buzzer is on the PIC (opcodes 0x50/0x51), not a SoC GPIO.
+	 */
+	gpio_keys: gpio-keys {
+		compatible = "gpio-keys";
+		autorepeat;
+
+		usb-copy {
+			label = "usb-copy";
+			linux,code = <KEY_COPY>;
+			gpios = <&rtk_misc_gpio 44 GPIO_ACTIVE_LOW>;
+			debounce-interval = <50>;
+		};
+
+		reset {
+			label = "reset";
+			linux,code = <KEY_RESTART>;
+			gpios = <&rtk_misc_gpio 45 GPIO_ACTIVE_LOW>;
+			debounce-interval = <50>;
+		};
+	};
+
+	gpio_leds: gpio-leds {
+		compatible = "gpio-leds";
+
+		/*
+		 * on = red (error); off = green (OK). Same physical LED.
+		 * Named hddN:red:status to match mainline's leds-qnap-mcu.c
+		 * naming for the equivalent per-bay error LED on TS-233/TS-433.
+		 */
+		disk1_err {
+			label = "hdd1:red:status";
+			gpios = <&rtk_misc_gpio 46 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		disk2_err {
+			label = "hdd2:red:status";
+			gpios = <&rtk_misc_gpio 47 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+	};
+
+};
+
+&uart1 {
+	status = "okay";
+
+	/* QNAP TS-228 front-panel PIC (fan, temperature) on UART1 */
+	pic {
+		compatible = "qnap,ts228-pic";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		fan_0: fan-0 {
+			cooling-levels = <0 64 128 192 255>;
+			#cooling-cells = <2>;
+		};
+
+		/*
+		 * PIC EEPROM MAC is stored as 6 bytes (binary) in this NVMEM
+		 * provider's logical address space.
+		 */
+		mac_cell: mac-address@0 {
+			reg = <0x0 0x6>;
+		};
+	};
+};
+
+&cpu_thermal {
+	trips {
+		/* Start ramping the system fan before the SoC gets hot. */
+		fan_on: fan-on {
+			temperature = <55000>;
+			hysteresis = <3000>;
+			type = "passive";
+		};
+	};
+	cooling-maps {
+		fan_map0 {
+			trip = <&fan_on>;
+			cooling-device = <&fan_0 0 4>;
+			contribution = <1024>;
+		};
+	};
+};
+
+/*
+ * The shared rtd-119x.dtsi leaves i2c_pins_3 unmuxed; the vendor TS-X28 DTB
+ * muxes it, which is what puts the RX-8010 on the wire. The whole list has to
+ * be restated because a DT property is replaced wholesale, not merged.
+ *
+ * Fan is controlled by the QNAP MCU on UART1, not the SoC PWM block.
+ */
+&pinctrl_crt {
+	pinctrl-0 = <&i2c_pins_1>, <&i2c_pins_3>, <&i2c_pins_5>, <&mmc_pins>;
+};
+
+&pinctrl_iso {
+	pinctrl-0 = <&ir_rx_pins>, <&ir_tx_pins>,
+		<&i2c_pins_0>, <&i2c_pins_6>,
+		<&uart1_pins_loc_iso>, <&uart1_flow_pins>, <&uart1_loc_pins>,
+		<&vfd_pins>;
+};
+
+/* I2C3 carries the Epson RX-8010 RTC, as on the vendor kernel. */
+&i2c_3 {
+	status = "okay";
+
+	rtc@32 {
+		compatible = "epson,rx8010";
+		reg = <0x32>;
+	};
+};
+
+&dwc3 {
+	/* usb3 power, output, default low */
+	realtek,rst-gpio = <&rtk_misc_gpio 5 GPIO_ACTIVE_HIGH>;
+
+	dwc3@18020000 {
+		dr_mode = "host";
+	};
+};
+
+&nic {
+	rtl-features = <2>;
+
+	/*
+	 * The MAC address lives in the PIC's EEPROM as 18 bytes of ASCII at
+	 * offset 0x10; the PIC driver exposes it as an NVMEM provider, so the
+	 * address itself is read from the hardware rather than written here.
+	 */
+	nvmem-cells = <&mac_cell>;
+	nvmem-cell-names = "mac-address";
+
+	status = "okay";
+};
+
+/*
+ * The ACPU runs its own firmware out of these two regions whether or not
+ * Linux talks to it, so take them out of the linear map. rtd1195.dtsi
+ * describes them, but without no-map.
+ */
+&rpc_comm {
+	no-map;
+};
+
+&rpc_ringbuf {
+	no-map;
+};
