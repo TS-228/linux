@@ -849,6 +849,19 @@ config CRYPTO_DEV_SA2UL
 	  used for crypto offload.  Select this if you want to use hardware
 	  acceleration for cryptographic algorithms on these devices.
 
+config CRYPTO_DEV_RTK_MCP
+	tristate "Realtek MCP crypto accelerator"
+	depends on ARCH_REALTEK || COMPILE_TEST
+	select CRYPTO_SKCIPHER
+	select CRYPTO_AES
+	help
+	  Hardware crypto acceleration using the Realtek MCP (Media Content
+	  Protection) engine found in the RTD1195 SoC. Supports AES-128
+	  ECB/CBC; other key sizes fall back to software.
+
+	  To compile this driver as a module, choose M here. The module
+	  will be called rtk-mcp.
+
 source "drivers/crypto/aspeed/Kconfig"
 source "drivers/crypto/starfive/Kconfig"
 
