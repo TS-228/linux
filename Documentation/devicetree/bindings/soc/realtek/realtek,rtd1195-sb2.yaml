@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/soc/realtek/realtek,rtd1195-sb2.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTD1195 system bus 2 (SB2) debug unit
+
+maintainers:
+  - Stephan Eicher <stephan.eicher@web.de>
+
+description:
+  Reports and logs bus errors (invalid access, memory trash detection)
+  raised on the SoC's internal SB2 bus fabric. This is a debug facility,
+  not a hardware semaphore or locking primitive.
+
+properties:
+  compatible:
+    enum:
+      - realtek,rtd1195-sb2
+      - realtek,sysbrg2
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    maxItems: 1
+
+required:
+  - compatible
+  - reg
+  - interrupts
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/interrupt-controller/arm-gic.h>
+    sb2@0 {
+        compatible = "realtek,rtd1195-sb2";
+        reg = <0x0 0x900>;
+        interrupts = <GIC_SPI 36 IRQ_TYPE_LEVEL_HIGH>;
+    };

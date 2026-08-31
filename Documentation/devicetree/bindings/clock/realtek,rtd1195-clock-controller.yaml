@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/clock/realtek,rtd1195-clock-controller.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTD1195 clock controller
+
+maintainers:
+  - Stephan Eicher <stephan.eicher@web.de>
+
+description:
+  The PLLs and their post-dividers, including the one feeding the CPU. All
+  of them derive from the 27MHz crystal.
+
+properties:
+  compatible:
+    const: realtek,rtd1195-clock-controller
+
+  reg:
+    maxItems: 1
+
+  "#clock-cells":
+    const: 1
+    description:
+      Index of the clock, from dt-bindings/clock/rtk,clock-rtd119x.h
+
+required:
+  - compatible
+  - reg
+  - "#clock-cells"
+
+additionalProperties: false
+
+examples:
+  - |
+    clock-controller@18000000 {
+        compatible = "realtek,rtd1195-clock-controller";
+        reg = <0x18000000 0x1000>;
+        #clock-cells = <1>;
+    };
