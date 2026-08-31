@@ -2891,9 +2891,26 @@ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 L:	linux-realtek-soc@lists.infradead.org (moderated for non-subscribers)
 S:	Maintained
 F:	Documentation/devicetree/bindings/arm/realtek.yaml
+F:	Documentation/devicetree/bindings/crypto/realtek,rtd1195-mcp.yaml
+F:	Documentation/devicetree/bindings/i2c/realtek,rtd1195-i2c.yaml
+F:	Documentation/devicetree/bindings/soc/realtek/
 F:	arch/arm/boot/dts/realtek/
 F:	arch/arm/mach-realtek/
 F:	arch/arm64/boot/dts/realtek/
+F:	drivers/clk/realtek/
+F:	drivers/clocksource/rtk_timer.c
+F:	drivers/crypto/rtk-mcp.c
+F:	drivers/gpio/gpio-rtd.c
+F:	drivers/i2c/busses/i2c-rtk*
+F:	drivers/irqchip/irq-rtd119x.*
+F:	drivers/mmc/host/reg_*_rtd119x.h
+F:	drivers/mmc/host/rtk-*
+F:	drivers/mmc/host/rtkemmc_rtd119x.*
+F:	drivers/phy/realtek/
+F:	drivers/pinctrl/realtek/
+F:	drivers/soc/realtek/
+F:	drivers/thermal/realtek/
+F:	include/soc/realtek/
 
 ARM/RISC-V/RENESAS ARCHITECTURE
 M:	Geert Uytterhoeven <geert+renesas@glider.be>
@@ -18865,6 +18882,12 @@ M:	Akihiro Tsukada <tskd08@gmail.com>
 L:	linux-media@vger.kernel.org
 S:	Odd Fixes
 F:	drivers/media/tuners/qm1d1c0042*
+
+QNAP TS-228 FRONT-PANEL PIC
+M:	Stephan Eicher <stephan.eicher@web.de>
+L:	linux-hwmon@vger.kernel.org
+S:	Maintained
+F:	drivers/hwmon/qnap-ts228-pic.c
 
 QNX4 FILESYSTEM
 M:	Anders Larsen <al@alarsen.net>
