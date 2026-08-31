@@ -53,6 +53,19 @@ endchoice
 
 comment "Platform Glue Driver Support"
 
+config USB_DWC3_RTK
+	tristate "Realtek Platforms"
+	depends on ARCH_REALTEK || COMPILE_TEST
+	default USB_DWC3
+	help
+	  Support USB2.0 and USB3.0 functions on Realtek RTD119x/RTD129x
+	  SoCs through their DesignWare USB3 controller.
+
+	  This platform glue driver wires the DWC3 core up to the SoC's
+	  clocks, resets, and PHYs.
+
+	  Say 'Y' or 'M' here if you have one such device.
+
 config USB_DWC3_OMAP
 	tristate "Texas Instruments OMAP5 and similar Platforms"
 	depends on ARCH_OMAP2PLUS || COMPILE_TEST
