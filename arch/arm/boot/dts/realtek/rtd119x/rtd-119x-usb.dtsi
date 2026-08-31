@@ -1,0 +1,69 @@
+/*
+ * realtek,port0-power-gpio: port 0 power, output, default low
+ * realtek,port1-power-gpio: port 1 power, output, default low
+ * realtek,port2-power-gpio: port 2  power, output, default low
+ * realtek,port3-power-gpio: 1296 port 3 power, output, default low
+ *
+ * usb_iso_mode: ISO mode is only port suspend (Default disable)
+ * usb_power_cut: Non ISO mode and power cut (Default disable power cut)
+ * Note if enable ISO mode, then power_cut will not effective
+ */
+
+usb2phy: usb2phy@18013214 {
+	compatible = "realtek,rtd1195-usb2phy";
+	reg = <0x18013214 0x4>, <0x18028280 0x4>;
+	#phy-cells = <0>;
+};
+
+usb3phy: usb3phy@18013210 {
+	compatible = "realtek,rtd1195-usb3phy";
+	reg = <0x18013210 0x4>;
+	#phy-cells = <0>;
+};
+
+dwc3: rtk_dwc3@18013200 {
+	compatible = "realtek,rtd-dwc3";
+	reg = <0x18013200 0x200>;
+	interrupts = <0 21 4>;
+	#address-cells = <1>;
+	#size-cells = <1>;
+	ranges;
+
+	dwc3@18020000 {
+		compatible = "snps,dwc3";
+		reg = <0x18020000 0x9000>;
+		interrupts = <0 21 4>;
+		phys = <&usb2phy &usb3phy>;
+		phy-names = "usb2-phy", "usb3-phy";
+		dr_mode = "host";		/* peripheral */
+		snps,dis_u2_susphy_quirk;
+		xhci-reset-ep0-ring-quirk;
+	};
+};
+
+phy_rle0599: usb-phy@18013824 {
+	compatible = "realtek,rtd1195-rle0599-usb2phy";
+	/* REG_WRAP_VStatusOut2, REG_EHCI_INSNREG05 */
+	reg = <0x18013824 0x4>, <0x180130a4 0x4>;
+	reg-names = "vstatus", "insnreg05";
+	#phy-cells = <0>;
+};
+
+ehci: ehci@18013000 {
+	compatible = "generic-ehci";
+	reg = <0x18013000 0x100>;
+	interrupts = <0 21 4>;
+	phys = <&phy_rle0599>;
+	phy-names = "usb2-phy";
+};
+
+ohci: ohci@18013400 {
+	compatible = "generic-ohci";
+	reg = <0x18013400 0x100>;
+	interrupts = <0 21 4>;
+	phys = <&phy_rle0599>;
+	phy-names = "usb2-phy";
+
+	//wrap_reg = <0x18013820>;
+};
+

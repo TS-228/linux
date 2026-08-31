@@ -1,0 +1,561 @@
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/clock/rtk,clock-rtd119x.h>
+#include <dt-bindings/reset/realtek,rtd1195.h>
+
+#include "../rtd1195.dtsi"
+
+/ {
+	/*
+	 * UART1's baud reference. The clock controller does not model where
+	 * this comes from, but the rate is not guesswork: the front-panel PIC
+	 * runs at 19200 baud, the port programs a divisor of 1406, and
+	 * 19200 * 16 * 1406 is 432MHz. A 27MHz reference would put the line
+	 * at 1200 baud and the PIC would not answer at all.
+	 */
+	uart1_clk: uart1-clk {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <432000000>;
+		clock-output-names = "uart1_clk";
+	};
+
+	/*
+	 * Still outside syscon@0: this claims the whole block from
+	 * offset 0, where the reset controller already sits, so it needs
+	 * converting to a syscon phandle and regmap before it can move.
+	 */
+	pinctrl_crt: pinctrl@18000000 {
+		compatible = "realtek,rtd1195-crt-pinctrl";
+		reg = <0x18000000 0x500>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&i2c_pins_1>, <&i2c_pins_3>, <&i2c_pins_5>, <&mmc_pins>;
+
+		emmc_pins: emmc-pins {
+			pins = "nf_dd_0",
+				"nf_dd_1",
+				"nf_dd_2",
+				"nf_dd_3",
+				"nf_dd_4",
+				"nf_dd_5",
+				"nf_dd_6",
+				"nf_dd_7",
+				"nf_rdy",
+				"nf_rd_n",
+				"nf_cle";
+			function = "emmc";
+			bias-disable;
+		};
+		i2c_pins_1: i2c-1-pins {
+			pins = "i2c_scl_1",
+				"i2c_sda_1";
+			function = "i2c1";
+			bias-disable;
+		};
+		i2c_pins_2_crt: i2c-2-crt-pins {
+			pins = "tp1_clk",
+				"tp1_sync";
+			function = "i2c2";
+			bias-disable;
+		};
+		i2c_pins_3: i2c-3-pins {
+			pins = "tp1_data",
+				"tp1_valid";
+			function = "i2c3";
+			bias-disable;
+		};
+		i2c_pins_4: i2c-4-pins {
+			pins = "i2c_scl_4",
+				"i2c_sda_4";
+			function = "i2c4";
+			bias-disable;
+		};
+		i2c_pins_5: i2c-5-pins {
+			pins = "i2c_scl_5",
+				"i2c_sda_5";
+			function = "i2c5";
+			bias-disable;
+		};
+		mmc_pins: mmc-pins {
+			pins = "mmc_data_0",
+				"mmc_data_1",
+				"mmc_data_2",
+				"mmc_data_3",
+				"mmc_clk",
+				"mmc_cmd",
+				"mmc_wp",
+				"mmc_cd";
+			function = "mmc";
+			bias-disable;
+		};
+		sdio_pins: sdio-pins {
+			pins = "sdio_clk",
+				"sdio_data_0",
+				"sdio_data_1",
+				"sdio_data_2",
+				"sdio_data_3",
+				"sdio_cmd";
+			function = "sdio";
+			bias-disable;
+		};
+		uart1_pins_loc_misc_crt: uart1-loc-misc-crt-pins {
+			pins = "gpio_0",
+				"gpio_1",
+				"gpio_2",
+				"gpio_3",
+				"sf_en";
+			function = "uart1_loc_misc";
+		};
+		usb_pins: usb-pins {
+			pins = "usb_id";
+			function = "usb";
+			bias-disable;
+		};
+	};
+
+	/*
+	 * Still outside syscon@0: this claims the whole block from
+	 * offset 0, where the reset controller already sits, so it needs
+	 * converting to a syscon phandle and regmap before it can move.
+	 */
+	cc: clock-controller@18000000 {
+		compatible = "realtek,rtd1195-clock-controller";
+		reg = <0x18000000 0x1000>;
+		#clock-cells = <1>;
+
+		/*
+		 * The boot loader leaves the CPU PLL at 800 MHz. The stock
+		 * firmware runs this part at 1100 MHz on the same default
+		 * core voltage, but the PLL table has no 1100 MHz entry, so
+		 * take the next one below it rather than the 1160 and 1200
+		 * entries above what the vendor ships.
+		 */
+		assigned-clocks = <&cc CC_PLL_SCPU>;
+		assigned-clock-rates = <1000000000>;
+	};
+
+	/*
+	 * The unit address does not match reg[0], which is the CRT block, not
+	 * this controller. Putting its own register first would fix that, but
+	 * the driver indexes these by position and a single A/B showed SD init
+	 * retrying afterwards. SD init is flaky enough that one run each
+	 * proves nothing, so leave it until it can be measured properly.
+	 */
+	sdmmc@18010400 {
+		compatible = "realtek,rtd1195-sdmmc";
+		gpios = <&rtk_misc_gpio 23 GPIO_ACTIVE_HIGH>;
+		reg = <0x18010400 0x200>,	/* the controller itself */
+		      <0x18000000 0x400>,	/* CRT: PLL and pad control */
+		      <0x1801a000 0x80>,	/* BS2 */
+		      <0x18012000 0x10>;	/* eMMC, shared */
+		reg-names = "sdmmc", "crt", "bs2", "emmc";
+		interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clk_en_1 CLK_EN_CR>, <&clk_en_1 CLK_EN_SD_IP>;
+		clock-names = "clk_en_cr", "clk_en_sd_ip";
+		resets = <&reset2 RTD1195_RSTN_CR>;
+	};
+
+	thermal-zones {
+		cpu_thermal: cpu-thermal {
+			polling-delay-passive = <250>;
+			polling-delay = <1000>;
+			thermal-sensors = <&cpu_tm>;
+			trips {
+				cpu_crit: cpu-crit {
+					temperature = <130000>;
+					hysteresis = <0>;
+					type = "critical";
+				};
+			};
+			cooling-maps {};
+		};
+	};
+
+	/*
+	 * Mainline's rtd1195.dtsi describes this SoC as a bus with a syscon
+	 * per register block, children addressed relative to their block.
+	 * Nodes are being moved in here one subsystem at a time; what is left
+	 * at the root above is still flat with absolute addresses.
+	 */
+	/*
+	 * Not inside a syscon: this gathers interrupts from two different
+	 * register blocks, MISC_TOP and MISC_ISO, so its second reg entry
+	 * cannot be expressed relative to either one. Converting the driver
+	 * to take two syscon phandles and a regmap would let it move.
+	 */
+	mux_intc: interrupt-controller@1801b000 {
+		compatible = "realtek,rtd1195-irq-mux";
+		/* MISC_TOP, MISC_ISO */
+		reg = <0x1801b000 0x100>, <0x18007000 0x100>;
+		reg-names = "misc", "iso";
+		interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+	};
+
+};
+
+&crt {
+	clk_en_1: clk-en@c {
+		compatible = "realtek,rtd1195-clock-gate-controller";
+		reg = <0xc 0x4>;
+		#clock-cells = <1>;
+		clock-output-names =
+			"",           "hdmirx",     "",           "gspi",
+			"usb",        "",           "",           "",
+			"hdmi",       "etn",        "aio",        "gpu",
+			"ve_h264",    "jpeg",       "",           "",
+			"",           "se",         "",           "cp",
+			"md",         "tp",         "",           "nf",
+			"emmc",       "cr",         "sdio_ip",    "mipi",
+			"emmic_ip",   "ve_h265",    "sdio",       "sd_ip";
+	};
+	clk_en_2: clk-en@10 {
+		compatible = "realtek,rtd1195-clock-gate-controller";
+		reg = <0x10 0x4>;
+		#clock-cells = <1>;
+		clock-output-names =
+			"",           "misc_i2c_5", "",           "",
+			"vpu",        "",           "",           "",
+			"",           "",           "misc_rtc",   "",
+			"",           "misc_i2c_4", "misc_i2c_3", "misc_i2c_2",
+			"misc_i2c_1", "audio_da",   "audio_mod",  "audio_codec",
+			"",           "spdif",      "i2s_in",     "i2s_out",
+			"",           "",           "",           "",
+			"ur1",        "",           "",           "";
+	};
+	cpu_tm: thermal-sensor@310 {
+		compatible = "realtek,rtd1195-thermal-sensor";
+		reg = <0x310 0x4>, <0x314 0x4>;
+		#thermal-sensor-cells = <0>;
+		status = "okay";
+		nvmem-cells = <&tcal0>, <&tcal1>;
+		nvmem-cell-names = "calibration0", "calibration1";
+	};
+};
+
+&iso {
+	pinctrl_iso: pinctrl@0 {
+		compatible = "realtek,rtd1195-iso-pinctrl";
+		reg = <0x0 0x400>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&ir_rx_pins>, <&ir_tx_pins>, <&i2c_pins_0>,
+			<&i2c_pins_6>, <&uart1_pins_loc_iso>,
+			<&uart1_flow_pins>, <&uart1_loc_pins>, <&vfd_pins>;
+
+		i2c_pins_0: i2c-0-pins {
+			pins = "i2c_scl_0",
+				"i2c_sda_0";
+			function = "i2c0";
+			bias-disable;
+		};
+		i2c_pins_2_iso: i2c-2-iso-pins {
+			pins = "vfd_d";
+			function = "i2c2";
+			bias-disable;
+		};
+		i2c_pins_6: i2c-6-pins {
+			pins = "i2c_scl_6",
+				"i2c_sda_6";
+			function = "i2c6";
+			bias-disable;
+		};
+		uart1_pins_loc_iso: uart1-loc-iso-pins {
+			pins = "ur1_rx",
+				"ur1_tx";
+			function = "uart1_loc_iso";
+			bias-pull-up;
+		};
+		uart1_flow_pins: uart1-flow-pins {
+			pins = "ur1_cts_n",
+				"ur1_rts_n";
+			function = "uart1_loc_iso";
+			bias-pull-down;
+		};
+		uart1_loc_pins: uart1-loc-pins {
+			pins = "ur1_loc";
+			function = "uart1_loc_iso";
+		};
+		uart0_pins: uart0-pins {
+			pins = "ur0_rx",
+				"ur0_tx";
+			function = "uart0";
+			bias-disable;
+		};
+		vfd_pins: vfd-pins {
+			pins = "vfd_cs_n",
+				"vfd_clk",
+				"vfd_d";
+			function = "vfd";
+			bias-disable;
+		};
+		ir_rx_pins: ir-rx-pins {
+			pins = "ir_rx";
+			function = "irrx";
+			bias-disable;
+		};
+		ir_tx_pins: ir-tx-pins {
+			pins = "ir_tx";
+			function = "irtx";
+			bias-disable;
+		};
+		etn_led_pins: etn-led-pins {
+			pins = "etn_led_link",
+				"etn_led_rxtx";
+			function = "etn_led";
+			bias-disable;
+		};
+	};
+		rtk_iso_gpio: rtk_iso_gpio@100 {
+			compatible = "realtek,rtd1195-iso-gpio";
+			gpio-controller;
+			#gpio-cells = <2>;
+			interrupt-parent = <&mux_intc>;
+			#interrupt-cells = <1>;
+			interrupt-controller;
+			interrupts = <1 19>, <1 20>;						/*GPIOA_INT   GPIODA_INT*/
+			/* ISO_GPIO, then the two ISR words the driver uses at 0x8 and 0xc */
+			reg = <0x100 0x100>, <0x0 0x10>;
+			gpio-ranges = <&pinctrl_iso 0 0 21>;
+		};
+	iso_clk_en: clk-en@8c {
+		compatible = "realtek,rtd1195-clock-gate-controller";
+		reg = <0x8c 0x4>;
+		#clock-cells = <1>;
+		clock-output-names =
+			"",           "",           "cec0",       "cbusrx_sys",
+			"cbustx_sys", "cbus_sys",   "cbus_osc",   "misc_ir",
+			"misc_ur0",   "i2c0",       "i2c6",       "etn_250m",
+			"etn_sys";
+	};
+	i2c_0: i2c@d00 {
+		compatible = "realtek,rtd1195-i2c", "snps,designware-i2c";
+		reg = <0xd00 0x100>;
+		interrupt-parent = <&mux_intc>;
+		interrupts = <1 8>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks = <&iso_clk_en CLK_EN_I2C0>;
+		resets = <&iso_reset RTD1195_ISO_RSTN_I2C_0>;
+	};
+	i2c_6: i2c@e00 {
+		compatible = "realtek,rtd1195-i2c", "snps,designware-i2c";
+		reg = <0xe00 0x100>;
+		interrupt-parent = <&mux_intc>;
+		interrupts = <1 10>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks = <&iso_clk_en CLK_EN_I2C6>;
+		resets = <&iso_reset RTD1195_ISO_RSTN_I2C_6>;
+	};
+};
+
+&sb2 {
+	sb2@0 {
+		compatible = "realtek,rtd1195-sb2";
+		reg = <0x0 0x900>;
+		interrupts = <GIC_SPI 36 IRQ_TYPE_LEVEL_HIGH>;
+	};
+};
+
+&misc {
+	rtk_misc_gpio: rtk_misc_gpio@100 {
+		compatible = "realtek,rtd1195-misc-gpio";
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-parent = <&mux_intc>;
+		#interrupt-cells = <1>;
+		interrupt-controller;
+		/* GPIOA_INT, GPIODA_INT */
+		interrupts = <0 19>, <0 20>;
+		/* MISC_GPIO, MISC_SYS (ISR) */
+		reg = <0x100 0x100>, <0x0 0x100>;
+		gpio-ranges = <&pinctrl_crt 0 0 60>;
+	};
+	i2c_1: i2c@300 {
+		compatible = "realtek,rtd1195-i2c", "snps,designware-i2c";
+		reg = <0x300 0x100>;
+		interrupt-parent = <&mux_intc>;
+		interrupts = <0 4>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks = <&clk_en_2 CLK_EN_MISC_I2C_1>;
+		resets = <&reset2 RTD1195_RSTN_I2C_1>;
+	};
+	i2c_2: i2c@700 {
+		compatible = "realtek,rtd1195-i2c", "snps,designware-i2c";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x700 0x100>;
+		interrupt-parent = <&mux_intc>;
+		interrupts = <0 26>;
+		clocks = <&clk_en_2 CLK_EN_MISC_I2C_2>;
+		resets = <&reset2 RTD1195_RSTN_I2C_2>;
+	};
+	i2c_3: i2c@900 {
+		compatible = "realtek,rtd1195-i2c", "snps,designware-i2c";
+		reg = <0x900 0x100>;
+		interrupt-parent = <&mux_intc>;
+		interrupts = <0 23>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks = <&clk_en_2 CLK_EN_MISC_I2C_3>;
+		resets = <&reset2 RTD1195_RSTN_I2C_3>;
+	};
+	i2c_4: i2c@a00 {
+		compatible = "realtek,rtd1195-i2c", "snps,designware-i2c";
+		reg = <0xa00 0x100>;
+		interrupt-parent = <&mux_intc>;
+		interrupts = <0 15>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks = <&clk_en_2 CLK_EN_MISC_I2C_4>;
+		resets = <&reset2 RTD1195_RSTN_I2C_4>;
+	};
+	i2c_5: i2c@b00 {
+		compatible = "realtek,rtd1195-i2c", "snps,designware-i2c";
+		reg = <0xb00 0x100>;
+		interrupt-parent = <&mux_intc>;
+		interrupts = <0 14>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks = <&clk_en_2 CLK_EN_MISC_I2C_5>;
+		resets = <&reset2 RTD1195_RSTN_I2C_5>;
+	};
+	timer@0 {
+		compatible = "realtek,rtd1195-timer";
+		reg = <0x0 0x600>;
+		/* one per channel: CPU0 first, CPU1 second */
+		interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 18 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&osc27M>;
+	};
+};
+
+&scpu_wrapper {
+	sramctl@0 {
+		compatible = "realtek,rtd1195-scpu-sramctl";
+		reg = <0x0 0x4>;
+	};
+};
+
+&rbus {
+	nic: gmac@16000 {
+		compatible = "realtek,rtd1195-gmac";
+		reg = <0x16000 0x1000>;
+		interrupts = <GIC_SPI 22 IRQ_TYPE_LEVEL_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&etn_led_pins>;
+		rtl-config = <1>;
+		mac-version = <42>;		/* RTL_GIGA_MAC_VER_42 */
+		rtl-features = <2>;		/* BIT(2) GMii */
+		led-cfg = <0x70CA>;
+		status = "okay";
+		clocks = <&clk_en_1 CLK_EN_ETN>,
+			<&iso_clk_en CLK_EN_ETN_250M>,
+			<&iso_clk_en CLK_EN_ETN_SYS>;
+		clock-names = "etn", "etn_250m", "etn_sys";
+		resets = <&reset1 RTD1195_RSTN_ETN>;
+		reset-names = "rst_etn";
+	};
+	emmc@12000 {
+		compatible = "realtek,rtd1195-emmc";
+		/* EMMC, CRT, CRSD, BS2, SDIO */
+		reg = <0x12000 0x400>, <0x0 0x400>,
+		      <0x10400 0x200>, <0x1a000 0x80>,
+		      <0x10c00 0x40>;
+		interrupts = <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
+		speed-step = <0>;	/* 0: sdr50, 1: ddr50, 2: hs200 */
+		clocks = <&clk_en_1 CLK_EN_EMMC>, <&clk_en_1 CLK_EN_EMMC_IP>,
+			 <&clk_en_1 CLK_EN_CR>;
+		clock-names = "emmc", "emmc_ip", "cr";
+		resets = <&reset2 RTD1195_RSTN_EMMC>;
+	};
+	crypto@15000 {
+		compatible = "realtek,rtd1195-mcp";
+		reg = <0x15000 0x1000>;
+		interrupts = <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clk_en_1 CLK_EN_CP>;
+		resets = <&reset1 RTD1195_RSTN_CP>;
+	};
+	efuse@17000 {
+		compatible = "realtek,rtd1195-efuse";
+		reg = <0x17000 0x400>;
+		read-only;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Do not put nvmem-cells on the provider itself — that creates a
+		 * dependency cycle and prevents cell registration.
+		 */
+		tcal1: thermal-calibration@-17ffffff {
+			reg = <0x1CA 0x2>;
+			bits = <2 7>;
+		};
+		tcal0: thermal-calibration@-18000000 {
+			reg = <0x1CB 0x1>;
+			bits = <1 7>;
+		};
+	};
+gpu: gpu@3000 {
+	compatible = "arm,mali-400", "arm,mali-utgard";
+	reg = <0x3000 0x1000>;
+	clocks = <&cc CC_CLK_GPU>;
+	clock-names = "clk_mali";
+	resets = <&reset1 RTD1195_RSTN_GPU>;
+	interrupts =
+		<GIC_SPI 24 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 25 IRQ_TYPE_LEVEL_HIGH>,
+		<GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 27 IRQ_TYPE_LEVEL_HIGH>,
+		<GIC_SPI 28 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
+	interrupt-names =
+		"IRQGP", "IRQGPMMU",
+		"IRQPP0", "IRQPPMMU0",
+		"IRQPP1", "IRQPPMMU1";
+	status = "okay";
+};
+};
+
+&uart0 {
+	/delete-property/ clock-frequency;
+		compatible = "realtek,rtd1195-uart", "snps,dw-apb-uart";
+		interrupt-parent = <&mux_intc>;
+		reg = <0x800 0x400>, <0x0 0x100>;
+		interrupts-st-mask = <0x4>;
+		interrupts = <1 2>;
+		reg-shift = <2>;
+		reg-io-width = <4>;
+		/*
+		 * baudclk is the 27MHz crystal; apb_pclk is the gate that
+		 * feeds it to the UART. Naming both lets 8250_dw take the
+		 * rate from the crystal and still claim the gate, so the
+		 * gate is not treated as an unused clock and switched off.
+		 */
+		clocks = <&osc27M>, <&iso_clk_en CLK_EN_MISC_UR0>;
+		clock-names = "baudclk", "apb_pclk";
+		resets = <&iso_reset RTD1195_ISO_RSTN_UR0>;
+	status = "okay";
+};
+
+&uart1 {
+	/delete-property/ clock-frequency;
+		compatible = "realtek,rtd1195-uart", "snps,dw-apb-uart";
+		interrupt-parent = <&mux_intc>;
+		reg = <0x200 0x100>, <0xc 0x100>;
+		interrupts-st-mask = <0x8>;
+		interrupts = <0 3>, <0 5>;	/*UR1_INT and UR1_TO_INT*/
+		reg-shift = <2>;
+		reg-io-width = <4>;
+		clocks = <&uart1_clk>, <&clk_en_2 CLK_EN_UR1>;
+		clock-names = "baudclk", "apb_pclk";
+		resets = <&reset2 RTD1195_RSTN_UR1>;
+	status = "okay";
+};
+
+&cpu0 {
+	clocks = <&cc CC_PLL_SCPU>;
+};
+
+&cpu1 {
+	clocks = <&cc CC_PLL_SCPU>;
+};
