@@ -462,6 +462,19 @@ config NVMEM_ZYNQMP
 
 	  If sure, say yes. If unsure, say no.
 
+config RTK_EFUSE
+	tristate "Realtek SoCs eFuse support"
+	depends on ARCH_REALTEK || COMPILE_TEST
+	depends on HAS_IOMEM
+	default y if ARCH_REALTEK
+	help
+	  This is a driver to access the eFuse block on Realtek
+	  RTD119x/RTD129x SoCs, which holds factory-programmed data such
+	  as chip ID, thermal calibration, and other per-unit values.
+
+	  This driver can also be built as a module. If so, the module
+	  will be called rtk-efuse.
+
 config NVMEM_QORIQ_EFUSE
 	tristate "NXP QorIQ eFuse support"
 	depends on PPC_85xx || COMPILE_TEST
