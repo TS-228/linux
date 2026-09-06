@@ -2,6 +2,7 @@
 menuconfig ARCH_REALTEK
 	bool "Realtek SoCs"
 	depends on ARCH_MULTI_V7
+	select ARM_ERRATA_814220
 	select ARM_GIC
 	select ARM_GLOBAL_TIMER
 	select CLKSRC_ARM_GLOBAL_TIMER_SCHED_CLOCK
@@ -9,3 +10,12 @@ menuconfig ARCH_REALTEK
 	select RESET_CONTROLLER
 	help
 	  This enables support for the Realtek RTD1195 SoC family.
+
+	  RTD1195 is a Cortex-A7 r0p5 part, one of the revisions (r0p2-r0p5)
+	  affected by erratum 814220 (L2 set/way cache maintenance can
+	  overtake L1). The erratum itself isn't SMP-specific - it can bite
+	  any full cache flush, single core or not - but on this board it
+	  surfaced as an intermittent early-boot memory corruption tied to
+	  CPU1 coming up under heavy concurrent vmalloc/vmap_area churn
+	  (systemd + friends), so ARM_ERRATA_814220 is force-selected here
+	  rather than left as an opt-in.
